@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Impostor.Plugins.Welcome.Service;
 
+[Obsolete("WelcomeMessageService is deprecated. Use Text/{Language}HelloWord.txt file-based approach instead.")]
 public sealed class WelcomeMessageService
 {
     private static readonly string MessagesDir =

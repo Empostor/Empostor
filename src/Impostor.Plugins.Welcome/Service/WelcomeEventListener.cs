@@ -1,22 +1,23 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Impostor.Api.Events;
 using Impostor.Api.Events.Game.Player;
 using Impostor.Api.Innersloth;
-using Impostor.Api.Languages;
 using Microsoft.Extensions.Logging;
 
 namespace Impostor.Plugins.Welcome.Service;
 
 public sealed class WelcomeEventListener : IEventListener
 {
-    private readonly ILogger<WelcomeEventListener> _logger;
-    private readonly LanguageService _lang;
+    private const string TextDir = "Messages";
+    private const string FallbackFile = "EnglishHelloWord.txt";
 
-    public WelcomeEventListener(ILogger<WelcomeEventListener> logger, LanguageService lang)
+    private readonly ILogger<WelcomeEventListener> _logger;
+
+    public WelcomeEventListener(ILogger<WelcomeEventListener> logger)
     {
         _logger = logger;
-        _lang = lang;
     }
 
     [EventListener]
@@ -34,14 +35,23 @@ public sealed class WelcomeEventListener : IEventListener
                 if (player.Client.Connection == null || !player.Client.Connection.IsConnected)
                     return;
 
-                var message = _lang
-                    .Get("welcome.join", player.Client.Language)
-                    .Format(
-                        player.Client.Name,
-                        player.Client.FriendCode ?? "—",
-                        e.Game.Code.Code);
+                var baseDir = Path.Combine(Directory.GetCurrentDirectory(), TextDir);
+                var filePath = Path.Combine(baseDir, $"{player.Client.Language}HelloWord.txt");
 
-                await playerCtrl.SendChatToPlayerAsync(message, playerCtrl);
+                if (!File.Exists(filePath))
+                {
+                    filePath = Path.Combine(baseDir, FallbackFile);
+                    if (!File.Exists(filePath))
+                    {
+                        _logger.LogWarning("[Welcome] No HelloWord.txt found for language {Language}, fallback missing too.", player.Client.Language);
+                        return;
+                    }
+                }
+
+                var message = File.ReadAllText(filePath);
+                var formattedMessage = string.Format(message, player.Client.Name, e.Game.Code.Code);
+
+                await playerCtrl.SendChatToPlayerAsync(formattedMessage, playerCtrl);
             }
             catch (Exception ex)
             {

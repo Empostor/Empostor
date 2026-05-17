@@ -48,6 +48,11 @@
         "version": "1.0.0",
         "impostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome.dll"
+      },
+      {
+        "version": "1.1.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome1.1.0.dll"
       }
     ]
   },
