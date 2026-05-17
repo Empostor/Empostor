@@ -90,6 +90,19 @@
       }
     ]
   },
+  {
+    "id": "cn.hayashiume.playerchannel",
+    "name": "Player Channel",
+    "description": "using /s <text> to send an only channel message by friendcode",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.PlayerChannel.dll"
+      }
+    ]
+  },
     {
     "id": "cn.hayashiume.qqverify",
     "name": "QQ群验证API",
