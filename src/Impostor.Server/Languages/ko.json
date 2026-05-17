@@ -1,0 +1,18 @@
+{
+  "command.unknown": "알 수 없는 명령어 /{0}. /help를 입력하여 목록을 확인하세요.",
+  "command.error": "/{0} 실행 중 오류가 발생했습니다.",
+  "command.usage": "사용법: /{0}",
+  "command.help.list": "=== 명령어 목록 ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "알 수 없는 명령어: /{0}",
+  "command.help.aliases": "별칭: {0}",
+  "command.note.host_only": "/note는 방장만 사용할 수 있습니다.",
+  "command.note.cleared": "메모가 삭제되었습니다.",
+  "command.note.set": "메모 설정됨: {0}",
+  "command.color.invalid": "잘못된 색상 ID. 유효 범위: 0–17.",
+  "command.color.set": "색상이 {0}({1})으로 변경되었습니다.",
+  "command.title.too_long": "칭호가 너무 깁니다. 최대 12자.",
+  "command.title.cleared": "칭호가 제거되었습니다.",
+  "command.title.set": "칭호 설정됨: {0}",
+  "welcome.join": "환영합니다, {0}! 친구 코드: {1} | 방: {2}"
+}

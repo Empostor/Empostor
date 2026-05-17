@@ -1,0 +1,11 @@
+{
+  "CrewmatesByVote": 0,
+  "CrewmatesByTask": 1,
+  "ImpostorsByVote": 2,
+  "ImpostorsByKill": 3,
+  "ImpostorsBySabotage": 4,
+  "ImpostorDisconnect": 5,
+  "CrewmateDisconnect": 6,
+  "HideAndSeek_CrewmatesByTimer": 7,
+  "HideAndSeek_ImpostorsByKills": 8
+}

@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Ordú anaithnid /{0}. Clóscríobh /help le haghaidh liosta.",
+  "command.error": "Earráid agus /{0} á rith.",
+  "command.usage": "Úsáid: /{0}",
+  "command.help.list": "=== Orduithe ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Ordú anaithnid: /{0}",
+  "command.help.aliases": "Ailíasanna: {0}",
+  "command.note.host_only": "Ní féidir ach leis an óstach /note a úsáid.",
+  "command.note.cleared": "Nóta glanadh.",
+  "command.note.set": "Nóta socraithe: {0}",
+  "command.color.invalid": "ID datha neamhbhailí. Raon bailí: 0–17.",
+  "command.color.set": "Dath athraithe go {0} ({1}).",
+  "command.title.too_long": "Teideal ró-fhada. Uasmhéid 12 carachtar.",
+  "command.title.cleared": "Teideal bainte.",
+  "command.title.set": "Teideal socraithe: {0}",
+  "welcome.join": "Fáilte, {0}! Cód cara: {1} | Seomra: {2}"
+}

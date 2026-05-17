@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Comando desconhecido /{0}. Digite /help para ver a lista.",
+  "command.error": "Ocorreu um erro ao executar /{0}.",
+  "command.usage": "Uso: /{0}",
+  "command.help.list": "=== Comandos ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Comando desconhecido: /{0}",
+  "command.help.aliases": "Apelidos: {0}",
+  "command.note.host_only": "Somente o anfitrião pode usar /note.",
+  "command.note.cleared": "Nota removida.",
+  "command.note.set": "Nota definida: {0}",
+  "command.color.invalid": "ID de cor inválido. Intervalo válido: 0–17.",
+  "command.color.set": "Cor alterada para {0} ({1}).",
+  "command.title.too_long": "Título muito longo. Máximo 12 caracteres.",
+  "command.title.cleared": "Título removido.",
+  "command.title.set": "Título definido: {0}",
+  "welcome.join": "Bem-vindo, {0}! Código de amigo: {1} | Sala: {2}"
+}

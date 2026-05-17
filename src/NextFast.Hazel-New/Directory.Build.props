@@ -1,0 +1,15 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Authors>Impostor,Next-Fast</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/Next-Fast/Impostor.Hazel</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <VersionPrefix>1.0.2</VersionPrefix>
+        <VersionSuffix>dev</VersionSuffix>
+        <PackageLicense>MIT</PackageLicense>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+</Project>

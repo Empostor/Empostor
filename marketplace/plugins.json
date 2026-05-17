@@ -1,0 +1,106 @@
+[
+  {
+    "id": "serilog.sinks.file",
+    "name": "Log Output",
+    "description": "Write Serilog events to files in text and JSON formats, optionally rolling on time or size",
+    "author": "Serilog & miniduikboot",
+    "versions": [
+      {
+        "version": "5.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Serilog.Sinks.File.dll"
+      }
+    ]
+  },
+  {
+    "id": "at.duikbo.chat",
+    "name": "Output Chat Message",
+    "description": "Output lobbies chat message",
+    "author": "miniduikboot",
+    "versions": [
+      {
+        "version": "0.1",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Chat.dll"
+      }
+    ]
+  },
+    {
+    "id": "at.duikbo.codes",
+    "name": "Custom GameCode",
+    "description": "The GameCode will spwan according to the BootCodes File",
+    "author": "miniduikboot",
+    "versions": [
+      {
+        "version": "0.1",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Codes.dll"
+      }
+    ]
+  },
+  {
+    "id": "cn.hayashiume.welcome",
+    "name": "Welcome Messages",
+    "description": "Sends a localised welcome message when players join a room.",
+    "author": "BunchHanpiDev & HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome.dll"
+      }
+    ]
+  },
+  {
+    "id": "duck.hayashiume.friendcodevalidator",
+    "name": "Friend Code Validator",
+    "description": "Kicks clients whose friend code does not match the official AB+#XXXX format.",
+    "author": "MatchDuck & HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.FriendCodeValidator.dll"
+      }
+    ]
+  },
+  {
+    "id": "cn.hayashiume.fixedcode",
+    "name": "Fixed Room Code",
+    "description": "Assigns a fixed room code to a host based on their friend code.",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.FixedCode.dll"
+      }
+    ]
+  },
+    {
+    "id": "cn.hayashiume.titles",
+    "name": "Custom Title",
+    "description": "Assigns a title based on their friend code and show in front of their name.",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Titles.dll"
+      }
+    ]
+  },
+    {
+    "id": "cn.hayashiume.qqverify",
+    "name": "QQ群验证API",
+    "description": "[仅限中国]，搭配 [本插件](https://github.com/HayashiUme/LLOneBot_Empostor_Verify) 使用",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "impostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.QqVerify.dll"
+      }
+    ]
+  }
+]

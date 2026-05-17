@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>../ProjectRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyName>Impostor.Api</AssemblyName>
+    <AssemblyTitle>Impostor.Api</AssemblyTitle>
+    <Authors>AeonLucid</Authors>
+    <Description>An api library for Impostor, an Among Us private server. You need this package to write plugins for Impostor.</Description>
+    <PackageId>Impostor.Api</PackageId>
+    <PackageTags>Among Us;Impostor;Impostor Plugin</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/Impostor/Impostor/dev/docs/images/logo_64.png</PackageIconUrl>
+    <PackageIcon>logo_64.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/Impostor/Impostor</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Impostor/Impostor</RepositoryUrl>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../docs/images/logo_100.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+
+    <ProjectReference Include="..\Impostor.Api.Innersloth.Generator\Impostor.Api.Innersloth.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+
+    <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel.Abstractions\Next.Hazel.Abstractions.csproj" />
+
+    <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel\Next.Hazel.csproj" />
+    <AdditionalFiles Include="Innersloth/Data/**/*.json" />
+  </ItemGroup>
+
+</Project>

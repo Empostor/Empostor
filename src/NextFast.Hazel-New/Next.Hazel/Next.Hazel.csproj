@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>HAZEL_BAG</DefineConstants>
+        <RootNamespace>Next.Hazel</RootNamespace>
+        <AssemblyName>Next.Hazel</AssemblyName>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>NextFast.Hazel</PackageId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Hazel.UnitTests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.1" />
+        <PackageReference Include="Serilog" Version="4.3.1-dev-02373" />
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Next.Hazel.Abstractions\Next.Hazel.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RootNamespace>Next.Hazel.Abstractions</RootNamespace>
+        <AssemblyName>Next.Hazel.Abstractions</AssemblyName>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>NextFast.Hazel.Abstractions</PackageId>
+    </PropertyGroup>
+
+</Project>

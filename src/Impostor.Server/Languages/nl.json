@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Onbekend commando /{0}. Typ /help voor een lijst.",
+  "command.error": "Fout bij uitvoeren van /{0}.",
+  "command.usage": "Gebruik: /{0}",
+  "command.help.list": "=== Commando's ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Onbekend commando: /{0}",
+  "command.help.aliases": "Aliassen: {0}",
+  "command.note.host_only": "Alleen de host kan /note gebruiken.",
+  "command.note.cleared": "Notitie verwijderd.",
+  "command.note.set": "Notitie ingesteld: {0}",
+  "command.color.invalid": "Ongeldig kleur-ID. Geldig bereik: 0–17.",
+  "command.color.set": "Kleur gewijzigd naar {0} ({1}).",
+  "command.title.too_long": "Titel te lang. Maximaal 12 tekens.",
+  "command.title.cleared": "Titel verwijderd.",
+  "command.title.set": "Titel ingesteld: {0}",
+  "welcome.join": "Welkom, {0}! Vriendcode: {1} | Kamer: {2}"
+}

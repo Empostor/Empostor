@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Unknown command /{0}. Type /help for a list.",
+  "command.error": "An error occurred while executing /{0}.",
+  "command.usage": "Usage: /{0}",
+  "command.help.list": "=== Commands ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Unknown command: /{0}",
+  "command.help.aliases": "Aliases: {0}",
+  "command.note.host_only": "Only the host can use /note.",
+  "command.note.cleared": "Note cleared.",
+  "command.note.set": "Note set: {0}",
+  "command.color.invalid": "Invalid color ID. Valid range: 0–17.",
+  "command.color.set": "Color changed to {0} ({1}).",
+  "command.title.too_long": "Title too long. Max 12 characters.",
+  "command.title.cleared": "Title removed.",
+  "command.title.set": "Title set: {0}",
+  "welcome.join": "Welcome, {0}! Friend code: {1} | Room: {2}"
+}

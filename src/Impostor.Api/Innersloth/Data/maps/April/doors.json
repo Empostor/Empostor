@@ -1,0 +1,93 @@
+{
+  "0": {
+    "room": "Cafeteria",
+    "position": {
+      "x": -5.1432004,
+      "y": 1.3355999
+    }
+  },
+  "1": {
+    "room": "Cafeteria",
+    "position": {
+      "x": 0.708,
+      "y": -4.992
+    }
+  },
+  "2": {
+    "room": "Cafeteria",
+    "position": {
+      "x": 6.3936,
+      "y": 1.33848
+    }
+  },
+  "3": {
+    "room": "Electrical",
+    "position": {
+      "x": 9.53616,
+      "y": -13.416001
+    }
+  },
+  "4": {
+    "room": "Storage",
+    "position": {
+      "x": -1.1316001,
+      "y": -11.98128
+    }
+  },
+  "5": {
+    "room": "Storage",
+    "position": {
+      "x": 0.70919997,
+      "y": -8.560801
+    }
+  },
+  "6": {
+    "room": "Storage",
+    "position": {
+      "x": 5.268,
+      "y": -14.2884
+    }
+  },
+  "7": {
+    "room": "LowerEngine",
+    "position": {
+      "x": 14.6808,
+      "y": -11.472
+    }
+  },
+  "8": {
+    "room": "LowerEngine",
+    "position": {
+      "x": 16.930801,
+      "y": -8.9664
+    }
+  },
+  "9": {
+    "room": "UpperEngine",
+    "position": {
+      "x": 14.676002,
+      "y": 1.3406401
+    }
+  },
+  "10": {
+    "room": "UpperEngine",
+    "position": {
+      "x": 16.930801,
+      "y": -2.1276002
+    }
+  },
+  "11": {
+    "room": "Security",
+    "position": {
+      "x": 14.734801,
+      "y": -5.1417603
+    }
+  },
+  "12": {
+    "room": "MedBay",
+    "position": {
+      "x": 9.1452,
+      "y": -0.4439999
+    }
+  }
+}
