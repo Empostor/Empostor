@@ -22,11 +22,11 @@ public sealed class PlayerChannelCommand : ICommand
         }
     }
 
-    public string Name => "s";
+    public string Name => "channel";
 
     public string Description => "Send a message to your player channel.";
 
-    public string Usage => "s <message>";
+    public string Usage => "channel <message>";
 
     public async ValueTask<bool> ExecuteAsync(CommandContext ctx)
     {
