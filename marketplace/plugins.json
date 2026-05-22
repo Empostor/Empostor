@@ -1,40 +1,40 @@
 [
   {
-    "id": "serilog.sinks.file",
-    "name": "Log Output",
-    "description": "Write Serilog events to files in text and JSON formats, optionally rolling on time or size",
-    "author": "Serilog & miniduikboot",
+    "id": "cn.hayashiume.log",
+    "name": "Log to File",
+    "description": "Writes server logs to rolling files. Requires Serilog.Sinks.File.dll alongside this plugin.",
+    "author": "Serilog & HayashiUme",
     "versions": [
       {
-        "version": "5.0.0",
+        "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Serilog.Sinks.File.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugin.Log.dll"
       }
     ]
   },
   {
-    "id": "at.duikbo.chat",
-    "name": "Output Chat Message",
-    "description": "Output lobbies chat message",
-    "author": "miniduikboot",
+    "id": "cn.hayashiume.chat",
+    "name": "Chat Manager",
+    "description": "Logs chat messages and enforces configurable message length limits for players and hosts.",
+    "author": "miniduikboot & HayashiUme",
     "versions": [
       {
-        "version": "0.1",
+        "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Chat.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugin.Chat.dll"
       }
     ]
   },
-    {
-    "id": "at.duikbo.codes",
-    "name": "Custom GameCode",
-    "description": "The GameCode will spwan according to the BootCodes File",
-    "author": "miniduikboot",
+  {
+    "id": "cn.hayashiume.code",
+    "name": "Custom Game Codes",
+    "description": "Assigns game room codes from word lists placed in the Boot.Codes/ folder (4 or 6 letter codes).",
+    "author": "miniduikboot & HayashiUme",
     "versions": [
       {
-        "version": "0.1",
+        "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Codes.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugin.Code.dll"
       }
     ]
   },
@@ -42,11 +42,11 @@
     "id": "cn.hayashiume.welcome",
     "name": "Welcome Messages",
     "description": "Sends a localised welcome message when players join a room.",
-    "author": "BunchHanpiDev & HayashiUme",
+    "author": "Fangkuai & HayashiUme",
     "versions": [
       {
         "version": "1.0.0",
-        "empostor_version": "2.0.0",
+        "empostor_version": "2.0.0-old",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome.dll"
       },
       {
@@ -82,7 +82,6 @@
       }
     ]
   },
-
   {
     "id": "cn.hayashiume.titles",
     "name": "Custom Title",
@@ -109,7 +108,7 @@
       }
     ]
   },
-    {
+  {
     "id": "cn.hayashiume.qqverify",
     "name": "QQ群验证API",
     "description": "[仅限中国]，搭配 [本插件](https://github.com/HayashiUme/LLOneBot_Empostor_Verify) 使用",
