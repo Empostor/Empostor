@@ -10,7 +10,7 @@ namespace Empostor.Plugins.Welcome.Service;
 
 public sealed class WelcomeEventListener : IEventListener
 {
-    private const string TextDir = "Messages";
+    private const string TextDir = "Message";
     private const string FallbackFile = "EnglishHelloWord.txt";
 
     private readonly ILogger<WelcomeEventListener> _logger;
