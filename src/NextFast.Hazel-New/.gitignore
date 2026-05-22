@@ -1,7 +1,7 @@
 ﻿/.vscode
 /build
 /.vs
-/src/Impostor.Plugins.Debugger/Properties/launchSettings.json
+/src/Empostor.Plugins.Debugger/Properties/launchSettings.json
 /tools
 
 .local/

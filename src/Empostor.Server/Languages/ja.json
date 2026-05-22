@@ -1,0 +1,18 @@
+{
+  "command.unknown": "不明なコマンド /{0}。/help でリストを確認してください。",
+  "command.error": "/{0} の実行中にエラーが発生しました。",
+  "command.usage": "使い方：/{0}",
+  "command.help.list": "=== コマンド一覧 ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "不明なコマンド：/{0}",
+  "command.help.aliases": "エイリアス：{0}",
+  "command.note.host_only": "/note はホストのみ使用できます。",
+  "command.note.cleared": "ノートを削除しました。",
+  "command.note.set": "ノートを設定しました：{0}",
+  "command.color.invalid": "無効なカラーID。有効範囲：0–17。",
+  "command.color.set": "カラーを {0}（{1}）に変更しました。",
+  "command.title.too_long": "称号が長すぎます。最大12文字。",
+  "command.title.cleared": "称号を削除しました。",
+  "command.title.set": "称号を設定しました：{0}",
+  "welcome.join": "ようこそ、{0}！フレンドコード：{1} | ルーム：{2}"
+}

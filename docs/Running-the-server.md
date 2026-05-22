@@ -6,7 +6,7 @@ There are currently two install methods for Empostor: You can install it normall
 
 This section applies to both the normal installation as well as the Docker (Compose) installation
 
-To connect to the server, you need to configure and install a region file on https://impostor.github.io/Impostor/
+To connect to the server, you need to configure and install a region file on https://empostor.github.io/Empostor/
 
 Among Us connects to the server using two network services: the (TCP) HTTP service points Among Us to the UDP service, then the UDP service hosts the actual game traffic. Because of this, Empostor uses port 22023 using **both** the TCP and UDP protocols.
 
@@ -22,7 +22,7 @@ Depending on your host you may also need to port forward Empostor to the interne
 2. Download the [latest release](https://github.com/HayashiUme/Empostor/releases) or the [latest CI build](https://nightly.link/HayashiUme/Empostor/workflows/ci/master). Note that Empostor is built for multiple CPU-architectures and operating systems, you most likely want the x64 version, unless you are running on a Raspberry Pi or another device/VPS with an Arm processor.
 3. Extract the zip.
 4. Modify `config.json` to your liking. Documentation can be found [here](Server-configuration.md). You need to at least change `PublicIp` to the address people will connect to your server to.
-5. Run `Impostor.Server` (Linux/macOS) or `Impostor.Server.exe` (Windows)
+5. Run `Empostor.Server` (Linux/macOS) or `Empostor.Server.exe` (Windows)
 6. Set up a reverse proxy to support HTTPS, so you can connect to your server from another device. See [reverse proxy configuration](Http-server.md)
 7. (OPTIONAL - Linux) Configure a systemd definition file and enable the service to start on boot, see [systemd configuration](Server-configuration.md#systemd)
 

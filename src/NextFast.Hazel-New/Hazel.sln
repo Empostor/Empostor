@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Next.Hazel", "Next.Hazel\Ne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Next.Hazel.Abstractions", "Next.Hazel.Abstractions\Next.Hazel.Abstractions.csproj", "{51FD3233-44D5-43BC-A618-A381703EDAD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Impostor.Hazel.Tests", "Impostor.Hazel.Tests\Impostor.Hazel.Tests.csproj", "{6CC1050D-4142-454E-BA09-974DF77D2C10}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Empostor.Hazel.Tests", "Empostor.Hazel.Tests\Empostor.Hazel.Tests.csproj", "{6CC1050D-4142-454E-BA09-974DF77D2C10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

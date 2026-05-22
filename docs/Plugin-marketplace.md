@@ -25,11 +25,11 @@ The admin panel plugin marketplace reads `marketplace/plugins.json` at startup.
         // Semantic version of this plugin release
         "version": "1.0.0",
 
-        // Minimum Empostor / Impostor version required
-        "impostor_version": "2.0.0",
+        // Minimum Empostor / Empostor version required
+        "empostor_version": "2.0.0",
 
         // Direct download URL for the .dll file
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome.dll"
       }
     ]
   }

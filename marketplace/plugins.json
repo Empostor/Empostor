@@ -7,7 +7,7 @@
     "versions": [
       {
         "version": "5.0.0",
-        "impostor_version": "2.0.0",
+        "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Serilog.Sinks.File.dll"
       }
     ]
@@ -20,7 +20,7 @@
     "versions": [
       {
         "version": "0.1",
-        "impostor_version": "2.0.0",
+        "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Chat.dll"
       }
     ]
@@ -33,7 +33,7 @@
     "versions": [
       {
         "version": "0.1",
-        "impostor_version": "2.0.0",
+        "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Boot.Codes.dll"
       }
     ]
@@ -46,13 +46,13 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome.dll"
       },
       {
         "version": "1.1.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Welcome1.1.0.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome1.1.0.dll"
       }
     ]
   },
@@ -64,8 +64,8 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.FriendCodeValidator.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.FriendCodeValidator.dll"
       }
     ]
   },
@@ -77,12 +77,13 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.FixedCode.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.FixedCode.dll"
       }
     ]
   },
-    {
+
+  {
     "id": "cn.hayashiume.titles",
     "name": "Custom Title",
     "description": "Assigns a title based on their friend code and show in front of their name.",
@@ -90,8 +91,8 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.Titles.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Titles.dll"
       }
     ]
   },
@@ -103,8 +104,8 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.PlayerChannel.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.PlayerChannel.dll"
       }
     ]
   },
@@ -116,8 +117,8 @@
     "versions": [
       {
         "version": "1.0.0",
-        "impostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Impostor.Plugins.QqVerify.dll"
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.QqVerify.dll"
       }
     ]
   }

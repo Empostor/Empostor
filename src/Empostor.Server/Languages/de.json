@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Unbekannter Befehl /{0}. Tippe /help für eine Liste.",
+  "command.error": "Fehler beim Ausführen von /{0}.",
+  "command.usage": "Verwendung: /{0}",
+  "command.help.list": "=== Befehle ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Unbekannter Befehl: /{0}",
+  "command.help.aliases": "Aliase: {0}",
+  "command.note.host_only": "Nur der Host kann /note verwenden.",
+  "command.note.cleared": "Notiz gelöscht.",
+  "command.note.set": "Notiz gesetzt: {0}",
+  "command.color.invalid": "Ungültige Farb-ID. Gültiger Bereich: 0–17.",
+  "command.color.set": "Farbe geändert zu {0} ({1}).",
+  "command.title.too_long": "Titel zu lang. Maximal 12 Zeichen.",
+  "command.title.cleared": "Titel entfernt.",
+  "command.title.set": "Titel gesetzt: {0}",
+  "welcome.join": "Willkommen, {0}! Freundescode: {1} | Raum: {2}"
+}

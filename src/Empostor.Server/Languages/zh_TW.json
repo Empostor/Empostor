@@ -1,0 +1,18 @@
+{
+  "command.unknown": "未知指令 /{0}。輸入 /help 查看列表。",
+  "command.error": "執行 /{0} 時發生錯誤。",
+  "command.usage": "用法：/{0}",
+  "command.help.list": "=== 指令列表 ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "未知指令：/{0}",
+  "command.help.aliases": "別名：{0}",
+  "command.note.host_only": "只有房主可以使用 /note。",
+  "command.note.cleared": "備註已清除。",
+  "command.note.set": "備註已設置：{0}",
+  "command.color.invalid": "無效顏色 ID，範圍：0–17。",
+  "command.color.set": "顏色已更改為 {0}（{1}）。",
+  "command.title.too_long": "頭銜過長，最多 12 個字符。",
+  "command.title.cleared": "頭銜已移除。",
+  "command.title.set": "頭銜已設置：{0}",
+  "welcome.join": "歡迎，{0}！好友碼：{1} | 房間：{2}"
+}

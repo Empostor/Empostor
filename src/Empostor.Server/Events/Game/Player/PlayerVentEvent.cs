@@ -1,0 +1,27 @@
+using Empostor.Api.Events.Player;
+using Empostor.Api.Games;
+using Empostor.Api.Innersloth.Maps;
+using Empostor.Api.Net;
+using Empostor.Api.Net.Inner.Objects;
+
+namespace Empostor.Server.Events.Player
+{
+    public class PlayerVentEvent : IPlayerVentEvent
+    {
+        public PlayerVentEvent(IGame game, IClientPlayer sender, IInnerPlayerControl innerPlayerPhysics, VentData vent)
+        {
+            Game = game;
+            ClientPlayer = sender;
+            PlayerControl = innerPlayerPhysics;
+            NewVent = vent;
+        }
+
+        public IGame Game { get; }
+
+        public IClientPlayer ClientPlayer { get; }
+
+        public IInnerPlayerControl PlayerControl { get; }
+
+        public VentData NewVent { get; }
+    }
+}

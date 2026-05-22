@@ -1,3 +1,3 @@
-# Impostor.Hazel
+# Empostor.Hazel
 
-Fork of Hazel made for [Impostor](https://github.com/Impostor/Impostor) 
+Fork of Hazel made for [Empostor](https://github.com/Empostor/Empostor) 

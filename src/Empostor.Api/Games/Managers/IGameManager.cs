@@ -1,0 +1,23 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Empostor.Api.Innersloth;
+using Empostor.Api.Innersloth.GameOptions;
+
+namespace Empostor.Api.Games.Managers
+{
+    public interface IGameManager
+    {
+        IEnumerable<IGame> Games { get; }
+
+        IGame? Find(GameCode code);
+
+        /// <summary>
+        /// Creates a new game.
+        /// </summary>
+        /// <param name="options">Game options.</param>
+        /// <param name="filterOptions">Filter options.</param>
+        /// <returns>Created game or null if creation was cancelled by a plugin.</returns>
+        /// <exception cref="EmpostorException">Thrown when game creation failed.</exception>
+        ValueTask<IGame?> CreateAsync(IGameOptions options, GameFilterOptions filterOptions);
+    }
+}

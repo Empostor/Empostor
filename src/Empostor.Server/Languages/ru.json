@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Неизвестная команда /{0}. Введите /help для списка.",
+  "command.error": "Ошибка при выполнении /{0}.",
+  "command.usage": "Использование: /{0}",
+  "command.help.list": "=== Команды ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Неизвестная команда: /{0}",
+  "command.help.aliases": "Псевдонимы: {0}",
+  "command.note.host_only": "Только хост может использовать /note.",
+  "command.note.cleared": "Заметка удалена.",
+  "command.note.set": "Заметка установлена: {0}",
+  "command.color.invalid": "Неверный ID цвета. Допустимый диапазон: 0–17.",
+  "command.color.set": "Цвет изменён на {0} ({1}).",
+  "command.title.too_long": "Титул слишком длинный. Максимум 12 символов.",
+  "command.title.cleared": "Титул удалён.",
+  "command.title.set": "Титул установлен: {0}",
+  "welcome.join": "Добро пожаловать, {0}! Код друга: {1} | Комната: {2}"
+}

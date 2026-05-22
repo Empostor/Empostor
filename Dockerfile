@@ -9,9 +9,9 @@ ARG VERSIONSUFFIX="docker"
 WORKDIR /source
 
 # Copy csproj and restore.
-COPY src/Impostor.Server/Impostor.Server.csproj ./src/Impostor.Server/Impostor.Server.csproj
-COPY src/Impostor.Api.Innersloth.Generator/Impostor.Api.Innersloth.Generator.csproj ./src/Impostor.Api.Innersloth.Generator/Impostor.Api.Innersloth.Generator.csproj
-COPY src/Impostor.Api/Impostor.Api.csproj ./src/Impostor.Api/Impostor.Api.csproj
+COPY src/Empostor.Server/Empostor.Server.csproj ./src/Empostor.Server/Empostor.Server.csproj
+COPY src/Empostor.Api.Innersloth.Generator/Empostor.Api.Innersloth.Generator.csproj ./src/Empostor.Api.Innersloth.Generator/Empostor.Api.Innersloth.Generator.csproj
+COPY src/Empostor.Api/Empostor.Api.csproj ./src/Empostor.Api/Empostor.Api.csproj
 COPY src/Directory.Build.props ./src/Directory.Build.props
 
 RUN case "$TARGETARCH" in \
@@ -20,9 +20,9 @@ RUN case "$TARGETARCH" in \
     arm)    NETCORE_PLATFORM='linux-arm';; \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac && \
-  dotnet restore -r "$NETCORE_PLATFORM" ./src/Impostor.Server/Impostor.Server.csproj && \
-  dotnet restore -r "$NETCORE_PLATFORM" ./src/Impostor.Api.Innersloth.Generator/Impostor.Api.Innersloth.Generator.csproj && \
-  dotnet restore -r "$NETCORE_PLATFORM" ./src/Impostor.Api/Impostor.Api.csproj
+  dotnet restore -r "$NETCORE_PLATFORM" ./src/Empostor.Server/Empostor.Server.csproj && \
+  dotnet restore -r "$NETCORE_PLATFORM" ./src/Empostor.Api.Innersloth.Generator/Empostor.Api.Innersloth.Generator.csproj && \
+  dotnet restore -r "$NETCORE_PLATFORM" ./src/Empostor.Api/Empostor.Api.csproj
 
 # Copy everything else.
 COPY src/. ./src/
@@ -33,7 +33,7 @@ RUN case "$TARGETARCH" in \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac && \
   [ $VERSIONSUFFIX = "none" ] && VERSIONSUFFIX=; \
-  dotnet publish -c release -o /app -r "$NETCORE_PLATFORM" -p:VersionSuffix="$VERSIONSUFFIX" --no-restore ./src/Impostor.Server/Impostor.Server.csproj
+  dotnet publish -c release -o /app -r "$NETCORE_PLATFORM" -p:VersionSuffix="$VERSIONSUFFIX" --no-restore ./src/Empostor.Server/Empostor.Server.csproj
 
 # Final image.
 FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
@@ -44,4 +44,4 @@ COPY --from=build /app ./
 ENV ASPNETCORE_URLS=
 
 EXPOSE 22023/tcp 22023/udp
-ENTRYPOINT ["./Impostor.Server"]
+ENTRYPOINT ["./Empostor.Server"]

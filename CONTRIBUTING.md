@@ -17,13 +17,13 @@ Thank you for your interest in contributing! We welcome bug reports, feature sug
 ```bash
 git clone https://github.com/your-org/Empostor.git
 cd Empostor
-dotnet build src/Impostor.sln
+dotnet build src/Empostor.sln
 ```
 
 ### Run locally
 
 ```bash
-dotnet run --project src/Core/Impostor.Server
+dotnet run --project src/Core/Empostor.Server
 ```
 
 ---
@@ -66,10 +66,10 @@ dotnet run --project src/Core/Impostor.Server
 
 ## Writing a Plugin
 
-Plugins implement `PluginBase` + `IPluginStartup` and reference `Impostor.Api`.
+Plugins implement `PluginBase` + `IPluginStartup` and reference `Empostor.Api`.
 
 ```csharp
-[ImpostorPlugin("com.example.myplugin", "My Plugin", "Author", "1.0.0")]
+[EmpostorPlugin("com.example.myplugin", "My Plugin", "Author", "1.0.0")]
 public sealed class MyPlugin : PluginBase
 {
     public override ValueTask EnableAsync()
@@ -82,7 +82,7 @@ public sealed class MyPlugin : PluginBase
 
 See **[docs/Writing-a-plugin.md](docs/Writing-a-plugin.md)** for the full guide.
 
-Custom commands can be registered by injecting `CommandService` and calling `Register(new MyCommand())`. The `ICommand` interface lives in `Impostor.Api.Commands` so plugins can use it without referencing `Impostor.Server`.
+Custom commands can be registered by injecting `CommandService` and calling `Register(new MyCommand())`. The `ICommand` interface lives in `Empostor.Api.Commands` so plugins can use it without referencing `Empostor.Server`.
 
 ---
 

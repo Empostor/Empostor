@@ -1,9 +1,0 @@
-{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "Generator": {
-      "commandName": "DebugRoslynComponent",
-      "targetProject": "../Impostor.Api/Impostor.Api.csproj"
-    }
-  }
-}

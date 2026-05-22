@@ -1,4 +1,4 @@
-# Impostor Documentation
+# Empostor Documentation
 
 1. [Running the server](Running-the-server.md)
 2. [Server configuration](Server-configuration.md)

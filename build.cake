@@ -35,7 +35,7 @@ else
 //////////////////////////////////////////////////////////////////////
 
 // Remove unnecessary files for packaging.
-private void ImpostorPublish(string name, string project, string runtime, bool isServer = false) {
+private void EmpostorPublish(string name, string project, string runtime, bool isServer = false) {
     var projBuildDir = buildDir.Combine(name + "_" + runtime);
     var projBuildName = name + "_" + buildVersion + "_" + runtime;
 
@@ -55,7 +55,7 @@ private void ImpostorPublish(string name, string project, string runtime, bool i
         CreateDirectory(projBuildDir.Combine("libraries"));
 
         if (runtime == "win-x64") {
-            FileWriteText(projBuildDir.CombineWithFilePath("run.bat"), "@echo off\r\nImpostor.Server.exe\r\npause");
+            FileWriteText(projBuildDir.CombineWithFilePath("run.bat"), "@echo off\r\nEmpostor.Server.exe\r\npause");
         }
     }
 
@@ -70,7 +70,7 @@ private void ImpostorPublish(string name, string project, string runtime, bool i
     }
 }
 
-private void ImpostorPublishNF(string name, string project) {
+private void EmpostorPublishNF(string name, string project) {
     var runtime = "win-x64";
     var projBuildDir = buildDir.Combine(name + "_" + runtime);
     var projBuildZip = buildDir.CombineWithFilePath(name + "_" + buildVersion + "_" + runtime + ".zip");
@@ -101,15 +101,15 @@ Task("Clean")
 
 Task("Restore")
     .Does(() => {
-        DotNetRestore("./src/Impostor.sln");
+        DotNetRestore("./src/Empostor.sln");
     });
 
 Task("Replay")
     .Does(() => {
-        // D:\Projects\GitHub\Impostor\Impostor\src\Impostor.Tools.ServerReplay\sessions
+        // D:\Projects\GitHub\Empostor\Empostor\src\Empostor.Tools.ServerReplay\sessions
         DotNetRun(
-            "./src/Impostor.Tools.ServerReplay/Impostor.Tools.ServerReplay.csproj", 
-            "./src/Impostor.Tools.ServerReplay/sessions", new DotNetRunSettings {
+            "./src/Empostor.Tools.ServerReplay/Empostor.Tools.ServerReplay.csproj", 
+            "./src/Empostor.Tools.ServerReplay/sessions", new DotNetRunSettings {
                 Configuration = configuration,
                 NoRestore = true,
             });
@@ -121,19 +121,19 @@ Task("Build")
     .IsDependentOn("Replay")
     .Does(() => {
         // Tests.
-        DotNetBuild("./src/Impostor.Tests/Impostor.Tests.csproj", new DotNetBuildSettings {
+        DotNetBuild("./src/Empostor.Tests/Empostor.Tests.csproj", new DotNetBuildSettings {
             Configuration = configuration,
         });
             
         // Server.
-        ImpostorPublish("Impostor-Server", "./src/Impostor.Server/Impostor.Server.csproj", "win-x64", true);
-        ImpostorPublish("Impostor-Server", "./src/Impostor.Server/Impostor.Server.csproj", "osx-x64", true);
-        ImpostorPublish("Impostor-Server", "./src/Impostor.Server/Impostor.Server.csproj", "linux-x64", true);
-        ImpostorPublish("Impostor-Server", "./src/Impostor.Server/Impostor.Server.csproj", "linux-arm", true);
-        ImpostorPublish("Impostor-Server", "./src/Impostor.Server/Impostor.Server.csproj", "linux-arm64", true);
+        EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "win-x64", true);
+        EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "osx-x64", true);
+        EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "linux-x64", true);
+        EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "linux-arm", true);
+        EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "linux-arm64", true);
 
         // API.
-        DotNetPack("./src/Impostor.Api/Impostor.Api.csproj", new DotNetPackSettings {
+        DotNetPack("./src/Empostor.Api/Empostor.Api.csproj", new DotNetPackSettings {
             Configuration = configuration,
             OutputDirectory = buildDir,
             IncludeSource = true,
@@ -144,7 +144,7 @@ Task("Build")
         if (BuildSystem.GitHubActions.IsRunningOnGitHubActions) {
             foreach (var file in GetFiles(buildDir + "/*.{nupkg,snupkg}"))
             {
-                BuildSystem.GitHubActions.Commands.UploadArtifact(file, "Impostor.Api");
+                BuildSystem.GitHubActions.Commands.UploadArtifact(file, "Empostor.Api");
             }
         }
     });
@@ -152,7 +152,7 @@ Task("Build")
 Task("Test")
     .IsDependentOn("Build")
     .Does(() => {
-        DotNetTest("./src/Impostor.Tests/Impostor.Tests.csproj", new DotNetTestSettings {
+        DotNetTest("./src/Empostor.Tests/Empostor.Tests.csproj", new DotNetTestSettings {
             Configuration = configuration,
             NoBuild = true
         });

@@ -1,0 +1,18 @@
+{
+  "command.unknown": "Hindi kilalang command /{0}. I-type ang /help para sa listahan.",
+  "command.error": "May error sa pagpapatakbo ng /{0}.",
+  "command.usage": "Paggamit: /{0}",
+  "command.help.list": "=== Mga Command ===",
+  "command.help.entry": "/{0} — {1}",
+  "command.help.unknown": "Hindi kilalang command: /{0}",
+  "command.help.aliases": "Mga Alias: {0}",
+  "command.note.host_only": "Ang host lang ang maaaring gumamit ng /note.",
+  "command.note.cleared": "Natanggal ang tala.",
+  "command.note.set": "Naitakda ang tala: {0}",
+  "command.color.invalid": "Di-wastong color ID. Valid na hanay: 0–17.",
+  "command.color.set": "Binago ang kulay sa {0} ({1}).",
+  "command.title.too_long": "Masyadong mahaba ang pamagat. Max 12 karakter.",
+  "command.title.cleared": "Natanggal ang pamagat.",
+  "command.title.set": "Naitakda ang pamagat: {0}",
+  "welcome.join": "Maligayang pagdating, {0}! Friend code: {1} | Silid: {2}"
+}

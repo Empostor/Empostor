@@ -130,11 +130,11 @@ Toggles a game between Public and Private. This affects whether the room appears
 
 ## Plugin Marketplace
 
-Fetches the plugin list from the URL configured in `Admin.MarketplaceUrl` (a raw GitHub JSON file). For each plugin, the latest version, supported Impostor version, and description are shown.
+Fetches the plugin list from the URL configured in `Admin.MarketplaceUrl` (a raw GitHub JSON file). For each plugin, the latest version, supported Empostor version, and description are shown.
 
 Clicking **Install** downloads the `.dll` to the `plugins/` folder. The server must be restarted to load the new plugin.
 
-If the plugin was built for a different Impostor version, a warning is displayed but installation is not blocked.
+If the plugin was built for a different Empostor version, a warning is displayed but installation is not blocked.
 
 ---
 

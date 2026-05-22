@@ -1,6 +1,6 @@
 # HTTP Server
 
-Since Impostor 1.9.0 a HTTP service is included for matchmaking, which is required for clients to connect to the Empostor server.
+Since Empostor 1.9.0 a HTTP service is included for matchmaking, which is required for clients to connect to the Empostor server.
 
 Starting from Among Us 16.0.5, you need to set up HTTPS for players to connect to your server.
 Unfortunately Empostor doesn't handle SSL certificates, so you need to set up a reverse proxy.

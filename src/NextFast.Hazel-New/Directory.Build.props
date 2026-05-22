@@ -2,9 +2,9 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <Authors>Impostor,Next-Fast</Authors>
+        <Authors>Empostor,Next-Fast</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/Next-Fast/Impostor.Hazel</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Next-Fast/Empostor.Hazel</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <VersionPrefix>1.0.2</VersionPrefix>
         <VersionSuffix>dev</VersionSuffix>

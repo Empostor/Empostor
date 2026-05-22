@@ -7,7 +7,7 @@ Empostor serves a customisable home page at `http://your-server:22023/`.
 On startup, the server checks for a `Pages/` directory next to the executable. If it does not exist it is created automatically, and a default `index.html` is written into it.
 
 ```
-Impostor.Server (binary)
+Empostor.Server (binary)
 Pages/
   index.html   ← served at GET /
 ```
@@ -31,7 +31,7 @@ The generated default page contains:
 
 - A status indicator showing the server is online
 - A link to the admin panel (`/admin`)
-- A link to the [region file generator](https://impostor.github.io/Impostor)
+- A link to the [region file generator](https://empostor.github.io/Empostor)
 - The server start time
 
 ## Notes

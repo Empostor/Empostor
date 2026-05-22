@@ -6,7 +6,7 @@ The Empostor project is a reverse engineered and open source server for the game
 
 ## Can this be used with the mobile version of the game?
 
-Yes, Empostor can be used with both the Android and iOS versions of the game. You can add a custom server via a link, you can do this using the [site](https://impostor.github.io/Impostor)
+Yes, Empostor can be used with both the Android and iOS versions of the game. You can add a custom server via a link, you can do this using the [site](https://empostor.github.io/Empostor)
 
 ## Can this be used with the console version of the game?
 
@@ -18,6 +18,6 @@ No, it's an entirely different game with a completely different network stack. S
 
 ## How can I get started?
 
-See [Setting up your Server](Running-the-server.md) for more information on running the server and [Client Setup](https://impostor.github.io/Impostor/) for helping your friends join in!
+See [Setting up your Server](Running-the-server.md) for more information on running the server and [Client Setup](https://empostor.github.io/Empostor/) for helping your friends join in!
 
 If you're having issues with the server software, check the [Troubleshooting page](TROUBLESHOOTING.md).
