@@ -1,5 +1,4 @@
 {
-  "command.unknown": "Hindi kilalang command /{0}. I-type ang /help para sa listahan.",
   "command.error": "May error sa pagpapatakbo ng /{0}.",
   "command.usage": "Paggamit: /{0}",
   "command.help.list": "=== Mga Command ===",

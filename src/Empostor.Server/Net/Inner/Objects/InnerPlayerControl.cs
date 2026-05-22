@@ -1160,8 +1160,9 @@ namespace Empostor.Server.Net.Inner.Objects
                     Game = Game,
                     Lang = _commandService.Lang,
                 };
-                await _commandService.TryHandleAsync(ctx);
-                return false;
+                var handled = await _commandService.TryHandleAsync(ctx);
+                if (handled)
+                    return false;
             }
 
             var @event = new PlayerChatEvent(Game, sender, this, message);

@@ -129,7 +129,6 @@ public sealed class LanguageService
     // Any Pr fix grammer wrongs is OK!
     private const string DefaultEn = """
 {
-  "command.unknown": "Unknown command /{0}. Type /help for a list.",
   "command.error": "An error occurred while executing /{0}.",
   "command.usage": "Usage: /{0}",
   "command.help.list": "=== Commands ===",
@@ -162,7 +161,6 @@ public sealed class LanguageService
 
     private const string DefaultZhCn = """
 {
-  "command.unknown": "未知指令 /{0}。输入 /help 查看列表。",
   "command.error": "执行 /{0} 时发生错误。",
   "command.usage": "用法：/{0}",
   "command.help.list": "=== 指令列表 ===",
@@ -194,7 +192,6 @@ public sealed class LanguageService
 
     private const string DefaultZhTw = """
 {
-  "command.unknown": "未知指令 /{0}。輸入 /help 查看列表。",
   "command.error": "執行 /{0} 時發生錯誤。",
   "command.usage": "用法：/{0}",
   "command.help.list": "=== 指令列表 ===",
@@ -226,7 +223,6 @@ public sealed class LanguageService
 
     private const string DefaultKo = """
 {
-  "command.unknown": "알 수 없는 명령어 /{0}. /help를 입력하여 목록을 확인하세요.",
   "command.error": "/{0} 실행 중 오류가 발생했습니다.",
   "command.usage": "사용법: /{0}",
   "command.help.list": "=== 명령어 목록 ===",
@@ -258,7 +254,6 @@ public sealed class LanguageService
 
     private const string DefaultRu = """
 {
-  "command.unknown": "Неизвестная команда /{0}. Введите /help для списка.",
   "command.error": "Ошибка при выполнении /{0}.",
   "command.usage": "Использование: /{0}",
   "command.help.list": "=== Команды ===",
@@ -290,7 +285,6 @@ public sealed class LanguageService
 
     private const string DefaultDe = """
 {
-  "command.unknown": "Unbekannter Befehl /{0}. Tippe /help für eine Liste.",
   "command.error": "Fehler beim Ausführen von /{0}.",
   "command.usage": "Verwendung: /{0}",
   "command.help.list": "=== Befehle ===",
@@ -322,7 +316,6 @@ public sealed class LanguageService
 
     private const string DefaultFr = """
 {
-  "command.unknown": "Commande inconnue /{0}. Tapez /help pour la liste.",
   "command.error": "Erreur lors de l'exécution de /{0}.",
   "command.usage": "Utilisation : /{0}",
   "command.help.list": "=== Commandes ===",
@@ -354,7 +347,6 @@ public sealed class LanguageService
 
     private const string DefaultJa = """
 {
-  "command.unknown": "不明なコマンド /{0}。/help でリストを確認してください。",
   "command.error": "/{0} の実行中にエラーが発生しました。",
   "command.usage": "使い方：/{0}",
   "command.help.list": "=== コマンド一覧 ===",
@@ -386,7 +378,6 @@ public sealed class LanguageService
 
     private const string DefaultPt = """
 {
-  "command.unknown": "Comando desconhecido /{0}. Digite /help para ver a lista.",
   "command.error": "Ocorreu um erro ao executar /{0}.",
   "command.usage": "Uso: /{0}",
   "command.help.list": "=== Comandos ===",
@@ -418,7 +409,6 @@ public sealed class LanguageService
 
     private const string DefaultPtBr = """
 {
-  "command.unknown": "Comando desconhecido /{0}. Digite /help para ver a lista.",
   "command.error": "Ocorreu um erro ao executar /{0}.",
   "command.usage": "Uso: /{0}",
   "command.help.list": "=== Comandos ===",
@@ -450,7 +440,6 @@ public sealed class LanguageService
 
     private const string DefaultEs = """
 {
-  "command.unknown": "Comando desconocido /{0}. Escribe /help para ver la lista.",
   "command.error": "Error al ejecutar /{0}.",
   "command.usage": "Uso: /{0}",
   "command.help.list": "=== Comandos ===",
@@ -482,7 +471,6 @@ public sealed class LanguageService
 
     private const string DefaultIt = """
 {
-  "command.unknown": "Comando sconosciuto /{0}. Digita /help per la lista.",
   "command.error": "Errore durante l'esecuzione di /{0}.",
   "command.usage": "Utilizzo: /{0}",
   "command.help.list": "=== Comandi ===",
@@ -514,7 +502,6 @@ public sealed class LanguageService
 
     private const string DefaultNl = """
 {
-  "command.unknown": "Onbekend commando /{0}. Typ /help voor een lijst.",
   "command.error": "Fout bij uitvoeren van /{0}.",
   "command.usage": "Gebruik: /{0}",
   "command.help.list": "=== Commando's ===",
@@ -546,7 +533,6 @@ public sealed class LanguageService
 
     private const string DefaultFil = """
 {
-  "command.unknown": "Hindi kilalang command /{0}. I-type ang /help para sa listahan.",
   "command.error": "May error sa pagpapatakbo ng /{0}.",
   "command.usage": "Paggamit: /{0}",
   "command.help.list": "=== Mga Command ===",
@@ -578,7 +564,6 @@ public sealed class LanguageService
 
     private const string DefaultGa = """
 {
-  "command.unknown": "Ordú anaithnid /{0}. Clóscríobh /help le haghaidh liosta.",
   "command.error": "Earráid agus /{0} á rith.",
   "command.usage": "Úsáid: /{0}",
   "command.help.list": "=== Orduithe ===",

@@ -1,5 +1,4 @@
 {
-  "command.unknown": "Ordú anaithnid /{0}. Clóscríobh /help le haghaidh liosta.",
   "command.error": "Earráid agus /{0} á rith.",
   "command.usage": "Úsáid: /{0}",
   "command.help.list": "=== Orduithe ===",

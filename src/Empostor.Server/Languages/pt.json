@@ -1,5 +1,4 @@
 {
-  "command.unknown": "Comando desconhecido /{0}. Digite /help para ver a lista.",
   "command.error": "Ocorreu um erro ao executar /{0}.",
   "command.usage": "Uso: /{0}",
   "command.help.list": "=== Comandos ===",

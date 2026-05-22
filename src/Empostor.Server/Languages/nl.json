@@ -1,5 +1,4 @@
 {
-  "command.unknown": "Onbekend commando /{0}. Typ /help voor een lijst.",
   "command.error": "Fout bij uitvoeren van /{0}.",
   "command.usage": "Gebruik: /{0}",
   "command.help.list": "=== Commando's ===",

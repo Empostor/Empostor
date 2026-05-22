@@ -42,14 +42,10 @@ public sealed class CommandService
 
     public LanguageService Lang => _lang;
 
-    public async ValueTask TryHandleAsync(CommandContext ctx)
+    public async ValueTask<bool> TryHandleAsync(CommandContext ctx)
     {
         if (!_commands.TryGetValue(ctx.Name, out var command))
-        {
-            await ctx.PlayerControl.SendChatToPlayerAsync(
-                ctx.GetString("command.unknown").Format(ctx.Name), ctx.PlayerControl);
-            return;
-        }
+            return false;
 
         try
         {
@@ -64,5 +60,7 @@ public sealed class CommandService
             await ctx.PlayerControl.SendChatToPlayerAsync(
                 ctx.GetString("command.error").Format(ctx.Name), ctx.PlayerControl);
         }
+
+        return true;
     }
 }

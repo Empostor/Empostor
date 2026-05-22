@@ -1,5 +1,4 @@
 {
-  "command.unknown": "未知指令 /{0}。输入 /help 查看列表。",
   "command.error": "执行 /{0} 时发生错误。",
   "command.usage": "用法：/{0}",
   "command.help.list": "=== 指令列表 ===",
