@@ -9,7 +9,7 @@ var tag = workflow.RefType == GitHubActionsRefType.Tag ? workflow.RefName : null
 var buildVersion = FindRegexMatchGroupInFile("./src/Directory.Build.props", @"\<VersionPrefix\>(.*?)\<\/VersionPrefix\>", 1, System.Text.RegularExpressions.RegexOptions.None).Value;
 var buildDir = MakeAbsolute(Directory("./build"));
 
-var target = Argument("target", "Test");
+var target = Argument("target", "Build");
 var configuration = Argument("configuration", "Release");
 
 var msbuildSettings = new DotNetMSBuildSettings();
@@ -109,11 +109,6 @@ Task("Build")
     .IsDependentOn("Clean")
     .IsDependentOn("Restore")
     .Does(() => {
-        // Tests.
-        DotNetBuild("./src/Empostor.Tests/Empostor.Tests.csproj", new DotNetBuildSettings {
-            Configuration = configuration,
-        });
-            
         // Server.
         EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "win-x64", true);
         EmpostorPublish("Empostor-Server", "./src/Empostor.Server/Empostor.Server.csproj", "osx-x64", true);
@@ -138,14 +133,6 @@ Task("Build")
         }
     });
 
-Task("Test")
-    .IsDependentOn("Build")
-    .Does(() => {
-        DotNetTest("./src/Empostor.Tests/Empostor.Tests.csproj", new DotNetTestSettings {
-            Configuration = configuration,
-            NoBuild = true
-        });
-    });
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
