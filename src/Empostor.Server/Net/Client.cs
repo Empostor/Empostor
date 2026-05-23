@@ -265,6 +265,47 @@ namespace Empostor.Server.Net
                     break;
                 }
 
+                case MessageFlags.PackedGameDataTo:
+                {
+                    if (!IsPackedGameDataToAllowed(reader))
+                    {
+                        return;
+                    }
+
+                    while (reader.Position < reader.Length)
+                    {
+                        using var packed = reader.ReadMessage();
+
+                        if (packed.Tag != MessageFlags.GameDataTo)
+                        {
+                            _logger.LogWarning("PackedGameDataTo contained non-GameDataTo flag {0}.", packed.Tag);
+                            return;
+                        }
+
+                        if (packed.ReadInt32() != Player!.Game.Code)
+                        {
+                            _logger.LogWarning("PackedGameDataTo contained GameDataTo for the wrong game.");
+                            return;
+                        }
+
+                        var position = packed.Position;
+                        var verified = await Player.Game.HandleGameDataAsync(packed, Player, true);
+                        packed.Seek(position);
+
+                        if (!verified || Player == null)
+                        {
+                            return;
+                        }
+
+                        using var writer = MessageWriter.Get(messageType);
+                        var target = packed.ReadPackedInt32();
+                        packed.CopyTo(writer);
+                        await Player.Game.SendToAsync(writer, target);
+                    }
+
+                    break;
+                }
+
                 case MessageFlags.EndGame:
                 {
                     if (!IsPacketAllowed(reader, true))
@@ -356,6 +397,7 @@ namespace Empostor.Server.Net
 #if DEBUG
             if (flag != MessageFlags.GameData &&
                 flag != MessageFlags.GameDataTo &&
+                flag != MessageFlags.PackedGameDataTo &&
                 flag != MessageFlags.EndGame &&
                 reader.Position < reader.Length)
             {
@@ -417,6 +459,29 @@ namespace Empostor.Server.Net
             }
 
             return true;
+        }
+
+        private bool IsPackedGameDataToAllowed(IMessageReader message)
+        {
+            if (Player == null)
+            {
+                return false;
+            }
+
+            var game = Player.Game;
+
+            if (message.ReadPackedInt32() != game.Code)
+            {
+                return false;
+            }
+
+            if (game.HostId == Id)
+            {
+                return true;
+            }
+
+            _logger.LogWarning("[{0}] Client sent PackedGameDataTo only allowed by the host ({1}).", Id, game.HostId);
+            return false;
         }
 
         /// <summary>
