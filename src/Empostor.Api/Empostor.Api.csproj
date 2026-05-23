@@ -12,8 +12,8 @@
     <Description>An api library for Empostor, an Among Us private server. You need this package to write plugins for Empostor.</Description>
     <PackageId>Empostor.Api</PackageId>
     <PackageTags>Among Us;Empostor;Empostor Plugin</PackageTags>
-    <PackageIconUrl>https://raw.githubusercontent.com/Empostor/Empostor/dev/docs/images/logo_64.png</PackageIconUrl>
-    <PackageIcon>logo_64.png</PackageIcon>
+    <PackageIconUrl>https://raw.githubusercontent.com/Empostor/Empostor/dev/docs/images/logo_100.png</PackageIconUrl>
+    <PackageIcon>logo_100.png</PackageIcon>
     <PackageProjectUrl>https://github.com/Empostor/Empostor</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Empostor/Empostor</RepositoryUrl>
