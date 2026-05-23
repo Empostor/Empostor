@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
+using Empostor.Server.Plugins;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,15 +24,18 @@ namespace Empostor.Server.Http
         private readonly ILogger<MarketplaceController> _logger;
         private readonly IHttpClientFactory _http;
         private readonly AdminConfig _config;
+        private readonly PluginLoaderService _pluginLoaderService;
 
         public MarketplaceController(
             ILogger<MarketplaceController> logger,
             IHttpClientFactory http,
-            IOptions<AdminConfig> config)
+            IOptions<AdminConfig> config,
+            PluginLoaderService pluginLoaderService)
         {
             _logger = logger;
             _http = http;
             _config = config.Value;
+            _pluginLoaderService = pluginLoaderService;
         }
 
         private bool IsAuthenticated()
@@ -54,7 +60,36 @@ namespace Empostor.Server.Http
                 using var client = _http.CreateClient();
                 client.DefaultRequestHeaders.Add("User-Agent", "Empostor-Marketplace/1.0");
                 var json = await client.GetStringAsync(url);
-                return Content(json, "application/json");
+
+                var installedIds = new HashSet<string>(
+                    _pluginLoaderService.Plugins.Select(p => p.Id),
+                    StringComparer.OrdinalIgnoreCase);
+
+                using var doc = JsonDocument.Parse(json);
+                var plugins = new List<JsonElement>();
+
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    var id = element.GetProperty("id").GetString() ?? string.Empty;
+                    var installed = installedIds.Contains(id);
+
+                    var obj = new Dictionary<string, object?>();
+                    foreach (var prop in element.EnumerateObject())
+                    {
+                        if (prop.Name == "installed")
+                        {
+                            continue;
+                        }
+
+                        obj[prop.Name] = JsonValueToObject(prop.Value);
+                    }
+
+                    obj["installed"] = installed;
+                    plugins.Add(JsonSerializer.SerializeToElement(obj));
+                }
+
+                var result = JsonSerializer.Serialize(plugins);
+                return Content(result, "application/json");
             }
             catch (Exception ex)
             {
@@ -79,6 +114,18 @@ namespace Empostor.Server.Http
             if (!req.DownloadUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { error = "Only HTTPS download URLs are allowed" });
+            }
+
+            if (!string.IsNullOrEmpty(req.PluginId))
+            {
+                var installedIds = new HashSet<string>(
+                    _pluginLoaderService.Plugins.Select(p => p.Id),
+                    StringComparer.OrdinalIgnoreCase);
+
+                if (installedIds.Contains(req.PluginId))
+                {
+                    return BadRequest(new { error = "This plugin is already installed." });
+                }
             }
 
             try
@@ -139,6 +186,21 @@ namespace Empostor.Server.Http
             }
         }
 
-        public sealed record InstallRequest(string DownloadUrl);
+        public sealed record InstallRequest(string DownloadUrl, string? PluginId = null);
+
+        private static object? JsonValueToObject(JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.Object => JsonSerializer.Deserialize<Dictionary<string, object?>>(element.GetRawText()),
+                JsonValueKind.Array => JsonSerializer.Deserialize<List<object?>>(element.GetRawText()),
+                JsonValueKind.String => element.GetString(),
+                JsonValueKind.Number => element.TryGetInt64(out var l) ? l : element.GetDouble(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Null => null,
+                _ => null,
+            };
+        }
     }
 }

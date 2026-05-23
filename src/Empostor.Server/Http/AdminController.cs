@@ -1892,7 +1892,10 @@ namespace Empostor.Server.Http
                             : `<div style="font-size:11px;color:var(--m);margin-top:4px">v${e(versions.length ? versions[versions.length - 1].version : '-')} (Empostor ${e(versions.length ? versions[versions.length - 1].empostor_version : '-')})</div>`
                         }
                     </div>
-                    <button class="bp bsm" style="flex-shrink:0" onclick="install('${e(p.id)}',this)">${_('marketplace.install', 'Install')}</button>
+                    ${p.installed
+                        ? `<button class="bp bsm" style="flex-shrink:0" disabled>${_('marketplace.installed', 'Installed')}</button>`
+                        : `<button class="bp bsm" style="flex-shrink:0" onclick="install('${e(p.id)}',this)">${_('marketplace.install', 'Install')}</button>`
+                    }
                 </div>
                 <div class="install-msg" style="font-size:12px;margin-top:6px;display:none"></div>
             </div>`;
@@ -1906,7 +1909,7 @@ namespace Empostor.Server.Http
             btn.disabled = true;
             btn.textContent = _('marketplace.installing', 'Installing...');
             const msgEl = btn.closest('.form').querySelector('.install-msg');
-            const { ok, data } = await api('POST', '/api/admin/marketplace/install', { downloadUrl: url });
+            const { ok, data } = await api('POST', '/api/admin/marketplace/install', { downloadUrl: url, pluginId: pluginId });
             if (ok) {
                 btn.textContent = _('marketplace.installed', 'Installed');
                 msgEl.style.display = 'block';
