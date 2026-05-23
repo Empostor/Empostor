@@ -129,10 +129,10 @@ public sealed class LanguageService
     // Any Pr fix grammer wrongs is OK!
     private const string DefaultEn = """
 {
-  "command.error": "An error occurred while executing /{0}.",
+  "command.error": "An error occurred while executing #{0}.",
   "command.usage": "Usage: #{0}",
   "command.help.list": "=== Commands ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Unknown command: #{0}",
   "command.help.aliases": "Aliases: {0}",
   "command.note.host_only": "Only the host can use #note.",
@@ -169,10 +169,10 @@ public sealed class LanguageService
 
     private const string DefaultZhCn = """
 {
-  "command.error": "执行 /{0} 时发生错误。",
+  "command.error": "执行 #{0}时发生错误。",
   "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "未知指令：#{0}",
   "command.help.aliases": "别名：{0}",
   "command.note.host_only": "只有房主可以使用 #note。",
@@ -208,10 +208,10 @@ public sealed class LanguageService
 
     private const string DefaultZhTw = """
 {
-  "command.error": "執行 /{0} 時發生錯誤。",
+  "command.error": "執行 #{0}時發生錯誤。",
   "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "未知指令：#{0}",
   "command.help.aliases": "別名：{0}",
   "command.note.host_only": "只有房主可以使用 #note。",
@@ -247,10 +247,10 @@ public sealed class LanguageService
 
     private const string DefaultKo = """
 {
-  "command.error": "/{0} 실행 중 오류가 발생했습니다.",
+  "command.error": "#{0}실행 중 오류가 발생했습니다.",
   "command.usage": "사용법: #{0}",
   "command.help.list": "=== 명령어 목록 ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "알 수 없는 명령어: #{0}",
   "command.help.aliases": "별칭: {0}",
   "command.note.host_only": "#note는 방장만 사용할 수 있습니다.",
@@ -286,10 +286,10 @@ public sealed class LanguageService
 
     private const string DefaultRu = """
 {
-  "command.error": "Ошибка при выполнении /{0}.",
+  "command.error": "Ошибка при выполнении #{0}.",
   "command.usage": "Использование: #{0}",
   "command.help.list": "=== Команды ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Неизвестная команда: #{0}",
   "command.help.aliases": "Псевдонимы: {0}",
   "command.note.host_only": "Только хост может использовать #note.",
@@ -325,10 +325,10 @@ public sealed class LanguageService
 
     private const string DefaultDe = """
 {
-  "command.error": "Fehler beim Ausführen von /{0}.",
+  "command.error": "Fehler beim Ausführen von #{0}.",
   "command.usage": "Verwendung: #{0}",
   "command.help.list": "=== Befehle ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Unbekannter Befehl: #{0}",
   "command.help.aliases": "Aliase: {0}",
   "command.note.host_only": "Nur der Host kann #note verwenden.",
@@ -364,10 +364,10 @@ public sealed class LanguageService
 
     private const string DefaultFr = """
 {
-  "command.error": "Erreur lors de l'exécution de /{0}.",
+  "command.error": "Erreur lors de l'exécution de #{0}.",
   "command.usage": "Utilisation : #{0}",
   "command.help.list": "=== Commandes ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Commande inconnue : #{0}",
   "command.help.aliases": "Alias : {0}",
   "command.note.host_only": "Seul l'hôte peut utiliser #note.",
@@ -403,10 +403,10 @@ public sealed class LanguageService
 
     private const string DefaultJa = """
 {
-  "command.error": "/{0} の実行中にエラーが発生しました。",
+  "command.error": "#{0}の実行中にエラーが発生しました。",
   "command.usage": "使い方：#{0}",
   "command.help.list": "=== コマンド一覧 ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "不明なコマンド：#{0}",
   "command.help.aliases": "エイリアス：{0}",
   "command.note.host_only": "#note はホストのみ使用できます。",
@@ -442,10 +442,10 @@ public sealed class LanguageService
 
     private const string DefaultPt = """
 {
-  "command.error": "Ocorreu um erro ao executar /{0}.",
+  "command.error": "Ocorreu um erro ao executar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Comando desconhecido: #{0}",
   "command.help.aliases": "Aliases: {0}",
   "command.note.host_only": "Apenas o anfitrião pode usar #note.",
@@ -481,10 +481,10 @@ public sealed class LanguageService
 
     private const string DefaultPtBr = """
 {
-  "command.error": "Ocorreu um erro ao executar /{0}.",
+  "command.error": "Ocorreu um erro ao executar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Comando desconhecido: #{0}",
   "command.help.aliases": "Apelidos: {0}",
   "command.note.host_only": "Somente o anfitrião pode usar #note.",
@@ -520,10 +520,10 @@ public sealed class LanguageService
 
     private const string DefaultEs = """
 {
-  "command.error": "Error al ejecutar /{0}.",
+  "command.error": "Error al ejecutar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Comando desconocido: #{0}",
   "command.help.aliases": "Alias: {0}",
   "command.note.host_only": "Solo el anfitrión puede usar #note.",
@@ -559,10 +559,10 @@ public sealed class LanguageService
 
     private const string DefaultIt = """
 {
-  "command.error": "Errore durante l'esecuzione di /{0}.",
+  "command.error": "Errore durante l'esecuzione di #{0}.",
   "command.usage": "Utilizzo: #{0}",
   "command.help.list": "=== Comandi ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Comando sconosciuto: #{0}",
   "command.help.aliases": "Alias: {0}",
   "command.note.host_only": "Solo l'host può usare #note.",
@@ -598,10 +598,10 @@ public sealed class LanguageService
 
     private const string DefaultNl = """
 {
-  "command.error": "Fout bij uitvoeren van /{0}.",
+  "command.error": "Fout bij uitvoeren van #{0}.",
   "command.usage": "Gebruik: #{0}",
   "command.help.list": "=== Commando's ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Onbekend commando: #{0}",
   "command.help.aliases": "Aliassen: {0}",
   "command.note.host_only": "Alleen de host kan #note gebruiken.",
@@ -637,10 +637,10 @@ public sealed class LanguageService
 
     private const string DefaultFil = """
 {
-  "command.error": "May error sa pagpapatakbo ng /{0}.",
+  "command.error": "May error sa pagpapatakbo ng #{0}.",
   "command.usage": "Paggamit: #{0}",
   "command.help.list": "=== Mga Command ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Hindi kilalang command: #{0}",
   "command.help.aliases": "Mga Alias: {0}",
   "command.note.host_only": "Ang host lang ang maaaring gumamit ng #note.",
@@ -676,10 +676,10 @@ public sealed class LanguageService
 
     private const string DefaultGa = """
 {
-  "command.error": "Earráid agus /{0} á rith.",
+  "command.error": "Earráid agus #{0}á rith.",
   "command.usage": "Úsáid: #{0}",
   "command.help.list": "=== Orduithe ===",
-  "command.help.entry": "/{0} — {1}",
+  "command.help.entry": "#{0} — {1}",
   "command.help.unknown": "Ordú anaithnid: #{0}",
   "command.help.aliases": "Ailíasanna: {0}",
   "command.note.host_only": "Ní féidir ach leis an óstach #note a úsáid.",

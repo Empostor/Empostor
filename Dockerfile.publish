@@ -1,0 +1,16 @@
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
+
+WORKDIR /app
+
+# Copy pre-published output from host
+COPY ./publish/ ./
+
+# Create directories for runtime data
+RUN mkdir -p /app/Log /app/plugins /app/libraries
+
+ENV ASPNETCORE_URLS=
+ENV EMPOSTOR_Server__PublicIp=0.0.0.0
+
+EXPOSE 22023/tcp 22023/udp
+
+ENTRYPOINT ["./Empostor.Server"]

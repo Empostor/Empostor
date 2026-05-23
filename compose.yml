@@ -1,0 +1,16 @@
+services:
+  empostor:
+    build:
+      context: .
+      dockerfile: Dockerfile.publish
+    container_name: empostor-server
+    restart: unless-stopped
+    ports:
+      - "22023:22023/tcp"
+      - "22023:22023/udp"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./Log:/app/Log
+      - ./plugins:/app/plugins
+      - ./libraries:/app/libraries
+      - ./Languages:/app/Languages
