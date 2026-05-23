@@ -209,6 +209,11 @@ namespace Empostor.Server
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                         .Enrich.FromLogContext()
                         .WriteTo.Console()
+                        .WriteTo.File(
+                            "Log/empostor-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 31,
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                         .ReadFrom.Configuration(context.Configuration,
                             new ConfigurationReaderOptions(ConfigurationAssemblySource.AlwaysScanDllFiles));
                     AssemblyLoadContext.Default.Resolving -= TryLoad;

@@ -1,18 +1,5 @@
 [
   {
-    "id": "cn.hayashiume.log",
-    "name": "Log to File",
-    "description": "Writes server logs to rolling files. Requires Serilog.Sinks.File.dll alongside this plugin.",
-    "author": "Serilog & HayashiUme",
-    "versions": [
-      {
-        "version": "1.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugin.Log.dll"
-      }
-    ]
-  },
-  {
     "id": "cn.hayashiume.chat",
     "name": "Chat Manager",
     "description": "Logs chat messages and enforces configurable message length limits for players and hosts.",
