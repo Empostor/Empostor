@@ -102,5 +102,18 @@
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.QqVerify.dll"
       }
     ]
+  },
+  {
+    "id": "cn.hayashiume.narrator",
+    "name": "Narrator",
+    "description": "AI-powered meeting assistant using DeepSeek. Use /narrator during meetings to get strategic advice. Host commands: /narrator enable/disable/limit.",
+    "author": "ELinmei",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Narrator.dll"
+      }
+    ]
   }
 ]

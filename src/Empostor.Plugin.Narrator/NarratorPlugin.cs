@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugin.Narrator;
 
-[EmpostorPlugin("cn.Empostor.narrator")]
+[EmpostorPlugin("cn.hayashiume.narrator")]
 public sealed class NarratorPlugin : PluginBase
 {
     private readonly ILogger<NarratorPlugin> _logger;
@@ -16,7 +16,7 @@ public sealed class NarratorPlugin : PluginBase
 
     public override ValueTask EnableAsync()
     {
-        _logger.LogInformation("[Narrator] Plugin enabled. /narrator command registered.");
+        _logger.LogInformation("[Narrator] Plugin enabled. #narrator command registered.");
         return default;
     }
 

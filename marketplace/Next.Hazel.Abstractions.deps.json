@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Next.Hazel.Abstractions/1.0.2-dev": {
+        "runtime": {
+          "Next.Hazel.Abstractions.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Next.Hazel.Abstractions/1.0.2-dev": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

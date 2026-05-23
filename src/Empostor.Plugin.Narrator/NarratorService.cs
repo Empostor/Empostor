@@ -29,9 +29,16 @@ public sealed class NarratorService
         _httpClient = new HttpClient();
     }
 
+    // ---- Game lifecycle ----
+
     public void RecordGameStart(IGame game)
     {
-        _games[game.Code.ToString()] = new GameState();
+        _games[game.Code.ToString()] = new GameState
+        {
+            Enabled = true,
+            MaxUsesPerGame = _config.MaxUsesPerGame,
+            MaxUsesPerMeeting = _config.MaxUsesPerMeeting
+        };
     }
 
     public void RecordGameEnd(IGame game)
@@ -39,6 +46,63 @@ public sealed class NarratorService
         _games.TryRemove(game.Code.ToString(), out _);
         _meetings.TryRemove(game.Code.ToString(), out _);
     }
+
+    // ---- Host controls ----
+
+    public bool IsEnabled(IGame game)
+    {
+        return _games.TryGetValue(game.Code.ToString(), out var state) && state.Enabled;
+    }
+
+    public void SetEnabled(IGame game, bool enabled)
+    {
+        if (_games.TryGetValue(game.Code.ToString(), out var state))
+            state.Enabled = enabled;
+    }
+
+    public void SetMaxUses(IGame game, int max)
+    {
+        if (_games.TryGetValue(game.Code.ToString(), out var state))
+            state.MaxUsesPerGame = Math.Max(0, max);
+    }
+
+    public int GetMaxUses(IGame game)
+    {
+        return _games.TryGetValue(game.Code.ToString(), out var state) ? state.MaxUsesPerGame : _config.MaxUsesPerGame;
+    }
+
+    // ---- Usage limits ----
+
+    public (bool allowed, string? error) TryUse(IGame game, string playerName)
+    {
+        var code = game.Code.ToString();
+        if (!_games.TryGetValue(code, out var state))
+            return (false, "Game state not found.");
+
+        if (!state.Enabled)
+            return (false, "Narrator is disabled for this game by the host.");
+
+        if (!IsMeetingActive(game))
+            return (false, "You can only use this command during a meeting.");
+
+        // Check per-meeting limit
+        var meetingUses = state.CurrentMeetingPlayerUses.GetValueOrDefault(playerName, 0);
+        if (meetingUses >= state.MaxUsesPerMeeting)
+            return (false, $"You've used the narrator {meetingUses} time(s) this meeting (limit: {state.MaxUsesPerMeeting}).");
+
+        // Check per-game limit
+        var gameUses = state.PlayerUseCounts.GetValueOrDefault(playerName, 0);
+        if (gameUses >= state.MaxUsesPerGame)
+            return (false, $"You've used the narrator {gameUses} time(s) this game (limit: {state.MaxUsesPerGame}).");
+
+        // Record usage
+        state.PlayerUseCounts[playerName] = gameUses + 1;
+        state.CurrentMeetingPlayerUses[playerName] = meetingUses + 1;
+
+        return (true, null);
+    }
+
+    // ---- Event recording ----
 
     public void RecordTask(IPlayerCompletedTaskEvent e)
     {
@@ -88,6 +152,11 @@ public sealed class NarratorService
     public void RecordMeetingStart(IMeetingStartedEvent e)
     {
         var gameCode = e.Game.Code.ToString();
+
+        // Reset per-meeting usage counters
+        if (_games.TryGetValue(gameCode, out var state))
+            state.CurrentMeetingPlayerUses.Clear();
+
         var meeting = new MeetingContext
         {
             IsActive = true,
@@ -129,6 +198,8 @@ public sealed class NarratorService
     {
         return _meetings.TryGetValue(game.Code.ToString(), out var meeting) && meeting.IsActive;
     }
+
+    // ---- Context & AI ----
 
     public string BuildContext(IGame game, IInnerPlayerControl player)
     {
@@ -256,8 +327,15 @@ public sealed class NarratorService
         }
     }
 
+    // ---- Private state classes ----
+
     private sealed class GameState
     {
+        public bool Enabled { get; set; } = true;
+        public int MaxUsesPerGame { get; set; } = 3;
+        public int MaxUsesPerMeeting { get; set; } = 1;
+        public Dictionary<string, int> PlayerUseCounts { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, int> CurrentMeetingPlayerUses { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, List<TaskRecord>> PlayerTasks { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> DeadPlayers { get; } = new(StringComparer.OrdinalIgnoreCase);
         public List<MurderRecord> Murders { get; } = new();

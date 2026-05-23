@@ -12,4 +12,10 @@ public sealed class NarratorConfig
 
     [JsonPropertyName("apiEndpoint")]
     public string ApiEndpoint { get; set; } = "https://api.deepseek.com/";
+
+    [JsonPropertyName("maxUsesPerGame")]
+    public int MaxUsesPerGame { get; set; } = 3;
+
+    [JsonPropertyName("maxUsesPerMeeting")]
+    public int MaxUsesPerMeeting { get; set; } = 1;
 }
