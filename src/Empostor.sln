@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Empostor.Plugin.Chat", "Emp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Empostor.Plugin.Code", "Empostor.Plugin.Code\Empostor.Plugin.Code.csproj", "{ADC4F301-51C0-45DB-B97A-BE3844DFD19B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Empostor.Plugin.Narrator", "Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj", "{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +215,18 @@ Global
 		{ADC4F301-51C0-45DB-B97A-BE3844DFD19B}.Release|x64.Build.0 = Release|Any CPU
 		{ADC4F301-51C0-45DB-B97A-BE3844DFD19B}.Release|x86.ActiveCfg = Release|Any CPU
 		{ADC4F301-51C0-45DB-B97A-BE3844DFD19B}.Release|x86.Build.0 = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|x64.Build.0 = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Debug|x86.Build.0 = Debug|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|x64.ActiveCfg = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|x64.Build.0 = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE6D40CC-4BE5-4E38-9DCA-E6832709FE3F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
