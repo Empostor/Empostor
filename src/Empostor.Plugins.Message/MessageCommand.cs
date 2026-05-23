@@ -31,12 +31,7 @@ public sealed class MessageCommand : ICommand
         }
 
         var targetFc = ctx.Args[0].Trim().ToUpperInvariant();
-        var content = ctx.RawArgs!;
-
-        // Remove the friend code prefix from the raw args to get the message content
-        var contentStart = ctx.RawArgs!.IndexOf(targetFc, StringComparison.OrdinalIgnoreCase);
-        if (contentStart >= 0)
-            content = ctx.RawArgs[(contentStart + ctx.Args[0].Length)..].Trim();
+        var content = ctx.RawArgs!.Substring(ctx.Args[0].Length).Trim();
 
         if (string.IsNullOrWhiteSpace(content))
         {

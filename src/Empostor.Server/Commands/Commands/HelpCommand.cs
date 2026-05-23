@@ -34,8 +34,8 @@ public sealed class HelpCommand : ICommand
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine(ctx.GetString("command.help.entry").Format(target.Name, target.Description));
-            sb.AppendLine(ctx.GetString("command.usage").Format(target.Usage));
+            sb.AppendLine(ctx.GetString("command.help.entry").Format(target.Name, GetDesc(ctx, target)));
+            sb.AppendLine(ctx.GetString("command.usage").Format(GetUsage(ctx, target)));
             if (target.Aliases.Length > 0)
                 sb.AppendLine(ctx.GetString("command.help.aliases")
                     .Format(string.Join(", ", target.Aliases.Select(a => "#" + a))));
@@ -47,10 +47,24 @@ public sealed class HelpCommand : ICommand
         var list = new StringBuilder(ctx.GetString("command.help.list").Get() + "\n");
         foreach (var cmd in _service.All.OrderBy(c => c.Name))
         {
-            list.AppendLine(ctx.GetString("command.help.entry").Format(cmd.Name, cmd.Description));
+            list.AppendLine(ctx.GetString("command.help.entry").Format(cmd.Name, GetDesc(ctx, cmd)));
         }
 
         await ctx.PlayerControl.SendChatToPlayerAsync(list.ToString().TrimEnd(), ctx.PlayerControl);
         return true;
+    }
+
+    private static string GetDesc(CommandContext ctx, ICommand cmd)
+    {
+        var key = $"command.{cmd.Name}.description";
+        var result = ctx.Lang.Get(key, ctx.SenderLanguage);
+        return result == key ? cmd.Description : result.Get();
+    }
+
+    private static string GetUsage(CommandContext ctx, ICommand cmd)
+    {
+        var key = $"command.{cmd.Name}.usage";
+        var result = ctx.Lang.Get(key, ctx.SenderLanguage);
+        return result == key ? cmd.Usage : result.Get();
     }
 }

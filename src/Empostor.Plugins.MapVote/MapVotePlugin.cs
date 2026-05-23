@@ -29,6 +29,8 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
         {
             ["en"] = new Dictionary<string, string>
             {
+                ["command.votemap.description"] = "Vote for the next map.",
+                ["command.votemap.usage"] = "votemap <map>",
                 ["mapvote.disabled"] = "Map voting is currently disabled by the host.",
                 ["mapvote.unknown_map"] = "Unknown map: {0}. Available: Skeld, Mira, Polus, Airship, Fungle",
                 ["mapvote.voted"] = "{0} voted for {1}.",
@@ -46,6 +48,8 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_CN"] = new Dictionary<string, string>
             {
+                ["command.votemap.description"] = "投票选择下一张地图。",
+                ["command.votemap.usage"] = "votemap <地图名>",
                 ["mapvote.disabled"] = "投票选图功能已被房主禁用。",
                 ["mapvote.unknown_map"] = "未知地图：{0}。可选：Skeld, Mira, Polus, Airship, Fungle",
                 ["mapvote.voted"] = "{0} 投票选择了 {1}。",
@@ -63,6 +67,8 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_TW"] = new Dictionary<string, string>
             {
+                ["command.votemap.description"] = "投票選擇下一張地圖。",
+                ["command.votemap.usage"] = "votemap <地圖名>",
                 ["mapvote.disabled"] = "投票選圖功能已被房主停用。",
                 ["mapvote.unknown_map"] = "未知地圖：{0}。可選：Skeld, Mira, Polus, Airship, Fungle",
                 ["mapvote.voted"] = "{0} 投票選擇了 {1}。",

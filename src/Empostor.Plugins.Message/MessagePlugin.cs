@@ -29,6 +29,8 @@ public sealed class MessagePlugin : PluginBase, IPluginLanguageProvider
         {
             ["en"] = new Dictionary<string, string>
             {
+                ["command.msg.description"] = "Leave a message for a player by friend code.",
+                ["command.msg.usage"] = "msg <friendcode> <message>",
                 ["message.usage"] = "Usage: #msg <friendcode> <message>\nExample: #msg ABCDEFG Hey, let's play again!",
                 ["message.sent"] = "Message sent to {0}.",
                 ["message.too_long"] = "Message is too long. Max {0} characters.",
@@ -41,6 +43,8 @@ public sealed class MessagePlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_CN"] = new Dictionary<string, string>
             {
+                ["command.msg.description"] = "通过好友代码给玩家留言。",
+                ["command.msg.usage"] = "msg <好友代码> <留言内容>",
                 ["message.usage"] = "用法：#msg <好友代码> <留言内容>\n示例：#msg ABCDEFG 下次一起玩！",
                 ["message.sent"] = "留言已发送给 {0}。",
                 ["message.too_long"] = "留言内容过长，最多 {0} 个字符。",
@@ -53,6 +57,8 @@ public sealed class MessagePlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_TW"] = new Dictionary<string, string>
             {
+                ["command.msg.description"] = "透過好友代碼給玩家留言。",
+                ["command.msg.usage"] = "msg <好友代碼> <留言內容>",
                 ["message.usage"] = "用法：#msg <好友代碼> <留言內容>\n範例：#msg ABCDEFG 下次一起玩！",
                 ["message.sent"] = "留言已發送給 {0}。",
                 ["message.too_long"] = "留言內容過長，最多 {0} 個字元。",

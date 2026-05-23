@@ -189,7 +189,21 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "This command can only be used in the lobby.",
   "command.players.header": "=== Players ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Your ping: {0}ms"
+  "command.ping.result": "Your ping: {0}ms",
+  "command.help.description": "Show available commands.",
+  "command.help.usage": "help [command]",
+  "command.stat.description": "Show your player statistics.",
+  "command.stat.usage": "stat",
+  "command.setcolor.description": "Change your player color.",
+  "command.setcolor.usage": "setcolor <0-17>",
+  "command.players.description": "List players in the current game.",
+  "command.players.usage": "players",
+  "command.ping.description": "Show your network ping.",
+  "command.ping.usage": "ping",
+  "command.note.description": "Set or clear a lobby note (host only).",
+  "command.note.usage": "note <text> | note clear",
+  "command.max.description": "Set max players for the lobby (host only).",
+  "command.max.usage": "max <1-15>"
 }
 """;
 
@@ -228,7 +242,21 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "此指令只能在大厅中使用。",
   "command.players.header": "=== 在线玩家 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "你的延迟：{0}ms"
+  "command.ping.result": "你的延迟：{0}ms",
+  "command.help.description": "显示可用命令。",
+  "command.help.usage": "help [命令]",
+  "command.stat.description": "显示你的游戏统计。",
+  "command.stat.usage": "stat",
+  "command.setcolor.description": "修改你的颜色。",
+  "command.setcolor.usage": "setcolor <0-17>",
+  "command.players.description": "列出当前房间的玩家。",
+  "command.players.usage": "players",
+  "command.ping.description": "显示你的网络延迟。",
+  "command.ping.usage": "ping",
+  "command.note.description": "设置或清除房间备注（仅房主）。",
+  "command.note.usage": "note <文字> | note clear",
+  "command.max.description": "设置房间最大人数（仅房主）。",
+  "command.max.usage": "max <1-15>"
 }
 """;
 
@@ -267,7 +295,21 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "此指令只能在大廳中使用。",
   "command.players.header": "=== 線上玩家 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "你的延遲：{0}ms"
+  "command.ping.result": "你的延遲：{0}ms",
+  "command.help.description": "顯示可用命令。",
+  "command.help.usage": "help [命令]",
+  "command.stat.description": "顯示你的遊戲統計。",
+  "command.stat.usage": "stat",
+  "command.setcolor.description": "修改你的顏色。",
+  "command.setcolor.usage": "setcolor <0-17>",
+  "command.players.description": "列出當前房間的玩家。",
+  "command.players.usage": "players",
+  "command.ping.description": "顯示你的網路延遲。",
+  "command.ping.usage": "ping",
+  "command.note.description": "設置或清除房間備註（僅房主）。",
+  "command.note.usage": "note <文字> | note clear",
+  "command.max.description": "設置房間最大人數（僅房主）。",
+  "command.max.usage": "max <1-15>"
 }
 """;
 

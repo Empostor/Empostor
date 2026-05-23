@@ -29,6 +29,8 @@ public sealed class QqVerifyPlugin : PluginBase, IPluginLanguageProvider
         {
             ["en"] = new Dictionary<string, string>
             {
+                ["command.verify.description"] = "Verify your QQ number for group access.",
+                ["command.verify.usage"] = "verify <QQ number>",
                 ["qqverify.chinese_only"] = "This command is only available for Chinese language players.\n此功能仅支持简体/繁体中文玩家使用。",
                 ["qqverify.no_friendcode"] = "Unable to get your friend code. Please make sure you are logged in.",
                 ["qqverify.usage_message"] = "Usage: #verify <your QQ number>\nExample: #verify 123456789",
@@ -36,6 +38,8 @@ public sealed class QqVerifyPlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_CN"] = new Dictionary<string, string>
             {
+                ["command.verify.description"] = "验证你的QQ号以获取群组访问权限。",
+                ["command.verify.usage"] = "verify <QQ号>",
                 ["qqverify.chinese_only"] = "此功能仅支持简体/繁体中文玩家使用。\nThis command is only available for Chinese language players.",
                 ["qqverify.no_friendcode"] = "无法获取你的好友代码，请确保已登录账号。",
                 ["qqverify.usage_message"] = "用法：#verify <你的QQ号>\n示例：#verify 123456789",
@@ -43,6 +47,8 @@ public sealed class QqVerifyPlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_TW"] = new Dictionary<string, string>
             {
+                ["command.verify.description"] = "驗證你的QQ號以獲取群組存取權限。",
+                ["command.verify.usage"] = "verify <QQ號>",
                 ["qqverify.chinese_only"] = "此功能僅支援簡體/繁體中文玩家使用。\nThis command is only available for Chinese language players.",
                 ["qqverify.no_friendcode"] = "無法獲取你的好友代碼，請確保已登入帳號。",
                 ["qqverify.usage_message"] = "用法：#verify <你的QQ號>\n範例：#verify 123456789",

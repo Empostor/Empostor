@@ -29,6 +29,8 @@ public sealed class NarratorPlugin : PluginBase, IPluginLanguageProvider
         {
             ["en"] = new Dictionary<string, string>
             {
+                ["command.narrator.description"] = "Ask the narrator for AI-powered advice during a meeting.",
+                ["command.narrator.usage"] = "narrator <your question>",
                 ["narrator.meeting_only"] = "You can only use #narrator during a meeting.",
                 ["narrator.disabled"] = "The narrator is currently disabled by the host.",
                 ["narrator.status_enabled"] = "enabled",
@@ -44,6 +46,8 @@ public sealed class NarratorPlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_CN"] = new Dictionary<string, string>
             {
+                ["command.narrator.description"] = "在会议中向旁白寻求AI建议。",
+                ["command.narrator.usage"] = "narrator <你要提的问题>",
                 ["narrator.meeting_only"] = "只能在会议中使用 #narrator。",
                 ["narrator.disabled"] = "房主已禁用旁白功能。",
                 ["narrator.status_enabled"] = "已启用",
@@ -59,6 +63,8 @@ public sealed class NarratorPlugin : PluginBase, IPluginLanguageProvider
             },
             ["zh_TW"] = new Dictionary<string, string>
             {
+                ["command.narrator.description"] = "在會議中向旁白尋求AI建議。",
+                ["command.narrator.usage"] = "narrator <你要提的問題>",
                 ["narrator.meeting_only"] = "只能在會議中使用 #narrator。",
                 ["narrator.disabled"] = "房主已停用旁白功能。",
                 ["narrator.status_enabled"] = "已啟用",

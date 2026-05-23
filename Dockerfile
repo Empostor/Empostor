@@ -30,6 +30,7 @@ COPY src/Empostor.Plugins.QqVerify/Empostor.Plugins.QqVerify.csproj ./Empostor.P
 COPY src/Empostor.Plugins.Titles/Empostor.Plugins.Titles.csproj ./Empostor.Plugins.Titles/
 COPY src/Empostor.Plugins.Welcome/Empostor.Plugins.Welcome.csproj ./Empostor.Plugins.Welcome/
 COPY src/Empostor.Plugins.MapVote/Empostor.Plugins.MapVote.csproj ./Empostor.Plugins.MapVote/
+COPY src/Empostor.Plugins.Message/Empostor.Plugins.Message.csproj ./Empostor.Plugins.Message/
 
 # Restore dependencies
 RUN dotnet restore Empostor.Server/Empostor.Server.csproj -a $TARGETARCH
@@ -64,6 +65,8 @@ RUN dotnet publish Empostor.Plugin.Chat/Empostor.Plugin.Chat.csproj \
     dotnet publish Empostor.Plugins.Welcome/Empostor.Plugins.Welcome.csproj \
     -c Release -a $TARGETARCH --self-contained false -o /publish/plugins --no-restore && \
     dotnet publish Empostor.Plugins.MapVote/Empostor.Plugins.MapVote.csproj \
+    -c Release -a $TARGETARCH --self-contained false -o /publish/plugins --no-restore && \
+    dotnet publish Empostor.Plugins.Message/Empostor.Plugins.Message.csproj \
     -c Release -a $TARGETARCH --self-contained false -o /publish/plugins --no-restore
 
 # ============================================
@@ -91,6 +94,7 @@ COPY --from=build /publish/plugins/Empostor.Plugins.QqVerify.dll ./plugins/
 COPY --from=build /publish/plugins/Empostor.Plugins.Titles.dll ./plugins/
 COPY --from=build /publish/plugins/Empostor.Plugins.Welcome.dll ./plugins/
 COPY --from=build /publish/plugins/Empostor.Plugins.MapVote.dll ./plugins/
+COPY --from=build /publish/plugins/Empostor.Plugins.Message.dll ./plugins/
 
 # Copy marketplace data
 COPY marketplace/ ./marketplace/
