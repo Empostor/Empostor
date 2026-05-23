@@ -104,21 +104,10 @@ Task("Restore")
         DotNetRestore("./src/Empostor.sln");
     });
 
-Task("Replay")
-    .Does(() => {
-        // D:\Projects\GitHub\Empostor\Empostor\src\Empostor.Tools.ServerReplay\sessions
-        DotNetRun(
-            "./src/Empostor.Tools.ServerReplay/Empostor.Tools.ServerReplay.csproj", 
-            "./src/Empostor.Tools.ServerReplay/sessions", new DotNetRunSettings {
-                Configuration = configuration,
-                NoRestore = true,
-            });
-    });
 
 Task("Build")
     .IsDependentOn("Clean")
     .IsDependentOn("Restore")
-    .IsDependentOn("Replay")
     .Does(() => {
         // Tests.
         DotNetBuild("./src/Empostor.Tests/Empostor.Tests.csproj", new DotNetBuildSettings {
