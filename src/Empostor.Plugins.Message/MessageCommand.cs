@@ -30,7 +30,7 @@ public sealed class MessageCommand : ICommand
             return true;
         }
 
-        var targetFc = ctx.Args[0].Trim().ToUpperInvariant();
+        var targetFc = ctx.Args[0].Trim();
         var content = ctx.RawArgs!.Substring(ctx.Args[0].Length).Trim();
 
         if (string.IsNullOrWhiteSpace(content))
