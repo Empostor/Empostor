@@ -2,6 +2,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Empostor.Api.Events;
+using Empostor.Api.Events.Game.Player;
+using Empostor.Api.Events.Player;
 
 namespace Empostor.Plugins.Message;
 
@@ -15,16 +17,13 @@ public sealed class MessageEventListener : IEventListener
     }
 
     [EventListener]
-    public async ValueTask OnPlayerJoined(IGamePlayerJoinedEvent e)
+    public async ValueTask OnPlayerReady(IPlayerReadyEvent e)
     {
-        var fc = e.Player.Client.FriendCode;
+        var fc = e.ClientPlayer.Client.FriendCode;
         if (string.IsNullOrEmpty(fc)) return;
 
         var messages = _store.TakeAll(fc);
         if (messages.Count == 0) return;
-
-        var ctrl = e.Player.Character;
-        if (ctrl == null) return;
 
         var sb = new StringBuilder();
         sb.AppendLine(string.Format("--- You have {0} pending message(s) ---", messages.Count));
@@ -35,6 +34,6 @@ public sealed class MessageEventListener : IEventListener
             sb.AppendLine($"[{time}] <{msg.SenderName}> {msg.Content}");
         }
 
-        await ctrl.SendChatToPlayerAsync(sb.ToString(), ctrl);
+        await e.PlayerControl.SendChatToPlayerAsync(sb.ToString(), e.PlayerControl);
     }
 }
