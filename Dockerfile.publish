@@ -1,16 +1,34 @@
+# ============================================
+# Usage:
+#   1. Publish the server:
+#      dotnet publish src/Empostor.Server -c Release -o publish
+#   2. Build and run:
+#      docker compose -f compose.publish.yml up -d
+# ============================================
 FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 
-# Copy pre-published output from host
+# Copy pre-published server output
 COPY ./publish/ ./
 
-# Create directories for runtime data
-RUN mkdir -p /app/Log /app/plugins /app/libraries
+# Create runtime directories
+RUN mkdir -p /app/plugins /app/libraries /app/Languages /app/Log
 
-ENV ASPNETCORE_URLS=
+# Copy plugins from build output (built separately)
+# Place your plugin DLLs in ./plugins/ before building the image
+COPY ./plugins/ ./plugins/ 2>/dev/null || true
+
+# Copy marketplace data
+COPY ./marketplace/ ./marketplace/ 2>/dev/null || true
+
+ENV ASPNETCORE_URLS=http://0.0.0.0:80
 ENV EMPOSTOR_Server__PublicIp=0.0.0.0
 
-EXPOSE 22023/tcp 22023/udp
+EXPOSE 80/tcp
+EXPOSE 22023/tcp
+EXPOSE 22023/udp
+
+VOLUME ["/app/config", "/app/plugins", "/app/Languages", "/app/Log"]
 
 ENTRYPOINT ["./Empostor.Server"]

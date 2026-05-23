@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.Logging;
@@ -5,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Empostor.Plugins.PlayerChannel;
 
 [EmpostorPlugin("cn.hayashiume.playerchannel", "Player Channel", "HayashiUme", "1.0.0")]
-public sealed class PlayerChannelPlugin : PluginBase
+public sealed class PlayerChannelPlugin : PluginBase, IPluginLanguageProvider
 {
     private readonly ILogger<PlayerChannelPlugin> _logger;
 
@@ -21,4 +22,29 @@ public sealed class PlayerChannelPlugin : PluginBase
     }
 
     public override ValueTask DisableAsync() => default;
+
+    public IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> GetTranslations()
+    {
+        return new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["en"] = new Dictionary<string, string>
+            {
+                ["playerchannel.unknown_friendcode"] = "[Refuse Channel] Unknown Friendcode",
+                ["playerchannel.not_in_channel"] = "[Refuse Channel] Not in any channel",
+                ["playerchannel.message_format"] = "[{0}] {1}",
+            },
+            ["zh_CN"] = new Dictionary<string, string>
+            {
+                ["playerchannel.unknown_friendcode"] = "[Refuse Channel] 未知的好友代码",
+                ["playerchannel.not_in_channel"] = "[Refuse Channel] 不在任何频道中",
+                ["playerchannel.message_format"] = "[{0}] {1}",
+            },
+            ["zh_TW"] = new Dictionary<string, string>
+            {
+                ["playerchannel.unknown_friendcode"] = "[Refuse Channel] 未知的好友代碼",
+                ["playerchannel.not_in_channel"] = "[Refuse Channel] 不在任何頻道中",
+                ["playerchannel.message_format"] = "[{0}] {1}",
+            },
+        };
+    }
 }

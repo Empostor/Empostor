@@ -38,18 +38,22 @@ public sealed class PlayerChannelCommand : ICommand
         if (string.IsNullOrEmpty(senderFc))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                "[Refuse Channel] Unnkown Friendcode", ctx.PlayerControl);
+                T(ctx, "playerchannel.unknown_friendcode", "[Refuse Channel] Unknown Friendcode"),
+                ctx.PlayerControl);
             return true;
         }
 
         if (!_fcToChannel.TryGetValue(senderFc, out var channel))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                "[Refuse Channel] No exsit in any Channnel", ctx.PlayerControl);
+                T(ctx, "playerchannel.not_in_channel", "[Refuse Channel] Not in any channel"),
+                ctx.PlayerControl);
             return true;
         }
 
-        var prefixed = $"[{channel.Name}] {text}";
+        var prefixed = T(ctx, "playerchannel.message_format", "[{0}] {1}")
+            .Replace("{0}", channel.Name)
+            .Replace("{1}", text);
 
         foreach (var player in ctx.Game.Players)
         {
@@ -64,5 +68,11 @@ public sealed class PlayerChannelCommand : ICommand
         }
 
         return true;
+    }
+
+    private static string T(CommandContext ctx, string key, string defaultText)
+    {
+        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
+        return result == key ? defaultText : result;
     }
 }

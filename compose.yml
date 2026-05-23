@@ -2,7 +2,7 @@ services:
   empostor:
     build:
       context: .
-      dockerfile: Dockerfile.publish
+      dockerfile: Dockerfile
     container_name: empostor-server
     restart: unless-stopped
     ports:
@@ -12,5 +12,14 @@ services:
       - ./config.json:/app/config.json:ro
       - ./Log:/app/Log
       - ./plugins:/app/plugins
-      - ./libraries:/app/libraries
       - ./Languages:/app/Languages
+      - ./marketplace:/app/marketplace
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - EMPOSTOR_Server__PublicIp=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/admin/update/check"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

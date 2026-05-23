@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Empostor.Api.Languages;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +43,17 @@ namespace Empostor.Server.Plugins
 
                 plugin.Instance = instance;
                 await plugin.Instance.EnableAsync();
+
+                // Register plugin-provided translations.
+                if (instance is IPluginLanguageProvider langProvider)
+                {
+                    var translations = langProvider.GetTranslations();
+                    if (translations.Count > 0)
+                    {
+                        _serviceProvider.GetRequiredService<LanguageService>()
+                            .AddPluginTranslations(translations);
+                    }
+                }
             }
 
             _logger.LogInformation(

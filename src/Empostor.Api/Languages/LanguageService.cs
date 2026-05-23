@@ -62,6 +62,32 @@ public sealed class LanguageService
         _logger.LogInformation("[Language] Reloaded all language files.");
     }
 
+    /// <summary>
+    ///     Register translations provided by a plugin.
+    ///     Merges into existing language tables without overwriting existing keys.
+    /// </summary>
+    public void AddPluginTranslations(IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> translations)
+    {
+        foreach (var (langCode, table) in translations)
+        {
+            if (!_tables.TryGetValue(langCode, out var existing))
+            {
+                existing = new Dictionary<string, string>();
+                _tables[langCode] = existing;
+            }
+
+            foreach (var (key, value) in table)
+            {
+                if (!existing.ContainsKey(key))
+                {
+                    existing[key] = value;
+                }
+            }
+
+            _logger.LogDebug("[Language] Plugin added {Count} keys for {Lang}", table.Count, langCode);
+        }
+    }
+
     private string? Lookup(string key, string langCode)
     {
         return _tables.TryGetValue(langCode, out var table) && table.TryGetValue(key, out var val)
@@ -163,19 +189,7 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "This command can only be used in the lobby.",
   "command.players.header": "=== Players ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Your ping: {0}ms",
-  "narrator.meeting_only": "You can only use #narrator during a meeting.",
-  "narrator.disabled": "The narrator is currently disabled by the host.",
-  "narrator.status_enabled": "enabled",
-  "narrator.status_disabled": "disabled",
-  "narrator.host_status": "Status: {0} | Max uses per player per game: {1}",
-  "narrator.host_commands": "Host commands: #narrator enable | disable | limit <number>",
-  "narrator.host_enabled": "Narrator enabled for this game.",
-  "narrator.host_disabled": "Narrator disabled for this game.",
-  "narrator.host_limit_set": "Narrator usage limit set to {0} per player per game.",
-  "narrator.host_limit_zero": "Narrator usage limit set to 0 (effectively disabled).",
-  "narrator.host_limit_usage": "Usage: #narrator limit <number>\nExample: #narrator limit 3",
-  "narrator.usage": "Usage: #narrator <your question or statement>\nExample: #narrator I'm being accused but I have a visual task, how do I prove myself?"
+  "command.ping.result": "Your ping: {0}ms"
 }
 """;
 
@@ -214,19 +228,7 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "此指令只能在大厅中使用。",
   "command.players.header": "=== 在线玩家 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "你的延迟：{0}ms",
-  "narrator.meeting_only": "只能在会议中使用 #narrator。",
-  "narrator.disabled": "房主已禁用旁白功能。",
-  "narrator.status_enabled": "已启用",
-  "narrator.status_disabled": "已禁用",
-  "narrator.host_status": "状态：{0} | 每局每人最大次数：{1}",
-  "narrator.host_commands": "房主指令：#narrator enable | disable | limit <次数>",
-  "narrator.host_enabled": "旁白已在此局中启用。",
-  "narrator.host_disabled": "旁白已在此局中禁用。",
-  "narrator.host_limit_set": "旁白使用次数限制已设为每人每局 {0} 次。",
-  "narrator.host_limit_zero": "旁白使用次数限制已设为 0（等效禁用）。",
-  "narrator.host_limit_usage": "用法：#narrator limit <次数>\n示例：#narrator limit 3",
-  "narrator.usage": "用法：#narrator <你要说的话>\n示例：#narrator 我被指控了但我有可视任务，怎么证明自己？"
+  "command.ping.result": "你的延迟：{0}ms"
 }
 """;
 
@@ -265,19 +267,7 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "此指令只能在大廳中使用。",
   "command.players.header": "=== 線上玩家 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "你的延遲：{0}ms",
-  "narrator.meeting_only": "只能在會議中使用 #narrator。",
-  "narrator.disabled": "房主已停用旁白功能。",
-  "narrator.status_enabled": "已啟用",
-  "narrator.status_disabled": "已停用",
-  "narrator.host_status": "狀態：{0} | 每局每人最大次數：{1}",
-  "narrator.host_commands": "房主指令：#narrator enable | disable | limit <次數>",
-  "narrator.host_enabled": "旁白已在此局中啟用。",
-  "narrator.host_disabled": "旁白已在此局中停用。",
-  "narrator.host_limit_set": "旁白使用次數限制已設為每人每局 {0} 次。",
-  "narrator.host_limit_zero": "旁白使用次數限制已設為 0（等效停用）。",
-  "narrator.host_limit_usage": "用法：#narrator limit <次數>\n範例：#narrator limit 3",
-  "narrator.usage": "用法：#narrator <你要說的話>\n範例：#narrator 我被指控了但我有可視任務，怎麼證明自己？"
+  "command.ping.result": "你的延遲：{0}ms"
 }
 """;
 

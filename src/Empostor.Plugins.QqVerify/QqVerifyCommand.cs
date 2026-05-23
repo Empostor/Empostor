@@ -26,7 +26,9 @@ public sealed class QqVerifyCommand : ICommand
         if (!ctx.IsSenderChinese())
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                "此功能仅支持简体/繁体中文玩家使用。\nThis command is only available for Chinese language players.", ctx.PlayerControl);
+                T(ctx, "qqverify.chinese_only",
+                    "This command is only available for Chinese language players.\n此功能仅支持简体/繁体中文玩家使用。"),
+                ctx.PlayerControl);
             return true;
         }
 
@@ -34,7 +36,9 @@ public sealed class QqVerifyCommand : ICommand
         if (string.IsNullOrEmpty(fc))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                "无法获取你的好友代码，请确保已登录账号。", ctx.PlayerControl);
+                T(ctx, "qqverify.no_friendcode",
+                    "Unable to get your friend code. Please make sure you are logged in."),
+                ctx.PlayerControl);
             return true;
         }
 
@@ -42,15 +46,26 @@ public sealed class QqVerifyCommand : ICommand
         if (string.IsNullOrEmpty(qqNumber) || !long.TryParse(qqNumber, out _))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                "用法：/verify <你的QQ号>\n示例：/verify 123456789", ctx.PlayerControl);
+                T(ctx, "qqverify.usage_message",
+                    "Usage: #verify <your QQ number>\nExample: #verify 123456789"),
+                ctx.PlayerControl);
             return true;
         }
 
         _store.AddPending(fc, qqNumber);
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            $"已记录验证请求！请私聊QQ机器人发送：/验证 {fc}\n注意：验证码10分钟内有效。", ctx.PlayerControl);
+            T(ctx, "qqverify.recorded",
+                    "Verification request recorded! Send /验证 {0} to the QQ bot.\nNote: The code is valid for 10 minutes.")
+                .Replace("{0}", fc),
+            ctx.PlayerControl);
 
         return true;
+    }
+
+    private static string T(CommandContext ctx, string key, string defaultText)
+    {
+        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
+        return result == key ? defaultText : result;
     }
 }

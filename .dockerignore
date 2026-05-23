@@ -1,9 +1,39 @@
-.dockerignore
-.env
+# Build output
+**/bin/
+**/obj/
+**/publish/
+
+# IDE
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
 .gitignore
-.vs
-.vscode
-**/.git
-**/.idea
-**/bin
-**/obj
+.gitattributes
+
+# Docs
+docs/
+*.md
+
+# Docker
+Dockerfile*
+.dockerignore
+compose.yml
+docker-compose*.yml
+
+# Logs
+Log/
+*.log
+
+# Temp
+tmp/
+temp/
+*.tmp
