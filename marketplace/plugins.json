@@ -112,7 +112,7 @@
       {
         "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Narrator.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Narrator.dll"
       }
     ]
   },
@@ -125,7 +125,7 @@
       {
         "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.MapVote.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.MapVote.dll"
       }
     ]
   },
@@ -138,7 +138,7 @@
       {
         "version": "1.0.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Message.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Message.dll"
       }
     ]
   }
