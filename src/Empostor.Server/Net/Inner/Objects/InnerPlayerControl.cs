@@ -1146,7 +1146,7 @@ namespace Empostor.Server.Net.Inner.Objects
 
         private async ValueTask<bool> HandleSendChat(ClientPlayer sender, string message)
         {
-            if (message.StartsWith("/"))
+            if (message.StartsWith("#"))
             {
                 var ctx = new CommandContext
                 {

@@ -130,12 +130,12 @@ public sealed class LanguageService
     private const string DefaultEn = """
 {
   "command.error": "An error occurred while executing /{0}.",
-  "command.usage": "Usage: /{0}",
+  "command.usage": "Usage: #{0}",
   "command.help.list": "=== Commands ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Unknown command: /{0}",
+  "command.help.unknown": "Unknown command: #{0}",
   "command.help.aliases": "Aliases: {0}",
-  "command.note.host_only": "Only the host can use /note.",
+  "command.note.host_only": "Only the host can use #note.",
   "command.note.cleared": "Note cleared.",
   "command.note.set": "Note set: {0}",
   "command.color.invalid": "Invalid color ID. Valid range: 0–17.",
@@ -155,19 +155,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Deaths: {0}",
   "command.stat.tasks": "Tasks Completed: {0}",
   "command.stat.exiled": "Times Exiled: {0}",
-  "welcome.join": "Welcome, {0}! Friend code: {1} | Room: {2}"
+  "welcome.join": "Welcome, {0}! Friend code: {1} | Room: {2}",
+  "command.max.host_only": "Only the host can change the max players.",
+  "command.max.invalid": "Invalid number. Valid range: 1-127.",
+  "command.max.set": "Max players set to {0}.",
+  "command.max.warning": "If you do not have CrowdedMod or another mod that supports 15+ players, please set it back to 15 before creating your next room.",
+  "command.players.not_in_lobby": "This command can only be used in the lobby.",
+  "command.players.header": "=== Players ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Your ping: {0}ms"
 }
 """;
 
     private const string DefaultZhCn = """
 {
   "command.error": "执行 /{0} 时发生错误。",
-  "command.usage": "用法：/{0}",
+  "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "未知指令：/{0}",
+  "command.help.unknown": "未知指令：#{0}",
   "command.help.aliases": "别名：{0}",
-  "command.note.host_only": "只有房主可以使用 /note。",
+  "command.note.host_only": "只有房主可以使用 #note。",
   "command.note.cleared": "备注已清除。",
   "command.note.set": "备注已设置：{0}",
   "command.color.invalid": "无效颜色 ID，范围：0–17。",
@@ -186,19 +194,27 @@ public sealed class LanguageService
   "command.stat.deaths": "死亡：{0}",
   "command.stat.tasks": "完成任务：{0}",
   "command.stat.exiled": "被票出：{0}",
-  "welcome.join": "欢迎，{0}！好友代码：{1} | 房间：{2}"
+  "welcome.join": "欢迎，{0}！好友代码：{1} | 房间：{2}",
+  "command.max.host_only": "只有房主可以修改最高人数。",
+  "command.max.invalid": "无效数字。有效范围：1–127。",
+  "command.max.set": "最高人数已设置为 {0}。",
+  "command.max.warning": "如果您未安装CrowdedMod或其他支持15人以上的Mod，请在下次创建房间前调回15人。",
+  "command.players.not_in_lobby": "此指令只能在大厅中使用。",
+  "command.players.header": "=== 在线玩家 ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "你的延迟：{0}ms"
 }
 """;
 
     private const string DefaultZhTw = """
 {
   "command.error": "執行 /{0} 時發生錯誤。",
-  "command.usage": "用法：/{0}",
+  "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "未知指令：/{0}",
+  "command.help.unknown": "未知指令：#{0}",
   "command.help.aliases": "別名：{0}",
-  "command.note.host_only": "只有房主可以使用 /note。",
+  "command.note.host_only": "只有房主可以使用 #note。",
   "command.note.cleared": "備註已清除。",
   "command.note.set": "備註已設置：{0}",
   "command.color.invalid": "無效顏色 ID，範圍：0–17。",
@@ -217,19 +233,27 @@ public sealed class LanguageService
   "command.stat.deaths": "死亡：{0}",
   "command.stat.tasks": "完成任務：{0}",
   "command.stat.exiled": "被票出：{0}",
-  "welcome.join": "歡迎，{0}！好代碼：{1} | 房間：{2}"
+  "welcome.join": "歡迎，{0}！好代碼：{1} | 房間：{2}",
+  "command.max.host_only": "只有房主可以修改最高人數。",
+  "command.max.invalid": "無效數字。有效範圍：1–127。",
+  "command.max.set": "最高人數已設置為 {0}。",
+  "command.max.warning": "如果您未安裝CrowdedMod或其他支援15人以上的Mod，請在下次創建房間前調回15人。",
+  "command.players.not_in_lobby": "此指令只能在大廳中使用。",
+  "command.players.header": "=== 線上玩家 ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "你的延遲：{0}ms"
 }
 """;
 
     private const string DefaultKo = """
 {
   "command.error": "/{0} 실행 중 오류가 발생했습니다.",
-  "command.usage": "사용법: /{0}",
+  "command.usage": "사용법: #{0}",
   "command.help.list": "=== 명령어 목록 ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "알 수 없는 명령어: /{0}",
+  "command.help.unknown": "알 수 없는 명령어: #{0}",
   "command.help.aliases": "별칭: {0}",
-  "command.note.host_only": "/note는 방장만 사용할 수 있습니다.",
+  "command.note.host_only": "#note는 방장만 사용할 수 있습니다.",
   "command.note.cleared": "메모가 삭제되었습니다.",
   "command.note.set": "메모 설정됨: {0}",
   "command.color.invalid": "잘못된 색상 ID. 유효 범위: 0–17.",
@@ -248,19 +272,27 @@ public sealed class LanguageService
   "command.stat.deaths": "사망: {0}",
   "command.stat.tasks": "완료한 작업: {0}",
   "command.stat.exiled": "추방됨: {0}",
-  "welcome.join": "환영합니다, {0}! 친구 코드: {1} | 방: {2}"
+  "welcome.join": "환영합니다, {0}! 친구 코드: {1} | 방: {2}",
+  "command.max.host_only": "방장만 최대 인원을 변경할 수 있습니다.",
+  "command.max.invalid": "잘못된 숫자입니다. 유효 범위: 1–127.",
+  "command.max.set": "최대 인원이 {0}명으로 설정되었습니다.",
+  "command.max.warning": "CrowdedMod 또는 15명 이상을 지원하는 모드가 설치되어 있지 않다면, 다음 방을 만들기 전에 15명으로 되돌리십시오.",
+  "command.players.not_in_lobby": "이 명령어는 로비에서만 사용할 수 있습니다.",
+  "command.players.header": "=== 플레이어 ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "내 핑: {0}ms"
 }
 """;
 
     private const string DefaultRu = """
 {
   "command.error": "Ошибка при выполнении /{0}.",
-  "command.usage": "Использование: /{0}",
+  "command.usage": "Использование: #{0}",
   "command.help.list": "=== Команды ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Неизвестная команда: /{0}",
+  "command.help.unknown": "Неизвестная команда: #{0}",
   "command.help.aliases": "Псевдонимы: {0}",
-  "command.note.host_only": "Только хост может использовать /note.",
+  "command.note.host_only": "Только хост может использовать #note.",
   "command.note.cleared": "Заметка удалена.",
   "command.note.set": "Заметка установлена: {0}",
   "command.color.invalid": "Неверный ID цвета. Допустимый диапазон: 0–17.",
@@ -279,19 +311,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Смертей: {0}",
   "command.stat.tasks": "Заданий выполнено: {0}",
   "command.stat.exiled": "Изгнаний: {0}",
-  "welcome.join": "Добро пожаловать, {0}! Код друга: {1} | Комната: {2}"
+  "welcome.join": "Добро пожаловать, {0}! Код друга: {1} | Комната: {2}",
+  "command.max.host_only": "Только хост может изменить максимальное количество игроков.",
+  "command.max.invalid": "Неверное число. Допустимый диапазон: 1–127.",
+  "command.max.set": "Максимальное количество игроков установлено на {0}.",
+  "command.max.warning": "Если у вас не установлен CrowdedMod или другой мод, поддерживающий 15+ игроков, верните значение на 15 перед созданием следующей комнаты.",
+  "command.players.not_in_lobby": "Эта команда может использоваться только в лобби.",
+  "command.players.header": "=== Игроки ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}мс",
+  "command.ping.result": "Ваш пинг: {0}мс"
 }
 """;
 
     private const string DefaultDe = """
 {
   "command.error": "Fehler beim Ausführen von /{0}.",
-  "command.usage": "Verwendung: /{0}",
+  "command.usage": "Verwendung: #{0}",
   "command.help.list": "=== Befehle ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Unbekannter Befehl: /{0}",
+  "command.help.unknown": "Unbekannter Befehl: #{0}",
   "command.help.aliases": "Aliase: {0}",
-  "command.note.host_only": "Nur der Host kann /note verwenden.",
+  "command.note.host_only": "Nur der Host kann #note verwenden.",
   "command.note.cleared": "Notiz gelöscht.",
   "command.note.set": "Notiz gesetzt: {0}",
   "command.color.invalid": "Ungültige Farb-ID. Gültiger Bereich: 0–17.",
@@ -310,19 +350,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Tode: {0}",
   "command.stat.tasks": "Aufgaben erledigt: {0}",
   "command.stat.exiled": "Verbannt: {0}",
-  "welcome.join": "Willkommen, {0}! Freundescode: {1} | Raum: {2}"
+  "welcome.join": "Willkommen, {0}! Freundescode: {1} | Raum: {2}",
+  "command.max.host_only": "Nur der Host kann die maximale Spieleranzahl ändern.",
+  "command.max.invalid": "Ungültige Zahl. Gültiger Bereich: 1–127.",
+  "command.max.set": "Maximale Spieleranzahl auf {0} gesetzt.",
+  "command.max.warning": "Falls du CrowdedMod oder eine andere Mod für 15+ Spieler nicht installiert hast, stelle den Wert vor dem nächsten Raum wieder auf 15.",
+  "command.players.not_in_lobby": "Dieser Befehl kann nur in der Lobby verwendet werden.",
+  "command.players.header": "=== Spieler ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Dein Ping: {0}ms"
 }
 """;
 
     private const string DefaultFr = """
 {
   "command.error": "Erreur lors de l'exécution de /{0}.",
-  "command.usage": "Utilisation : /{0}",
+  "command.usage": "Utilisation : #{0}",
   "command.help.list": "=== Commandes ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Commande inconnue : /{0}",
+  "command.help.unknown": "Commande inconnue : #{0}",
   "command.help.aliases": "Alias : {0}",
-  "command.note.host_only": "Seul l'hôte peut utiliser /note.",
+  "command.note.host_only": "Seul l'hôte peut utiliser #note.",
   "command.note.cleared": "Note effacée.",
   "command.note.set": "Note définie : {0}",
   "command.color.invalid": "ID de couleur invalide. Plage valide : 0–17.",
@@ -341,19 +389,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Morts : {0}",
   "command.stat.tasks": "Tâches accomplies : {0}",
   "command.stat.exiled": "Exilés : {0}",
-  "welcome.join": "Bienvenue, {0} ! Code ami : {1} | Salle : {2}"
+  "welcome.join": "Bienvenue, {0} ! Code ami : {1} | Salle : {2}",
+  "command.max.host_only": "Seul l'hôte peut modifier le nombre maximum de joueurs.",
+  "command.max.invalid": "Nombre invalide. Plage valide : 1–127.",
+  "command.max.set": "Nombre maximum de joueurs défini à {0}.",
+  "command.max.warning": "Si vous n'avez pas installé CrowdedMod ou un autre mod supportant 15+ joueurs, veuillez remettre à 15 avant de créer votre prochaine salle.",
+  "command.players.not_in_lobby": "Cette commande ne peut être utilisée que dans le lobby.",
+  "command.players.header": "=== Joueurs ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Votre ping : {0}ms"
 }
 """;
 
     private const string DefaultJa = """
 {
   "command.error": "/{0} の実行中にエラーが発生しました。",
-  "command.usage": "使い方：/{0}",
+  "command.usage": "使い方：#{0}",
   "command.help.list": "=== コマンド一覧 ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "不明なコマンド：/{0}",
+  "command.help.unknown": "不明なコマンド：#{0}",
   "command.help.aliases": "エイリアス：{0}",
-  "command.note.host_only": "/note はホストのみ使用できます。",
+  "command.note.host_only": "#note はホストのみ使用できます。",
   "command.note.cleared": "ノートを削除しました。",
   "command.note.set": "ノートを設定しました：{0}",
   "command.color.invalid": "無効なカラーID。有効範囲：0–17。",
@@ -372,19 +428,27 @@ public sealed class LanguageService
   "command.stat.deaths": "デス：{0}",
   "command.stat.tasks": "タスク完了：{0}",
   "command.stat.exiled": "追放された回数：{0}",
-  "welcome.join": "ようこそ、{0}！フレンドコード：{1} | ルーム：{2}"
+  "welcome.join": "ようこそ、{0}！フレンドコード：{1} | ルーム：{2}",
+  "command.max.host_only": "ホストのみが最大プレイヤー数を変更できます。",
+  "command.max.invalid": "無効な数字です。有効範囲: 1–127。",
+  "command.max.set": "最大プレイヤー数を {0} に設定しました。",
+  "command.max.warning": "CrowdedModまたは15人以上をサポートするModがインストールされていない場合は、次のルームを作成する前に15に戻してください。",
+  "command.players.not_in_lobby": "このコマンドはロビーでのみ使用できます。",
+  "command.players.header": "=== プレイヤー ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "あなたのPing: {0}ms"
 }
 """;
 
     private const string DefaultPt = """
 {
   "command.error": "Ocorreu um erro ao executar /{0}.",
-  "command.usage": "Uso: /{0}",
+  "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Comando desconhecido: /{0}",
+  "command.help.unknown": "Comando desconhecido: #{0}",
   "command.help.aliases": "Aliases: {0}",
-  "command.note.host_only": "Apenas o anfitrião pode usar /note.",
+  "command.note.host_only": "Apenas o anfitrião pode usar #note.",
   "command.note.cleared": "Nota removida.",
   "command.note.set": "Nota definida: {0}",
   "command.color.invalid": "ID de cor inválido. Intervalo válido: 0–17.",
@@ -403,19 +467,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Mortes: {0}",
   "command.stat.tasks": "Tarefas: {0}",
   "command.stat.exiled": "Exilado: {0}",
-  "welcome.join": "Bem-vindo, {0}! Código de amigo: {1} | Sala: {2}"
+  "welcome.join": "Bem-vindo, {0}! Código de amigo: {1} | Sala: {2}",
+  "command.max.host_only": "Apenas o anfitrião pode alterar o máximo de jogadores.",
+  "command.max.invalid": "Número inválido. Intervalo válido: 1–127.",
+  "command.max.set": "Máximo de jogadores definido para {0}.",
+  "command.max.warning": "Se não tiver o CrowdedMod ou outro mod que suporte 15+ jogadores, volte a definir para 15 antes de criar a próxima sala.",
+  "command.players.not_in_lobby": "Este comando só pode ser usado no lobby.",
+  "command.players.header": "=== Jogadores ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Seu ping: {0}ms"
 }
 """;
 
     private const string DefaultPtBr = """
 {
   "command.error": "Ocorreu um erro ao executar /{0}.",
-  "command.usage": "Uso: /{0}",
+  "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Comando desconhecido: /{0}",
+  "command.help.unknown": "Comando desconhecido: #{0}",
   "command.help.aliases": "Apelidos: {0}",
-  "command.note.host_only": "Somente o anfitrião pode usar /note.",
+  "command.note.host_only": "Somente o anfitrião pode usar #note.",
   "command.note.cleared": "Nota removida.",
   "command.note.set": "Nota definida: {0}",
   "command.color.invalid": "ID de cor inválido. Intervalo válido: 0–17.",
@@ -434,19 +506,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Mortes: {0}",
   "command.stat.tasks": "Tarefas: {0}",
   "command.stat.exiled": "Exilado: {0}",
-  "welcome.join": "Bem-vindo, {0}! Código de amigo: {1} | Sala: {2}"
+  "welcome.join": "Bem-vindo, {0}! Código de amigo: {1} | Sala: {2}",
+  "command.max.host_only": "Somente o anfitrião pode alterar o máximo de jogadores.",
+  "command.max.invalid": "Número inválido. Intervalo válido: 1–127.",
+  "command.max.set": "Máximo de jogadores definido para {0}.",
+  "command.max.warning": "Se você não tiver o CrowdedMod ou outro mod que suporte 15+ jogadores, volte a definir para 15 antes de criar a próxima sala.",
+  "command.players.not_in_lobby": "Este comando só pode ser usado no lobby.",
+  "command.players.header": "=== Jogadores ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Seu ping: {0}ms"
 }
 """;
 
     private const string DefaultEs = """
 {
   "command.error": "Error al ejecutar /{0}.",
-  "command.usage": "Uso: /{0}",
+  "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Comando desconocido: /{0}",
+  "command.help.unknown": "Comando desconocido: #{0}",
   "command.help.aliases": "Alias: {0}",
-  "command.note.host_only": "Solo el anfitrión puede usar /note.",
+  "command.note.host_only": "Solo el anfitrión puede usar #note.",
   "command.note.cleared": "Nota eliminada.",
   "command.note.set": "Nota establecida: {0}",
   "command.color.invalid": "ID de color inválido. Rango válido: 0–17.",
@@ -465,19 +545,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Muertes: {0}",
   "command.stat.tasks": "Tareas completadas: {0}",
   "command.stat.exiled": "Exiliado: {0}",
-  "welcome.join": "Bienvenido, {0}! Código de amigo: {1} | Sala: {2}"
+  "welcome.join": "Bienvenido, {0}! Código de amigo: {1} | Sala: {2}",
+  "command.max.host_only": "Solo el anfitrión puede cambiar el máximo de jugadores.",
+  "command.max.invalid": "Número inválido. Rango válido: 1–127.",
+  "command.max.set": "Máximo de jugadores establecido en {0}.",
+  "command.max.warning": "Si no tienes CrowdedMod u otro mod que soporte 15+ jugadores, vuelve a ponerlo en 15 antes de crear tu próxima sala.",
+  "command.players.not_in_lobby": "Este comando solo puede usarse en el lobby.",
+  "command.players.header": "=== Jugadores ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Tu ping: {0}ms"
 }
 """;
 
     private const string DefaultIt = """
 {
   "command.error": "Errore durante l'esecuzione di /{0}.",
-  "command.usage": "Utilizzo: /{0}",
+  "command.usage": "Utilizzo: #{0}",
   "command.help.list": "=== Comandi ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Comando sconosciuto: /{0}",
+  "command.help.unknown": "Comando sconosciuto: #{0}",
   "command.help.aliases": "Alias: {0}",
-  "command.note.host_only": "Solo l'host può usare /note.",
+  "command.note.host_only": "Solo l'host può usare #note.",
   "command.note.cleared": "Nota rimossa.",
   "command.note.set": "Nota impostata: {0}",
   "command.color.invalid": "ID colore non valido. Intervallo: 0–17.",
@@ -496,19 +584,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Morti: {0}",
   "command.stat.tasks": "Compiti completati: {0}",
   "command.stat.exiled": "Esiliato: {0}",
-  "welcome.join": "Benvenuto, {0}! Codice amico: {1} | Stanza: {2}"
+  "welcome.join": "Benvenuto, {0}! Codice amico: {1} | Stanza: {2}",
+  "command.max.host_only": "Solo l'host può cambiare il numero massimo di giocatori.",
+  "command.max.invalid": "Numero non valido. Intervallo valido: 1–127.",
+  "command.max.set": "Numero massimo di giocatori impostato a {0}.",
+  "command.max.warning": "Se non hai installato CrowdedMod o un'altra mod che supporta 15+ giocatori, riportalo a 15 prima di creare la prossima stanza.",
+  "command.players.not_in_lobby": "Questo comando può essere usato solo nella lobby.",
+  "command.players.header": "=== Giocatori ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Il tuo ping: {0}ms"
 }
 """;
 
     private const string DefaultNl = """
 {
   "command.error": "Fout bij uitvoeren van /{0}.",
-  "command.usage": "Gebruik: /{0}",
+  "command.usage": "Gebruik: #{0}",
   "command.help.list": "=== Commando's ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Onbekend commando: /{0}",
+  "command.help.unknown": "Onbekend commando: #{0}",
   "command.help.aliases": "Aliassen: {0}",
-  "command.note.host_only": "Alleen de host kan /note gebruiken.",
+  "command.note.host_only": "Alleen de host kan #note gebruiken.",
   "command.note.cleared": "Notitie verwijderd.",
   "command.note.set": "Notitie ingesteld: {0}",
   "command.color.invalid": "Ongeldig kleur-ID. Geldig bereik: 0–17.",
@@ -527,19 +623,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Sterfgevallen: {0}",
   "command.stat.tasks": "Taken voltooid: {0}",
   "command.stat.exiled": "Verbannen: {0}",
-  "welcome.join": "Welkom, {0}! Vriendcode: {1} | Kamer: {2}"
+  "welcome.join": "Welkom, {0}! Vriendcode: {1} | Kamer: {2}",
+  "command.max.host_only": "Alleen de host kan het maximale aantal spelers wijzigen.",
+  "command.max.invalid": "Ongeldig getal. Geldig bereik: 1–127.",
+  "command.max.set": "Maximaal aantal spelers ingesteld op {0}.",
+  "command.max.warning": "Als je CrowdedMod of een andere mod voor 15+ spelers niet hebt geïnstalleerd, zet het dan terug naar 15 voordat je een nieuwe kamer maakt.",
+  "command.players.not_in_lobby": "Dit commando kan alleen in de lobby worden gebruikt.",
+  "command.players.header": "=== Spelers ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Jouw ping: {0}ms"
 }
 """;
 
     private const string DefaultFil = """
 {
   "command.error": "May error sa pagpapatakbo ng /{0}.",
-  "command.usage": "Paggamit: /{0}",
+  "command.usage": "Paggamit: #{0}",
   "command.help.list": "=== Mga Command ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Hindi kilalang command: /{0}",
+  "command.help.unknown": "Hindi kilalang command: #{0}",
   "command.help.aliases": "Mga Alias: {0}",
-  "command.note.host_only": "Ang host lang ang maaaring gumamit ng /note.",
+  "command.note.host_only": "Ang host lang ang maaaring gumamit ng #note.",
   "command.note.cleared": "Natanggal ang tala.",
   "command.note.set": "Naitakda ang tala: {0}",
   "command.color.invalid": "Di-wastong color ID. Valid na hanay: 0–17.",
@@ -558,19 +662,27 @@ public sealed class LanguageService
   "command.stat.deaths": "Mga Kamatayan: {0}",
   "command.stat.tasks": "Mga Natapos na Gawain: {0}",
   "command.stat.exiled": "Itinapon: {0}",
-  "welcome.join": "Maligayang pagdating, {0}! Friend code: {1} | Silid: {2}"
+  "welcome.join": "Maligayang pagdating, {0}! Friend code: {1} | Silid: {2}",
+  "command.max.host_only": "Ang host lang ang maaaring magbago ng maximum na bilang ng manlalaro.",
+  "command.max.invalid": "Di-wastong numero. Valid na saklaw: 1–127.",
+  "command.max.set": "Itinakda ang maximum na manlalaro sa {0}.",
+  "command.max.warning": "Kung wala kang CrowdedMod o ibang mod na sumusuporta sa 15+ manlalaro, ibalik ito sa 15 bago gumawa ng susunod na silid.",
+  "command.players.not_in_lobby": "Ang command na ito ay maaari lamang gamitin sa lobby.",
+  "command.players.header": "=== Mga Manlalaro ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Ang iyong ping: {0}ms"
 }
 """;
 
     private const string DefaultGa = """
 {
   "command.error": "Earráid agus /{0} á rith.",
-  "command.usage": "Úsáid: /{0}",
+  "command.usage": "Úsáid: #{0}",
   "command.help.list": "=== Orduithe ===",
   "command.help.entry": "/{0} — {1}",
-  "command.help.unknown": "Ordú anaithnid: /{0}",
+  "command.help.unknown": "Ordú anaithnid: #{0}",
   "command.help.aliases": "Ailíasanna: {0}",
-  "command.note.host_only": "Ní féidir ach leis an óstach /note a úsáid.",
+  "command.note.host_only": "Ní féidir ach leis an óstach #note a úsáid.",
   "command.note.cleared": "Nóta glanadh.",
   "command.note.set": "Nóta socraithe: {0}",
   "command.color.invalid": "ID datha neamhbhailí. Raon bailí: 0–17.",
@@ -589,7 +701,15 @@ public sealed class LanguageService
   "command.stat.deaths": "Básanna: {0}",
   "command.stat.tasks": "Tascanna Críochnaithe: {0}",
   "command.stat.exiled": "Díbirthe: {0}",
-  "welcome.join": "Fáilte, {0}! Cód cara: {1} | Seomra: {2}"
+  "welcome.join": "Fáilte, {0}! Cód cara: {1} | Seomra: {2}",
+  "command.max.host_only": "Ní féidir ach leis an óstach an t-uaslíon imreoirí a athrú.",
+  "command.max.invalid": "Uimhir neamhbhailí. Raon bailí: 1–127.",
+  "command.max.set": "Uaslín imreoirí socraithe go {0}.",
+  "command.max.warning": "Mura bhfuil CrowdedMod nó mod eile agat a thacaíonn le 15+ imreoir, cuir ar ais go 15 é sula gcruthóidh tú an chéad seomra eile.",
+  "command.players.not_in_lobby": "Ní féidir an t-ordú seo a úsáid ach sa stocaireacht.",
+  "command.players.header": "=== Imreoirí ({0}) ===",
+  "command.players.entry": "{0} | {1} | {2}ms",
+  "command.ping.result": "Do phing: {0}ms"
 }
 """;
 

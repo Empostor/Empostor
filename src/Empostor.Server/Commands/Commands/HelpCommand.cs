@@ -38,7 +38,7 @@ public sealed class HelpCommand : ICommand
             sb.AppendLine(ctx.GetString("command.usage").Format(target.Usage));
             if (target.Aliases.Length > 0)
                 sb.AppendLine(ctx.GetString("command.help.aliases")
-                    .Format(string.Join(", ", target.Aliases.Select(a => "/" + a))));
+                    .Format(string.Join(", ", target.Aliases.Select(a => "#" + a))));
 
             await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString().TrimEnd(), ctx.PlayerControl);
             return true;

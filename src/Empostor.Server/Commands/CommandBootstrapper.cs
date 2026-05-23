@@ -32,12 +32,15 @@ internal sealed class CommandBootstrapper : IHostedService
         _commands.Register(new HelpCommand(_commands));
         _commands.Register(new SetColorCommand());
         _commands.Register(new NoteCommand());
+        _commands.Register(new MaxCommand());
+        _commands.Register(new PlayersCommand());
+        _commands.Register(new PingCommand());
         _commands.Register(_statCommand);
         _commands.RegisterAll(_pluginCommands);
         _logger.LogInformation(
             "[Commands] Registered {Count} command(s): {Names}",
             _commands.All.Count,
-            string.Join(", ", System.Linq.Enumerable.Select(_commands.All, c => "/" + c.Name)));
+            string.Join(", ", System.Linq.Enumerable.Select(_commands.All, c => "#" + c.Name)));
         return Task.CompletedTask;
     }
 
