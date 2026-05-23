@@ -80,7 +80,7 @@
   {
     "id": "cn.hayashiume.playerchannel",
     "name": "Player Channel",
-    "description": "using /s <text> to send an only channel message by friendcode",
+    "description": "using #channel <text> to send an only channel message by friendcode",
     "author": "HayashiUme",
     "versions": [
       {
@@ -106,13 +106,39 @@
   {
     "id": "cn.hayashiume.narrator",
     "name": "Narrator",
-    "description": "AI-powered meeting assistant using DeepSeek. Use /narrator during meetings to get strategic advice. Host commands: /narrator enable/disable/limit.",
+    "description": "AI-powered meeting assistant using DeepSeek. Use #narrator during meetings to get strategic advice. Host commands: #narrator enable/disable/limit.",
     "author": "ELinmei",
     "versions": [
       {
         "version": "1.0.0",
         "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Narrator.dll"
+      }
+    ]
+  },
+    {
+    "id": "cn.hayashiume.mapvote",
+    "name": "Map Vote",
+    "description": "using #votemap <map_name> to choose a map for lobby",
+    "author": "ELinmei",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.MapVote.dll"
+      }
+    ]
+  },
+  {
+    "id": "cn.hayashiume.message",
+    "name": "Leave a Message",
+    "description": "Leave a message for a player by friend code",
+    "author": "ELinmei",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Message.dll"
       }
     ]
   }
