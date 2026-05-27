@@ -12,7 +12,7 @@ using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
 using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Factories;
-using Empostor.Server.Service;
+using Empostor.Api.Service;
 using Empostor.Server.Service.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

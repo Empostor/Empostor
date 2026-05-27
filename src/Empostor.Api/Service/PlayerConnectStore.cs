@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service;
+namespace Empostor.Api.Service;
 
 public sealed class PlayerConnectStore : IDisposable
 {

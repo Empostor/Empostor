@@ -30,7 +30,7 @@ using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
-using Empostor.Server.Service;
+using Empostor.Api.Service;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Service.Stat;
 using Empostor.Server.Utils;
