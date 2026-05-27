@@ -34,6 +34,9 @@ namespace Empostor.Server.Net
         /// <inheritdoc />
         public string? FriendCode { get; set; }
 
+        /// <inheritdoc />
+        public string? ProductUserId { get; set; }
+
         public GameVersion GameVersion { get; }
 
         public IHazelConnection Connection { get; }

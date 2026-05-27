@@ -81,6 +81,11 @@ namespace Empostor.Api.Net
         /// </summary>
         string? FriendCode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Product User ID (PUID) from the player's EOS token.
+        /// </summary>
+        string? ProductUserId { get; set; }
+
         ValueTask<bool> ReportCheatAsync(CheatContext context, CheatCategory category, string message);
 
         [Obsolete("Please use the overload that adds a cheat category")]

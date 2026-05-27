@@ -30,6 +30,7 @@ using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
+using Empostor.Server.Service;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Service.Stat;
 using Empostor.Server.Utils;
@@ -109,9 +110,18 @@ namespace Empostor.Server
                     services.Configure<DiscordWebhookConfig>(host.Configuration.GetSection(DiscordWebhookConfig.Section));
                     services.Configure<PlayerStatsConfig>(host.Configuration.GetSection(PlayerStatsConfig.Section));
                     services.Configure<ChatFilterConfig>(host.Configuration.GetSection(ChatFilterConfig.Section));
+                    services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
 
                     services.AddSingleton<AuthCacheService>();
+                    services.AddSingleton<PlayerConnectStore>();
                     services.AddHttpClient("innersloth", client =>
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(15);
+                        client.DefaultRequestHeaders.Add("User-Agent",
+                            "UnityPlayer/2022.3.44f1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)");
+                        client.DefaultRequestHeaders.Add("X-Unity-Version", "2022.3.44f1");
+                    });
+                    services.AddHttpClient("niko", client =>
                     {
                         client.Timeout = TimeSpan.FromSeconds(15);
                         client.DefaultRequestHeaders.Add("User-Agent",

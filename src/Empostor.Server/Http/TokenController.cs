@@ -9,9 +9,11 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Empostor.Api.Config;
 using Empostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Http;
 
@@ -27,18 +29,24 @@ public sealed class TokenController : ControllerBase
 
     private static readonly object FileLock = new object();
 
+    private string? _nikoVerifyCode;
+    private bool _nikoFriendCodeConfirmed;
+
     private readonly ILogger<TokenController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AuthCacheService _authCache;
+    private readonly AuthApiConfig _authApiConfig;
 
     public TokenController(
         ILogger<TokenController> logger,
         IHttpClientFactory httpClientFactory,
-        AuthCacheService authCache)
+        AuthCacheService authCache,
+        IOptions<AuthApiConfig> authApiConfig)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _authCache = authCache;
+        _authApiConfig = authApiConfig.Value;
     }
 
     [HttpPost]
@@ -55,6 +63,7 @@ public sealed class TokenController : ControllerBase
             }
 
             var eosToken = authorization["Bearer ".Length..];
+            _logger.LogInformation("[TokenController] EOS Token: {Token}", eosToken);
             var productUserId = ExtractProductUserIdFromJwt(eosToken);
             if (string.IsNullOrEmpty(productUserId))
             {
@@ -62,11 +71,15 @@ public sealed class TokenController : ControllerBase
                 return Unauthorized(new { error = "Invalid token content" });
             }
 
+            _nikoVerifyCode = null;
+            _nikoFriendCodeConfirmed = false;
+
             var friendCode = await GetFriendCodeAsync(eosToken, productUserId);
             var matchmakerToken = GenerateMatchmakerToken(productUserId);
             var clientIp = GetClientIp();
 
-            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp);
+            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp,
+                verifyCode: _nikoVerifyCode, friendCodeConfirmed: _nikoFriendCodeConfirmed);
 
             _logger.LogInformation(
                 "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} IP={Ip}",
@@ -138,7 +151,21 @@ public sealed class TokenController : ControllerBase
             return cached;
         }
 
-        var friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
+        var mode = _authApiConfig.Mode;
+        _logger.LogDebug("[TokenController] AuthApi mode: {Mode}", mode);
+
+        string? friendCode = null;
+
+        if (mode == AuthApiMode.Niko || mode == AuthApiMode.Both)
+        {
+            friendCode = await FetchFromNikoAsync(eosToken, productUserId);
+        }
+
+        if (string.IsNullOrEmpty(friendCode) && (mode == AuthApiMode.Innersloth || mode == AuthApiMode.Both))
+        {
+            friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
+        }
+
         if (string.IsNullOrEmpty(friendCode))
         {
             friendCode = GenerateFallbackFriendCode(productUserId);
@@ -220,6 +247,7 @@ public sealed class TokenController : ControllerBase
             }
 
             var json = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("[TokenController] Innersloth raw response: {Json}", json);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             var attrs = root.TryGetProperty("data", out var data)
@@ -231,7 +259,7 @@ public sealed class TokenController : ControllerBase
             {
                 var fc = $"{username}#{discriminator}";
                 _logger.LogInformation(
-                    "[TokenController] FriendCode fetched: PUID={Puid} FC={FC}",
+                    "[TokenController] FriendCode fetched from Innersloth: PUID={Puid} FC={FC}",
                     productUserId, fc);
                 return fc;
             }
@@ -248,6 +276,161 @@ public sealed class TokenController : ControllerBase
         return null;
     }
 
+    private async Task<string?> FetchFromNikoAsync(string eosToken, string productUserId)
+    {
+        if (string.IsNullOrEmpty(_authApiConfig.NikoApiKey))
+        {
+            _logger.LogWarning("[TokenController] NikoApiKey is empty, skipping Niko API");
+            return null;
+        }
+
+        var baseUrl = _authApiConfig.NikoApiBaseUrl.TrimEnd('/');
+        var apiUrl = $"{baseUrl}/api/verify";
+
+        try
+        {
+            using var client = _httpClientFactory.CreateClient("niko");
+
+            // PUT to create a verification request
+            var putBody = JsonSerializer.SerializeToUtf8Bytes(new NikoPutRequest
+            {
+                ApiKey = _authApiConfig.NikoApiKey,
+                FriendCode = "",
+            });
+
+            var putReq = new HttpRequestMessage(HttpMethod.Put, apiUrl)
+            {
+                Content = new ByteArrayContent(putBody),
+            };
+            putReq.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+
+            var putResp = await client.SendAsync(putReq);
+            if (!putResp.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "[TokenController] Niko PUT returned {Status} for PUID={Puid}",
+                    putResp.StatusCode, productUserId);
+                return null;
+            }
+
+            var putJson = await putResp.Content.ReadAsStringAsync();
+            var createResult = JsonSerializer.Deserialize<NikoCreateResponse>(putJson);
+            if (createResult == null || string.IsNullOrEmpty(createResult.VerifyCode))
+            {
+                _logger.LogWarning(
+                    "[TokenController] Niko PUT response missing VerifyCode for PUID={Puid}", productUserId);
+                return null;
+            }
+
+            var verifyCode = createResult.VerifyCode;
+            _nikoVerifyCode = verifyCode;
+            _logger.LogInformation(
+                "[TokenController] Niko verify request created: Code={Code} for PUID={Puid}",
+                verifyCode, productUserId);
+
+            // Proxy EOS token to Niko to trigger HTTP auth
+            await ProxyEosTokenToNikoAsync(client, baseUrl, eosToken, productUserId);
+
+            // Poll GET briefly for verification result
+            var queryUrl = $"{apiUrl}?apikey={Uri.EscapeDataString(_authApiConfig.NikoApiKey)}&verifycode={Uri.EscapeDataString(verifyCode)}";
+
+            for (var i = 0; i < 2; i++)
+            {
+                if (i > 0)
+                {
+                    await Task.Delay(300);
+                }
+
+                var getReq = new HttpRequestMessage(HttpMethod.Get, queryUrl);
+                var getResp = await client.SendAsync(getReq);
+                if (!getResp.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var getJson = await getResp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<NikoVerifyApiResponse>(getJson);
+                if (result == null)
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(result.FriendCode)
+                    && (result.VerifyStatus == "HttpPending" || result.VerifyStatus == "Verified"))
+                {
+                    _nikoFriendCodeConfirmed = true;
+                    _logger.LogInformation(
+                        "[TokenController] FriendCode fetched from Niko: PUID={Puid} FC={FC} Status={Status}",
+                        productUserId, result.FriendCode, result.VerifyStatus);
+
+                    _ = DeleteNikoVerificationAsync(client, apiUrl, verifyCode);
+
+                    return result.FriendCode;
+                }
+
+                _logger.LogDebug(
+                    "[TokenController] Niko poll {Attempt}: Status={Status} for PUID={Puid}",
+                    i + 1, result.VerifyStatus ?? "null", productUserId);
+            }
+
+            _logger.LogInformation(
+                "[TokenController] Niko friend code not yet available for PUID={Puid}, VerifyCode={Code} deferred to handshake",
+                productUserId, verifyCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[TokenController] Exception calling Niko API for PUID={Puid}", productUserId);
+        }
+
+        return null;
+    }
+
+    private async Task ProxyEosTokenToNikoAsync(HttpClient client, string baseUrl, string eosToken, string productUserId)
+    {
+        try
+        {
+            var userApiUrl = $"{baseUrl}/api/user";
+            var req = new HttpRequestMessage(HttpMethod.Post, userApiUrl)
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+            };
+            req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + eosToken);
+            req.Headers.TryAddWithoutValidation("Accept", "application/vnd.api+json");
+
+            var resp = await client.SendAsync(req);
+            _logger.LogDebug(
+                "[TokenController] Niko proxy auth returned {Status} for PUID={Puid}",
+                resp.StatusCode, productUserId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "[TokenController] Failed to proxy EOS token to Niko for PUID={Puid}", productUserId);
+        }
+    }
+
+    private async Task DeleteNikoVerificationAsync(HttpClient client, string apiUrl, string verifyCode)
+    {
+        try
+        {
+            var body = JsonSerializer.SerializeToUtf8Bytes(new NikoDeleteRequest
+            {
+                ApiKey = _authApiConfig.NikoApiKey,
+                VerifyCode = verifyCode,
+            });
+            var req = new HttpRequestMessage(HttpMethod.Delete, apiUrl)
+            {
+                Content = new ByteArrayContent(body),
+            };
+            req.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+            await client.SendAsync(req);
+        }
+        catch
+        {
+            // Best-effort cleanup
+        }
+    }
+
     private static string GenerateMatchmakerToken(string productUserId)
     {
         var salt = RandomNumberGenerator.GetBytes(16);
@@ -261,6 +444,8 @@ public sealed class TokenController : ControllerBase
         var disc = BitConverter.ToUInt16(hash, 0) % 10000;
         return $"Player#{disc:D4}";
     }
+
+    #region Niko Request Datas
 
     public sealed class TokenRequest
     {
@@ -288,4 +473,56 @@ public sealed class TokenController : ControllerBase
         [JsonPropertyName("ExpiresAt")]
         public DateTime ExpiresAt { get; init; } = new DateTime(2099, 12, 31);
     }
+
+    private sealed class NikoPutRequest
+    {
+        [JsonPropertyName("ApiKey")]
+        public required string ApiKey { get; init; }
+
+        [JsonPropertyName("FriendCode")]
+        public string FriendCode { get; init; } = "";
+    }
+
+    private sealed class NikoCreateResponse
+    {
+        [JsonPropertyName("VerifyStatus")]
+        public string? VerifyStatus { get; init; }
+
+        [JsonPropertyName("VerifyCode")]
+        public string? VerifyCode { get; init; }
+
+        [JsonPropertyName("FriendCode")]
+        public string? FriendCode { get; init; }
+
+        [JsonPropertyName("ExpiresAt")]
+        public string? ExpiresAt { get; init; }
+    }
+
+    private sealed class NikoVerifyApiResponse
+    {
+        [JsonPropertyName("VerifyStatus")]
+        public string? VerifyStatus { get; init; }
+
+        [JsonPropertyName("FriendCode")]
+        public string? FriendCode { get; init; }
+
+        [JsonPropertyName("Puid")]
+        public string? Puid { get; init; }
+
+        [JsonPropertyName("PlayerName")]
+        public string? PlayerName { get; init; }
+
+        [JsonPropertyName("TokenPlatform")]
+        public string? TokenPlatform { get; init; }
+    }
+
+    private sealed class NikoDeleteRequest
+    {
+        [JsonPropertyName("apikey")]
+        public required string ApiKey { get; init; }
+
+        [JsonPropertyName("verifycode")]
+        public required string VerifyCode { get; init; }
+    }
+    #endregion
 }

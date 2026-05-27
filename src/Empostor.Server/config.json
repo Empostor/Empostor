@@ -36,6 +36,11 @@
     "GameRecorderEnabled": false,
     "GameRecorderPath": ""
   },
+  "AuthApi": {
+    "Mode": "Both",
+    "NikoApiKey": "niko-request-api-key",
+    "NikoApiBaseUrl": "https://au-verify.niko233.top"
+  },
   "Admin": {
     "Password": "CHANGE-ME",
     "MarketplaceUrl": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/plugins.json"
