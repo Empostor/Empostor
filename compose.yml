@@ -14,12 +14,7 @@ services:
       - ./plugins:/app/plugins
       - ./Languages:/app/Languages
       - ./marketplace:/app/marketplace
+      - ./Data:/app/Data
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:80
       - EMPOSTOR_Server__PublicIp=0.0.0.0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/api/admin/update/check"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s

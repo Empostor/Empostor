@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading.Tasks;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Game;
@@ -27,13 +26,12 @@ public sealed class MapVoteEventListener : IEventListener
 
         var winner = _service.GetWinner(gameCode);
 
-        // If host set a specific map and override is allowed, respect it
+        // If host set a specific map and override is allowed, respect it when no votes cast
         if (_config.AllowHostOverride && e.Game.Options.Map != winner)
         {
             var tally = _service.TallyVotes(gameCode);
             if (tally.Count == 0)
             {
-                // No votes at all — host's choice stands
                 _service.ResetVotes(gameCode);
                 return;
             }

@@ -33,10 +33,21 @@ public sealed class MapVoteService
 
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MapTypes>> _votes = new();
     private readonly ConcurrentDictionary<string, bool> _enabled = new();
+    private readonly ConcurrentDictionary<string, bool> _sessionActive = new();
 
     public bool IsEnabled(string gameCode) => _enabled.GetValueOrDefault(gameCode, true);
 
     public void SetEnabled(string gameCode, bool enabled) => _enabled[gameCode] = enabled;
+
+    public bool IsSessionActive(string gameCode) => _sessionActive.GetValueOrDefault(gameCode, false);
+
+    public void StartSession(string gameCode) => _sessionActive[gameCode] = true;
+
+    public void StopSession(string gameCode)
+    {
+        _sessionActive.TryRemove(gameCode, out _);
+        _votes.TryRemove(gameCode, out _);
+    }
 
     public bool TryParseMap(string input, out MapTypes map)
     {
@@ -46,7 +57,7 @@ public sealed class MapVoteService
         if (int.TryParse(input.Trim(), out var id) && Enum.IsDefined(typeof(MapTypes), (byte)id))
         {
             map = (MapTypes)(byte)id;
-            if (map != MapTypes.Dleks) // Exclude Dleks (mirrored Skeld)
+            if (map != MapTypes.Dleks)
                 return true;
         }
 
@@ -86,6 +97,13 @@ public sealed class MapVoteService
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
+    public int VoterCount(string gameCode)
+    {
+        if (!_votes.TryGetValue(gameCode, out var gameVotes))
+            return 0;
+        return gameVotes.Count;
+    }
+
     public MapTypes GetWinner(string gameCode)
     {
         var tally = TallyVotes(gameCode);
@@ -114,5 +132,6 @@ public sealed class MapVoteService
     {
         _votes.TryRemove(gameCode, out _);
         _enabled.TryRemove(gameCode, out _);
+        _sessionActive.TryRemove(gameCode, out _);
     }
 }

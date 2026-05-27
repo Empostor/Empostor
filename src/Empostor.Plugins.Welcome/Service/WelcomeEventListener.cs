@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Empostor.Api.Data;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Game.Player;
 using Empostor.Api.Innersloth;
@@ -48,15 +49,28 @@ public sealed class WelcomeEventListener : IEventListener
                     }
                 }
 
-                var message = File.ReadAllText(filePath);
-                var formattedMessage = string.Format(message, player.Client.Name, e.Game.Code.Code);
+                var template = File.ReadAllText(filePath);
+                var message = FormatMessage(template, player);
 
-                await playerCtrl.SendChatToPlayerAsync(formattedMessage, playerCtrl);
+                await playerCtrl.SendChatToPlayerAsync(message, playerCtrl);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "[Welcome] Failed to send welcome message");
             }
         });
+    }
+
+    private static string FormatMessage(string template, Api.Net.IClientPlayer player)
+    {
+        var lastConnect = player.Client.ProductUserId != null
+            ? PlayerConnectStore.GetLastConnectString(player.Client.ProductUserId)
+            : null;
+
+        return template
+            .Replace("{Name}", player.Client.Name ?? "Player")
+            .Replace("{Room}", player.Game.Code.Code)
+            .Replace("{FriendCode}", player.Client.FriendCode ?? "None")
+            .Replace("{LastConnect}", lastConnect ?? "First time!");
     }
 }

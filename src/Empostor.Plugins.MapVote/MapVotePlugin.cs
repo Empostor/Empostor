@@ -41,9 +41,11 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
                 ["mapvote.results_winner"] = "Winner: {0} ({1} votes)",
                 ["mapvote.results_random"] = "No votes cast, using random map: {0}",
                 ["mapvote.usage"] = "Usage: #votemap <map>\nMaps: Skeld, Mira, Polus, Airship, Fungle\nExample: #votemap polus",
-                ["mapvote.host_commands"] = "Host commands: #votemap enable | disable | results",
+                ["mapvote.host_commands"] = "Host commands: #votemap public | close | enable | disable | results",
+                ["mapvote.host_only"] = "Only the host can use this command.",
                 ["mapvote.host_enabled"] = "Map voting enabled.",
                 ["mapvote.host_disabled"] = "Map voting disabled.",
+                ["mapvote.session_started"] = "Map vote session started! Players, use #votemap <map> to vote.\nMaps: Skeld, Mira, Polus, Airship, Fungle",
                 ["mapvote.map_set"] = "Map set to {0} by vote.",
             },
             ["zh_CN"] = new Dictionary<string, string>
@@ -60,10 +62,12 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
                 ["mapvote.results_winner"] = "胜出：{0}（{1} 票）",
                 ["mapvote.results_random"] = "无人投票，随机选择地图：{0}",
                 ["mapvote.usage"] = "用法：#votemap <地图>\n可选地图：Skeld, Mira, Polus, Airship, Fungle\n示例：#votemap polus",
-                ["mapvote.host_commands"] = "房主指令：#votemap enable | disable | results",
+                ["mapvote.host_commands"] = "房主指令：#votemap public | close | enable | disable | results",
+                ["mapvote.host_only"] = "只有房主可以使用此指令。",
                 ["mapvote.host_enabled"] = "投票选图已启用。",
                 ["mapvote.host_disabled"] = "投票选图已禁用。",
-                ["mapvote.map_set"] = "投票结果为 {0}。",
+                ["mapvote.session_started"] = "地图投票已开始！请使用 #votemap <地图> 投票。\n可选地图：Skeld, Mira, Polus, Airship, Fungle",
+                ["mapvote.map_set"] = "投票结果，地图已设为 {0}。",
             },
             ["zh_TW"] = new Dictionary<string, string>
             {
@@ -79,10 +83,12 @@ public sealed class MapVotePlugin : PluginBase, IPluginLanguageProvider
                 ["mapvote.results_winner"] = "勝出：{0}（{1} 票）",
                 ["mapvote.results_random"] = "無人投票，隨機選擇地圖：{0}",
                 ["mapvote.usage"] = "用法：#votemap <地圖>\n可選地圖：Skeld, Mira, Polus, Airship, Fungle\n範例：#votemap polus",
-                ["mapvote.host_commands"] = "房主指令：#votemap enable | disable | results",
+                ["mapvote.host_commands"] = "房主指令：#votemap public | close | enable | disable | results",
+                ["mapvote.host_only"] = "只有房主可以使用此指令。",
                 ["mapvote.host_enabled"] = "投票選圖已啟用。",
                 ["mapvote.host_disabled"] = "投票選圖已停用。",
-                ["mapvote.map_set"] = "投票結果為 {0}。",
+                ["mapvote.session_started"] = "地圖投票已開始！請使用 #votemap <地圖> 投票。\n可選地圖：Skeld, Mira, Polus, Airship, Fungle",
+                ["mapvote.map_set"] = "投票結果，地圖已設為 {0}。",
             },
         };
     }

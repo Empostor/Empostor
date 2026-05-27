@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.Welcome;
 
-[EmpostorPlugin("cn.hayashiume.welcome", "Welcome Messages", "HayashiUme", "1.0.0")]
+[EmpostorPlugin("cn.hayashiume.welcome", "Welcome Messages", "HayashiUme", "1.1.0")]
 public sealed class WelcomePlugin : PluginBase
 {
     private const string TextDir = "Message";
@@ -38,22 +38,22 @@ public sealed class WelcomePlugin : PluginBase
     {
         var dir = Path.Combine(Directory.GetCurrentDirectory(), TextDir);
 
-        WriteIfMissing(dir, "EnglishHelloWord.txt", "Welcome, {0}! Room: {1}");
-        WriteIfMissing(dir, "SChineseHelloWord.txt", "欢迎，{0}！房间：{1}");
-        WriteIfMissing(dir, "TChineseHelloWord.txt", "歡迎，{0}！房間：{1}");
-        WriteIfMissing(dir, "KoreanHelloWord.txt", "환영합니다, {0}! 방: {1}");
-        WriteIfMissing(dir, "RussianHelloWord.txt", "Добро пожаловать, {0}! Комната: {1}");
-        WriteIfMissing(dir, "PortugueseHelloWord.txt", "Bem-vindo, {0}! Sala: {1}");
-        WriteIfMissing(dir, "BrazilianHelloWord.txt", "Bem-vindo, {0}! Sala: {1}");
-        WriteIfMissing(dir, "FrenchHelloWord.txt", "Bienvenue, {0}! Salle : {1}");
-        WriteIfMissing(dir, "GermanHelloWord.txt", "Willkommen, {0}! Raum: {1}");
-        WriteIfMissing(dir, "SpanishHelloWord.txt", "¡Bienvenido, {0}! Sala: {1}");
-        WriteIfMissing(dir, "LatamHelloWord.txt", "¡Bienvenido, {0}! Sala: {1}");
-        WriteIfMissing(dir, "JapaneseHelloWord.txt", "ようこそ、{0}！ルーム：{1}");
-        WriteIfMissing(dir, "ItalianHelloWord.txt", "Benvenuto, {0}! Stanza: {1}");
-        WriteIfMissing(dir, "DutchHelloWord.txt", "Welkom, {0}! Kamer: {1}");
-        WriteIfMissing(dir, "FilipinoHelloWord.txt", "Maligayang pagdating, {0}! Silid: {1}");
-        WriteIfMissing(dir, "IrishHelloWord.txt", "Fáilte, {0}! Seomra: {1}");
+        WriteIfMissing(dir, "EnglishHelloWord.txt", "Welcome, {Name}! Room: {Room}");
+        WriteIfMissing(dir, "SChineseHelloWord.txt", "欢迎，{Name}！房间：{Room}");
+        WriteIfMissing(dir, "TChineseHelloWord.txt", "歡迎，{Name}！房間：{Room}");
+        WriteIfMissing(dir, "KoreanHelloWord.txt", "환영합니다, {Name}! 방: {Room}");
+        WriteIfMissing(dir, "RussianHelloWord.txt", "Добро пожаловать, {Name}! Комната: {Room}");
+        WriteIfMissing(dir, "PortugueseHelloWord.txt", "Bem-vindo, {Name}! Sala: {Room}");
+        WriteIfMissing(dir, "BrazilianHelloWord.txt", "Bem-vindo, {Name}! Sala: {Room}");
+        WriteIfMissing(dir, "FrenchHelloWord.txt", "Bienvenue, {Name}! Salle : {Room}");
+        WriteIfMissing(dir, "GermanHelloWord.txt", "Willkommen, {Name}! Raum: {Room}");
+        WriteIfMissing(dir, "SpanishHelloWord.txt", "¡Bienvenido, {Name}! Sala: {Room}");
+        WriteIfMissing(dir, "LatamHelloWord.txt", "¡Bienvenido, {Name}! Sala: {Room}");
+        WriteIfMissing(dir, "JapaneseHelloWord.txt", "ようこそ、{Name}！ルーム：{Room}");
+        WriteIfMissing(dir, "ItalianHelloWord.txt", "Benvenuto, {Name}! Stanza: {Room}");
+        WriteIfMissing(dir, "DutchHelloWord.txt", "Welkom, {Name}! Kamer: {Room}");
+        WriteIfMissing(dir, "FilipinoHelloWord.txt", "Maligayang pagdating, {Name}! Silid: {Room}");
+        WriteIfMissing(dir, "IrishHelloWord.txt", "Fáilte, {Name}! Seomra: {Room}");
     }
 
     private void WriteIfMissing(string dir, string fileName, string content)
