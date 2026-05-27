@@ -63,7 +63,6 @@ public sealed class TokenController : ControllerBase
             }
 
             var eosToken = authorization["Bearer ".Length..];
-            _logger.LogInformation("[TokenController] EOS Token: {Token}", eosToken);
             var productUserId = ExtractProductUserIdFromJwt(eosToken);
             if (string.IsNullOrEmpty(productUserId))
             {
