@@ -441,7 +441,7 @@ public sealed class TokenController : ControllerBase
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(productUserId));
         var disc = BitConverter.ToUInt16(hash, 0) % 10000;
-        return $"Player#{disc:D4}";
+        return $"failauth#{disc:D4}";
     }
 
     #region Niko Request Datas
