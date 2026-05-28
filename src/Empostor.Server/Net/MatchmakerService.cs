@@ -47,12 +47,12 @@ namespace Empostor.Server.Net
                 // NOTE: If this warning annoys you, set your PublicIp to "localhost"
                 _logger.LogError("Your PublicIp is set to the default value of 127.0.0.1.");
                 _logger.LogError("To allow people on other devices to connect to your server, change this value to your Public IP address");
-                _logger.LogError("For more info on how to do this see https://github.com/Empostor/Empostor/blob/master/docs/Server-configuration.md");
+                _logger.LogError("For more info on how to do this see https://empostor.github.io/Server-configuration");
             }
             else if (_httpServerConfig.ListenIp == "0.0.0.0" && runningOutsideContainer)
             {
                 _logger.LogWarning("Since Among Us 16.0.5 it is required to support HTTPS for players to connect, we recommend setting up a reverse proxy:");
-                _logger.LogWarning("See https://github.com/Empostor/Empostor/blob/master/docs/Http-server.md for instructions");
+                _logger.LogWarning("See https://empostor.github.io/Http-server for instructions");
             }
         }
 

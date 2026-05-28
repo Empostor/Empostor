@@ -39,7 +39,11 @@
   "AuthApi": {
     "Mode": "Both",
     "NikoApiKey": "niko-request-api-key",
-    "NikoApiBaseUrl": "https://au-verify.niko233.top"
+    "NikoApiBaseUrl": "https://au-verify.niko233.top",
+    "RelayApiBaseUrl": "http://localhost:5100",
+    "RelayApiKey": "empostor-relay-api-key-change-me",
+    "UmeApiBaseUrl": "https://auverify.hayashiume.top",
+    "UmeApiKey": "sk-empostor-globalapikey"
   },
   "Admin": {
     "Password": "CHANGE-ME",

@@ -155,12 +155,52 @@ public sealed class TokenController : ControllerBase
 
         string? friendCode = null;
 
-        if (mode == AuthApiMode.Niko || mode == AuthApiMode.Both)
+        if (mode == AuthApiMode.Relay)
+        {
+            friendCode = await FetchFromRelayAsync(eosToken, productUserId);
+        }
+
+        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Ume)
+        {
+            friendCode = await FetchFromUmeAsync(eosToken, productUserId);
+        }
+
+        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Niko)
         {
             friendCode = await FetchFromNikoAsync(eosToken, productUserId);
         }
 
-        if (string.IsNullOrEmpty(friendCode) && (mode == AuthApiMode.Innersloth || mode == AuthApiMode.Both))
+        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Both)
+        {
+            var nikoKeyIsCustom = !string.IsNullOrEmpty(_authApiConfig.NikoApiKey)
+                && _authApiConfig.NikoApiKey != "niko-request-api-key";
+
+            if (nikoKeyIsCustom)
+            {
+                _logger.LogDebug("[TokenController] Both mode: trying Niko first (custom key)");
+                friendCode = await FetchFromNikoAsync(eosToken, productUserId);
+                if (string.IsNullOrEmpty(friendCode))
+                {
+                    friendCode = await FetchFromUmeAsync(eosToken, productUserId);
+                }
+            }
+            else
+            {
+                _logger.LogDebug("[TokenController] Both mode: trying Ume first (default Niko key)");
+                friendCode = await FetchFromUmeAsync(eosToken, productUserId);
+                if (string.IsNullOrEmpty(friendCode))
+                {
+                    friendCode = await FetchFromNikoAsync(eosToken, productUserId);
+                }
+            }
+
+            if (string.IsNullOrEmpty(friendCode))
+            {
+                friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
+            }
+        }
+
+        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Innersloth)
         {
             friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
         }
@@ -172,8 +212,10 @@ public sealed class TokenController : ControllerBase
                 "[TokenController] FriendCode fetch failed for PUID={Puid}, using fallback: {FC}",
                 productUserId, friendCode);
         }
-
-        SaveFriendCodeToCache(productUserId, friendCode);
+        else
+        {
+            SaveFriendCodeToCache(productUserId, friendCode);
+        }
 
         return friendCode;
     }
@@ -357,6 +399,15 @@ public sealed class TokenController : ControllerBase
                 if (!string.IsNullOrEmpty(result.FriendCode)
                     && (result.VerifyStatus == "HttpPending" || result.VerifyStatus == "Verified"))
                 {
+                    if (!string.IsNullOrEmpty(result.Puid)
+                        && !string.Equals(result.Puid, productUserId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning(
+                            "[TokenController] Niko PUID mismatch: expected={Expected} got={Got}",
+                            productUserId, result.Puid);
+                        return null;
+                    }
+
                     _nikoFriendCodeConfirmed = true;
                     _logger.LogInformation(
                         "[TokenController] FriendCode fetched from Niko: PUID={Puid} FC={FC} Status={Status}",
@@ -428,6 +479,154 @@ public sealed class TokenController : ControllerBase
         {
             // Best-effort cleanup
         }
+    }
+
+    private async Task<string?> FetchFromRelayAsync(string eosToken, string productUserId)
+    {
+        if (string.IsNullOrEmpty(_authApiConfig.RelayApiBaseUrl)
+            || string.IsNullOrEmpty(_authApiConfig.RelayApiKey))
+        {
+            _logger.LogWarning("[TokenController] RelayApi config incomplete, skipping relay");
+            return null;
+        }
+
+        try
+        {
+            using var client = _httpClientFactory.CreateClient("relay");
+            var body = JsonSerializer.SerializeToUtf8Bytes(new RelayVerifyRequest
+            {
+                EosToken = eosToken,
+                ProductUserId = productUserId,
+            });
+
+            var req = new HttpRequestMessage(HttpMethod.Post,
+                $"{_authApiConfig.RelayApiBaseUrl.TrimEnd('/')}/api/verify")
+            {
+                Content = new ByteArrayContent(body),
+            };
+            req.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authApiConfig.RelayApiKey);
+            req.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+
+            var resp = await client.SendAsync(req);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "[TokenController] Relay returned {Status} for PUID={Puid}",
+                    resp.StatusCode, productUserId);
+                return null;
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<RelayVerifyResult>(json);
+            if (result == null || string.IsNullOrEmpty(result.FriendCode))
+            {
+                _logger.LogWarning(
+                    "[TokenController] Relay response missing FriendCode for PUID={Puid}",
+                    productUserId);
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(result.ProductUserId)
+                || !string.Equals(result.ProductUserId, productUserId, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "[TokenController] Relay PUID mismatch: expected={Expected} got={Got}",
+                    productUserId, result.ProductUserId);
+                return null;
+            }
+
+            _logger.LogInformation(
+                "[TokenController] FriendCode from Relay: PUID={Puid} FC={FC}",
+                productUserId, result.FriendCode);
+            return result.FriendCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[TokenController] Exception calling Relay for PUID={Puid}", productUserId);
+        }
+
+        return null;
+    }
+
+    private async Task<string?> FetchFromUmeAsync(string eosToken, string productUserId)
+    {
+        if (string.IsNullOrEmpty(_authApiConfig.UmeApiBaseUrl)
+            || string.IsNullOrEmpty(_authApiConfig.UmeApiKey))
+        {
+            _logger.LogWarning("[TokenController] UmeApi config incomplete, skipping Ume");
+            return null;
+        }
+
+        try
+        {
+            using var client = _httpClientFactory.CreateClient("ume");
+            var body = JsonSerializer.SerializeToUtf8Bytes(new UmeVerifyRequest
+            {
+                ApiKey = _authApiConfig.UmeApiKey,
+                EosToken = eosToken,
+            });
+
+            var req = new HttpRequestMessage(HttpMethod.Post,
+                $"{_authApiConfig.UmeApiBaseUrl.TrimEnd('/')}/api/verify")
+            {
+                Content = new ByteArrayContent(body),
+            };
+            req.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+
+            var resp = await client.SendAsync(req);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "[TokenController] Ume returned {Status} for PUID={Puid}",
+                    resp.StatusCode, productUserId);
+                return null;
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            _logger.LogInformation("[TokenController] Ume raw response: {Json}", json);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var status = root.TryGetProperty("VerifyStatus", out var s) ? s.GetString() : null;
+            if (status != "Verified")
+            {
+                _logger.LogWarning(
+                    "[TokenController] Ume VerifyStatus={Status} for PUID={Puid}",
+                    status, productUserId);
+                return null;
+            }
+
+            var friendCode = root.TryGetProperty("FriendCode", out var fc) ? fc.GetString() : null;
+            if (string.IsNullOrEmpty(friendCode))
+            {
+                _logger.LogWarning(
+                    "[TokenController] Ume response missing FriendCode for PUID={Puid}",
+                    productUserId);
+                return null;
+            }
+
+            var returnedPuid = root.TryGetProperty("ProductUserId", out var rp) ? rp.GetString() : null;
+            if (string.IsNullOrEmpty(returnedPuid)
+                || !string.Equals(returnedPuid, productUserId, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "[TokenController] Ume PUID mismatch: expected={Expected} got={Got}",
+                    productUserId, returnedPuid);
+                return null;
+            }
+
+            _logger.LogInformation(
+                "[TokenController] FriendCode from Ume: PUID={Puid} FC={FC}",
+                productUserId, friendCode);
+            return friendCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[TokenController] Exception calling Ume for PUID={Puid}", productUserId);
+        }
+
+        return null;
     }
 
     private static string GenerateMatchmakerToken(string productUserId)
@@ -522,6 +721,33 @@ public sealed class TokenController : ControllerBase
 
         [JsonPropertyName("verifycode")]
         public required string VerifyCode { get; init; }
+    }
+
+    private sealed class RelayVerifyRequest
+    {
+        [JsonPropertyName("EosToken")]
+        public required string EosToken { get; init; }
+
+        [JsonPropertyName("ProductUserId")]
+        public required string ProductUserId { get; init; }
+    }
+
+    private sealed class RelayVerifyResult
+    {
+        [JsonPropertyName("FriendCode")]
+        public string? FriendCode { get; init; }
+
+        [JsonPropertyName("ProductUserId")]
+        public string? ProductUserId { get; init; }
+    }
+
+    private sealed class UmeVerifyRequest
+    {
+        [JsonPropertyName("ApiKey")]
+        public required string ApiKey { get; init; }
+
+        [JsonPropertyName("EosToken")]
+        public required string EosToken { get; init; }
     }
     #endregion
 }
