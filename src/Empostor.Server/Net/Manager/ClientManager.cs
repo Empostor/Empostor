@@ -171,6 +171,7 @@ namespace Empostor.Server.Net.Manager
                 if (ipAuth != null)
                 {
                     friendCode = ipAuth.FriendCode;
+                    authInfo = ipAuth;
                     _logger.LogInformation(
                         "[Auth] {Name}: matched via IP={Ip} → FriendCode={FC}",
                         name, NormalizeIp(clientIp), friendCode);
