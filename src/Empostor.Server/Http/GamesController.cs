@@ -125,6 +125,7 @@ public sealed class GamesController : ControllerBase
 
     /// <summary>
     /// JSON summary of all active games, consumed by the admin panel.
+    /// Does not filter by IsPublic; rooms with a Note include the note field.
     /// </summary>
     [HttpGet("publicgames")]
     public IActionResult Summary()
@@ -141,6 +142,7 @@ public sealed class GamesController : ControllerBase
             impostors = g.Options.NumImpostors,
             host = g.Host?.Client.Name ?? "UnknwonName",
             hostFriendCode = g.Host?.Client.FriendCode ?? "UnknownHostFriendCode",
+            note = string.IsNullOrEmpty(g.Note) ? null : g.Note,
             players = g.Players.Select(p => new
             {
                 name = p.Client.Name,
@@ -150,11 +152,17 @@ public sealed class GamesController : ControllerBase
             }).ToList(),
         }).ToList();
 
-        return Ok(new
+        var result = new
         {
             totalGames = games.Count,
             totalPlayers = games.Sum(g => g.playerCount),
             games,
+        };
+
+        return new JsonResult(result, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         });
     }
 
