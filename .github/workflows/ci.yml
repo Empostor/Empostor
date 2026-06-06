@@ -41,3 +41,46 @@ jobs:
         with:
           files: build/*
           generate_release_notes: true
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    strategy:
+      matrix:
+        arch:
+          - { docker: linux/amd64,   rid: amd64 }
+          - { docker: linux/arm64,   rid: arm64 }
+          - { docker: linux/arm/v7,  rid: arm   }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build Docker image (${{ matrix.arch.rid }})
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.arch.docker }}
+          load: true
+          tags: empostor-server:${{ matrix.arch.rid }}
+          build-args: |
+            VERSIONSUFFIX=docker
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Export Docker image to tar
+        run: docker save empostor-server:${{ matrix.arch.rid }} -o empostor-server-docker-${{ matrix.arch.rid }}.tar
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: empostor-docker-${{ matrix.arch.rid }}
+          path: empostor-server-docker-${{ matrix.arch.rid }}.tar

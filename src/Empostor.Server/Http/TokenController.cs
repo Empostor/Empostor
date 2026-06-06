@@ -251,20 +251,27 @@ public sealed class TokenController : ControllerBase
     {
         lock (FileLock)
         {
-            Directory.CreateDirectory(CacheFileDir);
-
-            if (System.IO.File.Exists(CacheFilePath))
+            try
             {
-                foreach (var line in System.IO.File.ReadLines(CacheFilePath))
+                Directory.CreateDirectory(CacheFileDir);
+
+                if (System.IO.File.Exists(CacheFilePath))
                 {
-                    if (line.StartsWith(productUserId + "=", StringComparison.Ordinal))
+                    foreach (var line in System.IO.File.ReadLines(CacheFilePath))
                     {
-                        return;
+                        if (line.StartsWith(productUserId + "=", StringComparison.Ordinal))
+                        {
+                            return;
+                        }
                     }
                 }
-            }
 
-            System.IO.File.AppendAllText(CacheFilePath, $"{productUserId}={friendCode}{Environment.NewLine}");
+                System.IO.File.AppendAllText(CacheFilePath, $"{productUserId}={friendCode}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Best-effort cache — silently ignore write failures (e.g. Docker permission)
+            }
         }
     }
 

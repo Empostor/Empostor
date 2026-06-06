@@ -1,36 +1,86 @@
 # ============================================
-# Usage:
-#   1. Publish the server:
-#      dotnet publish src/Empostor.Server -c Release -o publish
-#   2. Publish plugins:
-#      dotnet publish src/Empostor.Plugins.Welcome -c Release -o publish/plugins
-#      (repeat for each plugin)
-#   3. Build and run:
-#      docker compose up -d
+# Empostor Server Docker Image
 # ============================================
+# Multi-stage build: compiles from source, then produces a minimal runtime image.
+#
+# Build (local):
+#   docker build -t empostor-server .
+#
+# Build (multi-arch):
+#   docker buildx build --platform linux/amd64,linux/arm64 -t empostor-server .
+#
+# Run:
+#   docker compose up -d
+# ============================================
+
+# ── Build stage ────────────────────────────
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+ARG TARGETARCH
+ARG VERSIONSUFFIX=docker
+
+WORKDIR /source
+
+# Restore dependencies (layer caching)
+COPY src/Empostor.Server/Empostor.Server.csproj ./src/Empostor.Server/
+COPY src/Empostor.Api/Empostor.Api.csproj ./src/Empostor.Api/
+COPY src/Empostor.Api.Innersloth.Generator/Empostor.Api.Innersloth.Generator.csproj ./src/Empostor.Api.Innersloth.Generator/
+COPY src/NextFast.Hazel-New/Next.Hazel/Next.Hazel.csproj ./src/NextFast.Hazel-New/Next.Hazel/
+COPY src/NextFast.Hazel-New/Next.Hazel.Abstractions/Next.Hazel.Abstractions.csproj ./src/NextFast.Hazel-New/Next.Hazel.Abstractions/
+COPY src/Directory.Build.props ./src/
+
+RUN case "$TARGETARCH" in \
+    amd64) RID=linux-x64 ;; \
+    arm64) RID=linux-arm64 ;; \
+    arm)   RID=linux-arm ;; \
+    *)     echo "Unsupported arch: $TARGETARCH"; exit 1 ;; \
+  esac && \
+  dotnet restore -r "$RID" ./src/Empostor.Server/Empostor.Server.csproj
+
+# Copy sources and publish
+COPY src/. ./src/
+
+RUN case "$TARGETARCH" in \
+    amd64) RID=linux-x64 ;; \
+    arm64) RID=linux-arm64 ;; \
+    arm)   RID=linux-arm ;; \
+    *)     echo "Unsupported arch: $TARGETARCH"; exit 1 ;; \
+  esac && \
+  [ "$VERSIONSUFFIX" = "none" ] && VERSIONSUFFIX="" ; \
+  dotnet publish ./src/Empostor.Server/Empostor.Server.csproj \
+    -c Release \
+    -r "$RID" \
+    --no-restore \
+    --self-contained false \
+    -p:PublishSingleFile=true \
+    -p:PublishTrimmed=false \
+    -p:VersionSuffix="$VERSIONSUFFIX" \
+    -o /app
+
+# Copy runtime assets
+RUN cp ./src/Empostor.Server/config.json /app/config.json 2>/dev/null || true
+
+# ── Runtime stage ──────────────────────────
 FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 
-# Copy pre-published server output
-COPY ./publish/ ./
+# Copy published output from build stage
+COPY --from=build /app ./
 
-# Create runtime directories
-RUN mkdir -p /app/plugins /app/libraries /app/Languages /app/Log /app/config /app/Data
+# Create writable runtime directories
+RUN mkdir -p /app/plugins /app/libraries /app/Languages /app/Log /app/Data /app/marketplace \
+  && chmod 777 /app/plugins /app/libraries /app/Languages /app/Log /app/Data /app/marketplace
 
-# Copy plugins from build output
-COPY ./plugins/ ./plugins/ 2>/dev/null || true
-
-# Copy marketplace data
-COPY ./marketplace/ ./marketplace/ 2>/dev/null || true
-
+# Environment
 ENV ASPNETCORE_URLS=http://0.0.0.0:80
 ENV EMPOSTOR_Server__PublicIp=0.0.0.0
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 EXPOSE 80/tcp
 EXPOSE 22023/tcp
 EXPOSE 22023/udp
 
-VOLUME ["/app/config", "/app/plugins", "/app/Languages", "/app/Log", "/app/Data"]
+VOLUME ["/app/config", "/app/plugins", "/app/libraries", "/app/Languages", "/app/Log", "/app/Data", "/app/marketplace"]
 
 ENTRYPOINT ["./Empostor.Server"]

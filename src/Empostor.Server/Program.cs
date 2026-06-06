@@ -175,6 +175,7 @@ namespace Empostor.Server
                     services.AddSingleton<IEventListener, PlayerLogListener>();
                     services.AddSingleton<PlayerStatsStore>();
                     services.AddSingleton<StatCommand>();
+                    services.AddSingleton<DiscordWebhookStore>();
                     services.AddSingleton<IEventListener, DiscordWebhookListener>();
                     services.AddSingleton<IEventListener, PlayerStatsListener>();
                     services.AddSingleton<ChatFilterStore>();

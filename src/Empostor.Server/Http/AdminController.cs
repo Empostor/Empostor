@@ -16,6 +16,7 @@ using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Stat;
+using Empostor.Server.Service.Api;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -40,6 +41,7 @@ namespace Empostor.Server.Http
         private readonly PlayerStatsStore _playerStats;
         private readonly PlayerStatsConfig _statsConfig;
         private readonly ChatFilterStore _chatFilter;
+        private readonly DiscordWebhookStore _discordWebhook;
 
         public AdminController(
             ILogger<AdminController> logger,
@@ -51,7 +53,8 @@ namespace Empostor.Server.Http
             PlayerLogStore playerLogs,
             PlayerStatsStore playerStats,
             IOptions<PlayerStatsConfig> statsConfig,
-            ChatFilterStore chatFilter)
+            ChatFilterStore chatFilter,
+            DiscordWebhookStore discordWebhook)
         {
             _logger = logger;
             _gameManager = gameManager;
@@ -63,6 +66,7 @@ namespace Empostor.Server.Http
             _playerStats = playerStats;
             _statsConfig = statsConfig.Value;
             _chatFilter = chatFilter;
+            _discordWebhook = discordWebhook;
         }
 
         private static Dictionary<string, string> LoadStrings()
@@ -260,10 +264,8 @@ namespace Empostor.Server.Http
             {
                 await c.Player.KickAsync();
             }
-            else
-            {
-                await c.DisconnectAsync(DisconnectReason.Kicked, "Kicked by admin");
-            }
+
+            await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Kicked by admin");
 
             return Ok(new { kicked = true, name = c.Name });
         }
@@ -292,20 +294,17 @@ namespace Empostor.Server.Http
                     {
                         await c.Player.BanAsync();
                     }
-                    else
-                    {
-                        await c.DisconnectAsync(DisconnectReason.Banned, "Banned by admin");
-                    }
 
+                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
                     kicked++;
                 }
-            }
-
-            return Ok(new { banned = entry.Value, disconnected = kicked });
         }
 
-        [HttpPost("/api/admin/ban/fc")]
-        public async Task<IActionResult> BanFc([FromBody] BanFcReq req)
+        return Ok(new { banned = entry.Value, disconnected = kicked });
+    }
+
+    [HttpPost("/api/admin/ban/fc")]
+    public async Task<IActionResult> BanFc([FromBody] BanFcReq req)
         {
             if (!IsAuthenticated())
             {
@@ -327,20 +326,17 @@ namespace Empostor.Server.Http
                     {
                         await c.Player.BanAsync();
                     }
-                    else
-                    {
-                        await c.DisconnectAsync(DisconnectReason.Banned, "Banned by admin");
-                    }
 
+                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
                     kicked++;
                 }
-            }
-
-            return Ok(new { banned = entry.Value, disconnected = kicked });
         }
 
-        [HttpPost("/api/admin/unban/ip")]
-        public IActionResult UnbanIp([FromBody] UnbanReq req)
+        return Ok(new { banned = entry.Value, disconnected = kicked });
+    }
+
+    [HttpPost("/api/admin/unban/ip")]
+    public IActionResult UnbanIp([FromBody] UnbanReq req)
         {
             if (!IsAuthenticated())
             {
@@ -646,6 +642,83 @@ namespace Empostor.Server.Http
             });
         }
 
+        [HttpGet("/api/admin/discord")]
+        public IActionResult GetDiscordWebhook()
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new
+            {
+                enabled = _discordWebhook.Enabled,
+                webhookUrl = _discordWebhook.WebhookUrl,
+                notifyOnGameCreated = _discordWebhook.NotifyOnGameCreated,
+                notifyOnBan = _discordWebhook.NotifyOnBan,
+                notifyOnReport = _discordWebhook.NotifyOnReport,
+                notifyOnPlayerJoin = _discordWebhook.NotifyOnPlayerJoin,
+                notifyOnGameEnded = _discordWebhook.NotifyOnGameEnded,
+            });
+        }
+
+        [HttpPost("/api/admin/discord")]
+        public async Task<IActionResult> UpdateDiscordWebhook([FromBody] DiscordWebhookSettingsReq req)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            if (req.Enabled.HasValue)
+            {
+                _discordWebhook.Enabled = req.Enabled.Value;
+            }
+
+            if (req.WebhookUrl != null)
+            {
+                _discordWebhook.WebhookUrl = req.WebhookUrl;
+            }
+
+            if (req.NotifyOnGameCreated.HasValue)
+            {
+                _discordWebhook.NotifyOnGameCreated = req.NotifyOnGameCreated.Value;
+            }
+
+            if (req.NotifyOnBan.HasValue)
+            {
+                _discordWebhook.NotifyOnBan = req.NotifyOnBan.Value;
+            }
+
+            if (req.NotifyOnReport.HasValue)
+            {
+                _discordWebhook.NotifyOnReport = req.NotifyOnReport.Value;
+            }
+
+            if (req.NotifyOnPlayerJoin.HasValue)
+            {
+                _discordWebhook.NotifyOnPlayerJoin = req.NotifyOnPlayerJoin.Value;
+            }
+
+            if (req.NotifyOnGameEnded.HasValue)
+            {
+                _discordWebhook.NotifyOnGameEnded = req.NotifyOnGameEnded.Value;
+            }
+
+            await _discordWebhook.SaveAsync();
+
+            return Ok(new
+            {
+                enabled = _discordWebhook.Enabled,
+                webhookUrl = _discordWebhook.WebhookUrl,
+                notifyOnGameCreated = _discordWebhook.NotifyOnGameCreated,
+                notifyOnBan = _discordWebhook.NotifyOnBan,
+                notifyOnReport = _discordWebhook.NotifyOnReport,
+                notifyOnPlayerJoin = _discordWebhook.NotifyOnPlayerJoin,
+                notifyOnGameEnded = _discordWebhook.NotifyOnGameEnded,
+            });
+        }
+
         private IGame? FindGame(string code)
         {
             try { return _gameManager.Find(new GameCode(code.ToUpperInvariant())); }
@@ -726,7 +799,7 @@ namespace Empostor.Server.Http
 
         public sealed record GameMsgReq(string GameCode, string Message);
 
-        public sealed record ClientIdReq(int ClientId);
+        public sealed record ClientIdReq(int ClientId, string? Reason = null);
 
         public sealed record BanIpReq(string Ip, string? Reason);
 
@@ -741,6 +814,8 @@ namespace Empostor.Server.Http
         public sealed record ChatFilterWordReq(string Word);
 
         public sealed record ChatFilterSettingsReq(bool? Enabled, bool? BlockMessage, int? SpamThreshold, int? SpamWindowSeconds);
+
+        public sealed record DiscordWebhookSettingsReq(bool? Enabled, string? WebhookUrl, bool? NotifyOnGameCreated, bool? NotifyOnBan, bool? NotifyOnReport, bool? NotifyOnPlayerJoin, bool? NotifyOnGameEnded);
 
         private const string LoginHtml = """
 <!DOCTYPE html>
@@ -1402,6 +1477,7 @@ namespace Empostor.Server.Http
             <div class="ni" onclick="nav('pl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span data-i18n="nav.player_logs">Player Logs</span></div>
             <div class="ni" onclick="nav('st')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="nav.statistics">Statistics</span></div>
             <div class="ni" onclick="nav('cf')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span data-i18n="nav.chat_filter">Chat Filter</span></div>
+            <div class="ni" onclick="nav('dw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="nav.discord">Discord</span></div>
             <div class="nsep"></div>
             <div class="nlbl" data-i18n="nav.actions">Actions</div>
             <div class="ni" onclick="nav('bc')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2H7a2 2 0 00-2 2v16l5-3 5 3V4a2 2 0 00-2-2z"/><path d="M10 9h4M10 13h4"/></svg><span data-i18n="nav.broadcast">Broadcast</span></div>
@@ -1516,6 +1592,7 @@ namespace Empostor.Server.Http
                 <div class="form">
                     <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h3l1 4H7l1-4h3V3h2v2zM5 9h14v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9zM10 13v4"/></svg><span data-i18n="kick.title">Kick by Client ID</span></h3>
                     <div class="field"><label data-i18n="kick.placeholder">Client ID</label><input id="ki-id" type="number" data-i18n-placeholder="kick.placeholder" placeholder="Client ID"></div>
+                    <div class="field"><label data-i18n="kick.reason_placeholder">Reason (optional)</label><input id="ki-reason" type="text" data-i18n-placeholder="kick.reason_placeholder" placeholder="Reason (optional)"></div>
                     <button class="bw" onclick="doKick()"><span data-i18n="kick.button">Kick</span></button>
                     <div id="ki-r" class="msg"></div>
                 </div>
@@ -1744,6 +1821,46 @@ namespace Empostor.Server.Http
                     </label>
                 </div>
                 <div id="cf-r" class="msg"></div>
+            </div>
+            <div id="p-dw" class="pnl">
+                <div class="form">
+                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="discord.title">Discord Webhook</span></h2>
+                    <button class="bp bsm" onclick="saveDwSettings()"><span data-i18n="discord.save">Save Settings</span></button>
+                    <div style="margin-top:12px">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-enabled" onchange="saveDwSettings()">
+                            <span data-i18n="discord.enabled">Enable Discord Webhook</span>
+                        </label>
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label data-i18n="discord.webhook_url">Webhook URL</label>
+                        <input type="text" id="dw-url" data-i18n-placeholder="discord.webhook_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
+                    </div>
+                    <h4 data-i18n="discord.notifications" style="margin:12px 0 8px">Notifications</h4>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-game-created" onchange="saveDwSettings()">
+                            <span data-i18n="discord.notify_game_created">Game Created</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-ban" onchange="saveDwSettings()">
+                            <span data-i18n="discord.notify_ban">Player Banned</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-report" onchange="saveDwSettings()">
+                            <span data-i18n="discord.notify_report">Player Reported</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-player-join" onchange="saveDwSettings()">
+                            <span data-i18n="discord.notify_player_join">Player Joined</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="dw-game-ended" onchange="saveDwSettings()">
+                            <span data-i18n="discord.notify_game_ended">Game Ended</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="dw-r" class="msg"></div>
             </div>
         </ct>
     </main>
@@ -2082,6 +2199,34 @@ namespace Empostor.Server.Http
             }
         }
 
+        async function fDiscordWebhook() {
+            const { data } = await api('GET', '/api/admin/discord');
+            document.getElementById('dw-enabled').checked = data.enabled;
+            document.getElementById('dw-url').value = data.webhookUrl || '';
+            document.getElementById('dw-game-created').checked = data.notifyOnGameCreated;
+            document.getElementById('dw-ban').checked = data.notifyOnBan;
+            document.getElementById('dw-report').checked = data.notifyOnReport;
+            document.getElementById('dw-player-join').checked = data.notifyOnPlayerJoin;
+            document.getElementById('dw-game-ended').checked = data.notifyOnGameEnded;
+        }
+
+        async function saveDwSettings() {
+            const { ok, data } = await api('POST', '/api/admin/discord', {
+                enabled: document.getElementById('dw-enabled').checked,
+                webhookUrl: document.getElementById('dw-url').value.trim(),
+                notifyOnGameCreated: document.getElementById('dw-game-created').checked,
+                notifyOnBan: document.getElementById('dw-ban').checked,
+                notifyOnReport: document.getElementById('dw-report').checked,
+                notifyOnPlayerJoin: document.getElementById('dw-player-join').checked,
+                notifyOnGameEnded: document.getElementById('dw-game-ended').checked
+            });
+            if (ok) {
+                msg('dw-r', true, _('discord.saved', 'Discord webhook settings saved.'));
+            } else {
+                msg('dw-r', false, data.error ?? 'Error');
+            }
+        }
+
         function refreshTab() {
             if (cur === 'ov') fGames('ov-t', true);
             if (cur === 'gm') fGames('gm-t', false);
@@ -2092,6 +2237,7 @@ namespace Empostor.Server.Http
             if (cur === 'pl') fPlayerLogs();
             if (cur === 'st') fStats();
             if (cur === 'cf') fChatFilter();
+            if (cur === 'dw') fDiscordWebhook();
         }
 
         async function doBc() {
@@ -2104,7 +2250,8 @@ namespace Empostor.Server.Http
         async function doKick() {
             const id = parseInt(document.getElementById('ki-id').value);
             if (!id) return msg('ki-r', false, _('kick.placeholder', 'Enter client ID'));
-            const { ok, data } = await api('POST', '/api/admin/kick', { clientId: id });
+            const reason = document.getElementById('ki-reason').value.trim();
+            const { ok, data } = await api('POST', '/api/admin/kick', { clientId: id, reason: reason || undefined });
             msg('ki-r', ok, ok ? _('alert.kicked', 'Kicked {0}').replace('{0}', data.name) : (data.error ?? 'Error'));
             if (ok) fKickList();
         }

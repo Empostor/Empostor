@@ -5,16 +5,31 @@ services:
       dockerfile: Dockerfile
     container_name: empostor-server
     restart: unless-stopped
+
     ports:
       - "22023:22023/tcp"
       - "22023:22023/udp"
+      # Uncomment to expose admin HTTP panel:
+      # - "80:80/tcp"
+
     volumes:
+      # Server config (can be read-only if you only edit via file)
       - ./config.json:/app/config.json:ro
+      # Writable runtime data
+      - empostor_plugins:/app/plugins
+      - empostor_libraries:/app/libraries
+      - empostor_languages:/app/Languages
       - ./Log:/app/Log
-      - ./plugins:/app/plugins
-      - ./Languages:/app/Languages
-      - ./marketplace:/app/marketplace
       - ./Data:/app/Data
+      - ./marketplace:/app/marketplace
+      # Per-component configs (writable from admin panel)
+      - ./discord_webhook.json:/app/discord_webhook.json
+
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:80
       - EMPOSTOR_Server__PublicIp=0.0.0.0
+
+volumes:
+  empostor_plugins:
+  empostor_libraries:
+  empostor_languages:

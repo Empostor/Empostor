@@ -29,6 +29,7 @@
   "nav.player_logs": "Player Logs",
   "nav.statistics": "Statistics",
   "nav.chat_filter": "Chat Filter",
+  "nav.discord": "Discord",
   "nav.reload_lang": "Reload Lang",
 
   "status.games": "Games",
@@ -68,6 +69,7 @@
 
   "kick.title": "Kick by Client ID",
   "kick.placeholder": "Client ID",
+  "kick.reason_placeholder": "Reason (optional)",
   "kick.button": "Kick",
   "kick.quick": "Quick Kick",
 
@@ -210,5 +212,18 @@
   "chatfilter.save": "Save Settings",
   "chatfilter.saved": "Settings saved.",
   "chatfilter.word_added": "Word added.",
-  "chatfilter.word_removed": "Word removed."
+  "chatfilter.word_removed": "Word removed.",
+
+  "discord.title": "Discord Webhook",
+  "discord.save": "Save Settings",
+  "discord.enabled": "Enable Discord Webhook",
+  "discord.webhook_url": "Webhook URL",
+  "discord.webhook_url_placeholder": "https://discord.com/api/webhooks/...",
+  "discord.notifications": "Notifications",
+  "discord.notify_game_created": "Game Created",
+  "discord.notify_ban": "Player Banned",
+  "discord.notify_report": "Player Reported",
+  "discord.notify_player_join": "Player Joined",
+  "discord.notify_game_ended": "Game Ended",
+  "discord.saved": "Discord webhook settings saved."
 }

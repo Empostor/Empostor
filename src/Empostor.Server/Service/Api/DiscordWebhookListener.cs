@@ -6,11 +6,9 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Empostor.Api.Config;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Player;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Service.Api;
 
@@ -20,17 +18,17 @@ internal sealed class DiscordWebhookListener : IEventListener
 
     private readonly ILogger<DiscordWebhookListener> _logger;
     private readonly IHttpClientFactory _http;
-    private readonly DiscordWebhookConfig _config;
+    private readonly DiscordWebhookStore _config;
     private readonly ConcurrentDictionary<string, DateTime> _throttle = new();
 
     public DiscordWebhookListener(
         ILogger<DiscordWebhookListener> logger,
         IHttpClientFactory http,
-        IOptions<DiscordWebhookConfig> config)
+        DiscordWebhookStore config)
     {
         _logger = logger;
         _http = http;
-        _config = config.Value;
+        _config = config;
     }
 
     [EventListener]
