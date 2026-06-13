@@ -57,11 +57,11 @@ RUN case "$TARGETARCH" in \
     -p:VersionSuffix="$VERSIONSUFFIX" \
     -o /app
 
-# Copy runtime assets
+# Copy default config (must be overridden in production)
 RUN cp ./src/Empostor.Server/config.json /app/config.json 2>/dev/null || true
 
 # ── Runtime stage ──────────────────────────
-FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 

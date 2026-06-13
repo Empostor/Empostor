@@ -75,6 +75,7 @@ jobs:
             VERSIONSUFFIX=docker
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
 
       - name: Export Docker image to tar
         run: docker save empostor-server:${{ matrix.arch.rid }} -o empostor-server-docker-${{ matrix.arch.rid }}.tar
