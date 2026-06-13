@@ -260,12 +260,12 @@ namespace Empostor.Server.Http
                 return NotFound(Err($"Client {req.ClientId} not found"));
             }
 
+            await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Kicked by admin");
+
             if (c.Player != null)
             {
                 await c.Player.KickAsync();
             }
-
-            await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Kicked by admin");
 
             return Ok(new { kicked = true, name = c.Name });
         }
@@ -290,12 +290,13 @@ namespace Empostor.Server.Http
                 var cip = c.Connection?.EndPoint?.Address;
                 if (cip != null && Norm(cip) == Norm(ip))
                 {
+                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
+
                     if (c.Player != null)
                     {
                         await c.Player.BanAsync();
                     }
 
-                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
                     kicked++;
                 }
         }
@@ -322,12 +323,13 @@ namespace Empostor.Server.Http
             {
                 if (c.FriendCode == req.FriendCode)
                 {
+                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
+
                     if (c.Player != null)
                     {
                         await c.Player.BanAsync();
                     }
 
-                    await c.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Banned by admin");
                     kicked++;
                 }
         }
@@ -374,6 +376,7 @@ namespace Empostor.Server.Http
             var players = g.Players.ToList();
             foreach (var p in players)
             {
+                await p.Client.DisconnectAsync(DisconnectReason.Custom, req.Reason ?? "Game ended by admin");
                 await p.KickAsync();
             }
 
@@ -807,7 +810,7 @@ namespace Empostor.Server.Http
 
         public sealed record UnbanReq(string Value);
 
-        public sealed record GameCodeReq(string GameCode);
+        public sealed record GameCodeReq(string GameCode, string? Reason = null);
 
         public sealed record GamePublicReq(string GameCode, bool IsPublic);
 
@@ -1657,6 +1660,7 @@ namespace Empostor.Server.Http
                 <div class="form">
                     <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg><span data-i18n="endgame.title">Force End Game</span></h3>
                     <div class="field"><label data-i18n="table.code">Code</label><input id="ge-c" data-i18n-placeholder="endgame.code_placeholder" placeholder="ABCDEF" style="text-transform:uppercase"></div>
+                    <div class="field"><label data-i18n="kick.reason_placeholder">Reason (optional)</label><input id="ge-reason" type="text" data-i18n-placeholder="kick.reason_placeholder" placeholder="Reason (optional)"></div>
                     <button class="bd" onclick="doEnd()"><span data-i18n="endgame.button">End Game</span></button>
                     <div id="ge-r" class="msg"></div>
                 </div>
@@ -2289,7 +2293,8 @@ namespace Empostor.Server.Http
             const c = document.getElementById('ge-c').value.trim().toUpperCase();
             if (!c) return msg('ge-r', false, _('alert.code_required', 'Code required'));
             if (!confirm(`End game ${c}?`)) return;
-            const { ok, data } = await api('POST', '/api/admin/game/end', { gameCode: c });
+            const reason = document.getElementById('ge-reason').value.trim();
+            const { ok, data } = await api('POST', '/api/admin/game/end', { gameCode: c, reason: reason || undefined });
             msg('ge-r', ok, ok ? _('alert.ended', 'Ended ({0} kicked)').replace('{0}', data.playersKicked) : (data.error ?? 'Error'));
             if (ok) fGamesEnd();
         }
