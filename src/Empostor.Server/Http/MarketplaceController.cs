@@ -25,6 +25,7 @@ namespace Empostor.Server.Http
         private readonly IHttpClientFactory _http;
         private readonly AdminConfig _config;
         private readonly PluginLoaderService _pluginLoaderService;
+        private readonly string _passwordHash;
 
         public MarketplaceController(
             ILogger<MarketplaceController> logger,
@@ -36,10 +37,12 @@ namespace Empostor.Server.Http
             _http = http;
             _config = config.Value;
             _pluginLoaderService = pluginLoaderService;
+            _passwordHash = AdminAuthHelper.ComputeHash(_config.Password);
         }
 
         private bool IsAuthenticated()
-            => Request.Cookies.TryGetValue("empostor_admin", out var v) && v == _config.Password;
+            => Request.Cookies.TryGetValue("empostor_admin", out var v)
+               && AdminAuthHelper.ConstantTimeEquals(v, _passwordHash);
 
         [HttpGet("/api/admin/marketplace/plugins")]
         public async Task<IActionResult> ListPlugins()

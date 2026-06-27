@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,6 +32,9 @@ namespace Empostor.Server.Http
         private static Dictionary<string, string>? _adminStrings;
         private static readonly object _stringsLock = new();
 
+        private const int LoginLockoutThreshold = 5;
+        private static readonly TimeSpan LoginLockoutDuration = TimeSpan.FromMinutes(15);
+
         private readonly ILogger<AdminController> _logger;
         private readonly IGameManager _gameManager;
         private readonly IClientManager _clientManager;
@@ -42,6 +46,8 @@ namespace Empostor.Server.Http
         private readonly PlayerStatsConfig _statsConfig;
         private readonly ChatFilterStore _chatFilter;
         private readonly DiscordWebhookStore _discordWebhook;
+        private readonly string _passwordHash;
+        private static readonly ConcurrentDictionary<string, (int Count, DateTime FirstAttempt)> _loginFailures = new();
 
         public AdminController(
             ILogger<AdminController> logger,
@@ -67,6 +73,15 @@ namespace Empostor.Server.Http
             _statsConfig = statsConfig.Value;
             _chatFilter = chatFilter;
             _discordWebhook = discordWebhook;
+            _passwordHash = AdminAuthHelper.ComputeHash(_config.Password);
+
+            if (string.IsNullOrEmpty(_config.Password)
+                || _config.Password == "CHANGE-ME"
+                || _config.Password == "admin123")
+            {
+                _logger.LogWarning(
+                    "[Admin] SECURITY: Default or empty admin password detected! Set a strong password in config.json -> Admin.Password to protect the admin panel.");
+            }
         }
 
         private static Dictionary<string, string> LoadStrings()
@@ -83,7 +98,8 @@ namespace Empostor.Server.Http
         }
 
         private bool IsAuthenticated()
-            => Request.Cookies.TryGetValue("empostor_admin", out var v) && v == _config.Password;
+            => Request.Cookies.TryGetValue("empostor_admin", out var v)
+               && AdminAuthHelper.ConstantTimeEquals(v, _passwordHash);
 
         [HttpGet("/admin")]
         public IActionResult Panel()
@@ -92,17 +108,50 @@ namespace Empostor.Server.Http
         [HttpPost("/admin/login")]
         public IActionResult Login([FromForm] string password)
         {
-            if (password != _config.Password)
+            var ip = (HttpContext.Connection.RemoteIpAddress ?? IPAddress.Loopback).ToString();
+
+            // Rate-limit check: block IPs that have failed too many times recently
+            if (_loginFailures.TryGetValue(ip, out var entry))
             {
-                _logger.LogWarning("[Admin] Failed login from {Ip}", HttpContext.Connection.RemoteIpAddress);
+                if (entry.Count >= LoginLockoutThreshold
+                    && DateTime.UtcNow - entry.FirstAttempt < LoginLockoutDuration)
+                {
+                    var remaining = (int)(LoginLockoutDuration - (DateTime.UtcNow - entry.FirstAttempt)).TotalMinutes;
+                    _logger.LogWarning("[Admin] Rate-limited login attempt from {Ip} (locked out for ~{Min}m more)", ip, Math.Max(1, remaining));
+                    return Content(LoginHtml.Replace("<!--ERR-->",
+                        $"<p style='color:var(--r);margin-top:8px'>Too many failed attempts. Try again in {Math.Max(1, remaining)} minute(s).</p>"),
+                        "text/html; charset=utf-8");
+                }
+
+                // Reset if lockout window has passed
+                if (DateTime.UtcNow - entry.FirstAttempt >= LoginLockoutDuration)
+                {
+                    _loginFailures.TryRemove(ip, out _);
+                }
+            }
+
+            var submittedHash = AdminAuthHelper.ComputeHash(password);
+
+            if (!AdminAuthHelper.ConstantTimeEquals(submittedHash, _passwordHash))
+            {
+                _loginFailures.AddOrUpdate(ip,
+                    _ => (1, DateTime.UtcNow),
+                    (_, e) => (e.Count + 1, e.FirstAttempt));
+
+                _logger.LogWarning("[Admin] Failed login from {Ip} (attempt {Count})", ip,
+                    _loginFailures.TryGetValue(ip, out var updated) ? updated.Count : 1);
                 return Content(LoginHtml.Replace("<!--ERR-->",
                     "<p style='color:var(--r);margin-top:8px'>Incorrect password.</p>"),
                     "text/html; charset=utf-8");
             }
 
-            Response.Cookies.Append("empostor_admin", password, new CookieOptions
+            // Successful login — clear rate-limit entry for this IP
+            _loginFailures.TryRemove(ip, out _);
+
+            Response.Cookies.Append("empostor_admin", _passwordHash, new CookieOptions
             {
                 HttpOnly = true,
+                Secure = true,
                 SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromHours(8),
             });

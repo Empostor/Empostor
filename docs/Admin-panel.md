@@ -8,12 +8,14 @@ The panel is protected by a password set in `config.json`:
 
 ```json
 "Admin": {
-  "Password": "changeme",
+  "Password": "your-strong-password-here",
   "MarketplaceUrl": "https://raw.githubusercontent.com/your-org/your-repo/main/marketplace/plugins.json"
 }
 ```
 
-On first visit the login page is shown. After a successful login a session cookie valid for 8 hours is set. Clicking **Sign out** clears it immediately.
+The password is hashed (SHA256) in memory and in cookies — the plaintext is never stored in the browser or compared directly. On first visit the login page is shown. After a successful login a session cookie (HttpOnly, Secure, SameSite=Strict) valid for 8 hours is set. Clicking **Sign out** clears it immediately.
+
+After 5 failed login attempts from the same IP, that IP is locked out for 15 minutes.
 
 All API endpoints under `/api/admin/` return `401 Unauthorized` if the cookie is absent or incorrect.
 

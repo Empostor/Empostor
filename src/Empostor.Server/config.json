@@ -46,7 +46,7 @@
     "UmeApiKey": "sk-empostor-globalapikey"
   },
   "Admin": {
-    "Password": "CHANGE-ME",
+    "Password": "",
     "MarketplaceUrl": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/plugins.json"
   },
   "DiscordWebhook": {

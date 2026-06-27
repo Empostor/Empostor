@@ -65,7 +65,7 @@ The `Admin` configuration is used to set the admin password and plugin marketpla
 
 | Key | Default | Description |
 | :--- | :--- | :--- |
-| Password | `CHANGE-ME` | The admin password for the server, used for authentication. Make sure to change this to a strong, complex password. |
+| Password | *(empty — must be set)* | The admin password for the server, used for authentication. Set a strong, complex password. The server logs a warning at startup if this is left empty or set to a known default. |
 | MarketplaceUrl | `https://raw.githubusercontent.com/HayashiUme/Empostor/main/marketplace/plugins.json` | A URL pointing to a `plugins.json` file. This file defines the list of plugins available in the plugin marketplace. |
 
 ### DiscordWebhook
