@@ -32,6 +32,7 @@ namespace Empostor.Server.Net.Manager
         private readonly PlayerConnectStore _playerConnectStore;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly AuthApiConfig _authApiConfig;
+        private readonly PortPoolService _portPool;
         private int _idLast;
 
         public ClientManager(
@@ -43,7 +44,8 @@ namespace Empostor.Server.Net.Manager
             AuthCacheService authCache,
             PlayerConnectStore playerConnectStore,
             IHttpClientFactory httpClientFactory,
-            IOptions<AuthApiConfig> authApiConfig)
+            IOptions<AuthApiConfig> authApiConfig,
+            PortPoolService portPool)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -55,6 +57,7 @@ namespace Empostor.Server.Net.Manager
             _playerConnectStore = playerConnectStore;
             _httpClientFactory = httpClientFactory;
             _authApiConfig = authApiConfig.Value;
+            _portPool = portPool;
 
             if (_compatibilityConfig.AllowFutureGameVersions || _compatibilityConfig.AllowHostAuthority || _compatibilityConfig.AllowVersionMixing)
             {
@@ -92,7 +95,7 @@ namespace Empostor.Server.Net.Manager
             Language language,
             QuickChatModes chatMode,
             PlatformSpecificData? platformSpecificData,
-            string? matchmakerToken = null)
+            int deltaPort = 0)
         {
             var versionCompare = _compatibilityManager.CanConnectToServer(clientVersion);
             if (versionCompare == ICompatibilityManager.VersionCompareResult.ServerTooOld
@@ -130,48 +133,63 @@ namespace Empostor.Server.Net.Manager
             if (string.IsNullOrWhiteSpace(name)) { await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameIllegalCharacters); return; }
 
             string? friendCode = null;
+            UserAuthInfo? authInfo = null;
             var clientIp = connection.EndPoint?.Address;
 
-            var authInfo = _authCache.FindByToken(matchmakerToken);
-
-            if (authInfo != null)
+            // Primary: match by delta port (nonce)
+            if (deltaPort > 0)
             {
-                friendCode = authInfo.FriendCode;
-
-                if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
+                authInfo = _authCache.FindByPort(deltaPort);
+                if (authInfo != null)
                 {
-                    var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
-                    if (nikoResult != null)
+                    // Port matched — cancel the allocation timeout
+                    _portPool.ConfirmPort(deltaPort);
+
+                    friendCode = authInfo.FriendCode;
+
+                    if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
                     {
-                        if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
-                            && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                        var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
+                        if (nikoResult != null)
                         {
-                            friendCode = nikoResult.Value.FriendCode;
-                            _authCache.UpdateFriendCode(matchmakerToken!, friendCode);
-                            _logger.LogInformation(
-                                "[Auth] {Name}: Niko PUID matched → FriendCode={FC} PUID={Puid}",
-                                name, friendCode, authInfo.ProductUserId);
-                        }
-                        else
-                        {
-                            _logger.LogWarning(
-                                "[Auth] {Name}: Niko PUID mismatch (expected={Expected}, got={Got}) — keeping existing FC",
-                                name, authInfo.ProductUserId, nikoResult.Value.Puid);
+                            if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
+                                && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                            {
+                                friendCode = nikoResult.Value.FriendCode;
+                                authInfo.FriendCode = friendCode;
+                                authInfo.FriendCodeConfirmed = true;
+                                _logger.LogInformation(
+                                    "[Auth] {Name}: Niko PUID matched via port={Port} → FriendCode={FC} PUID={Puid}",
+                                    name, deltaPort, friendCode, authInfo.ProductUserId);
+                            }
+                            else
+                            {
+                                _logger.LogWarning(
+                                    "[Auth] {Name}: Niko PUID mismatch (expected={Expected}, got={Got}) — keeping existing FC",
+                                    name, authInfo.ProductUserId, nikoResult.Value.Puid);
+                            }
                         }
                     }
-                }
 
-                _logger.LogInformation(
-                    "[Auth] {Name}: matched via matchmakerToken → FriendCode={FC} PUID={Puid}",
-                    name, friendCode, authInfo.ProductUserId);
-            }
-            else if (clientIp != null)
-            {
-                var ipAuth = _authCache.FindByIp(clientIp);
-                if (ipAuth != null)
+                    _logger.LogInformation(
+                        "[Auth] {Name}: matched via port={Port} → FriendCode={FC} PUID={Puid}",
+                        name, deltaPort, friendCode, authInfo.ProductUserId);
+                }
+                else
                 {
-                    friendCode = ipAuth.FriendCode;
-                    authInfo = ipAuth;
+                    _logger.LogWarning(
+                        "[Auth] {Name}: port={Port} has no auth info (expired or unknown), falling back to IP",
+                        name, deltaPort);
+                }
+            }
+
+            // Fallback: match by IP
+            if (authInfo == null && clientIp != null)
+            {
+                authInfo = _authCache.FindByIp(clientIp);
+                if (authInfo != null)
+                {
+                    friendCode = authInfo.FriendCode;
                     _logger.LogInformation(
                         "[Auth] {Name}: matched via IP={Ip} → FriendCode={FC}",
                         name, NormalizeIp(clientIp), friendCode);
@@ -179,20 +197,19 @@ namespace Empostor.Server.Net.Manager
                 else
                 {
                     _logger.LogWarning(
-                        "[Auth] {Name}: no auth info found (token={Token}, IP={Ip}) — FriendCode will be null",
-                        name,
-                        string.IsNullOrEmpty(matchmakerToken) ? "(none)" : matchmakerToken[..Math.Min(8, matchmakerToken.Length)] + "...",
-                        NormalizeIp(clientIp));
+                        "[Auth] {Name}: no auth info found (deltaPort={DP}, IP={Ip}) — FriendCode will be null",
+                        name, deltaPort, NormalizeIp(clientIp));
                 }
             }
 
             var client = _clientFactory.Create(connection, name, clientVersion, language, chatMode, platformSpecificData);
             client.FriendCode = string.IsNullOrEmpty(friendCode) ? null : friendCode;
             client.ProductUserId = authInfo?.ProductUserId;
+            client.DeltaPort = deltaPort;
 
             var id = NextId();
             client.Id = id;
-            _logger.LogTrace("Client connected: Id={Id} Name={Name} FriendCode={FC}", id, name, client.FriendCode ?? "(none)");
+            _logger.LogTrace("Client connected: Id={Id} Name={Name} FriendCode={FC} DeltaPort={DP}", id, name, client.FriendCode ?? "(none)", deltaPort);
             _clients.TryAdd(id, client);
             await _eventManager.CallAsync(new ClientConnectedEvent(connection, client));
         }
@@ -201,6 +218,11 @@ namespace Empostor.Server.Net.Manager
         {
             _logger.LogTrace("Client {Id} disconnected.", client.Id);
             _clients.TryRemove(client.Id, out _);
+
+            if (client is ClientBase cb && cb.DeltaPort > 0)
+            {
+                _portPool.ReturnPort(cb.DeltaPort);
+            }
 
             if (!string.IsNullOrEmpty(client.ProductUserId))
             {

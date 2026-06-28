@@ -13,6 +13,14 @@ public sealed class AuthCacheService : IDisposable
 
     private readonly ConcurrentDictionary<string, UserAuthInfo> _byToken = new();
     private readonly ConcurrentDictionary<string, string> _byIp = new();
+    private readonly ConcurrentDictionary<int, UserAuthInfo> _byPort = new();
+    private readonly ConcurrentDictionary<string, UserAuthInfo> _byIpDirect = new();
+    private readonly ConcurrentDictionary<string, int> _ipToPort = new();
+
+    /// <summary>
+    ///     Invoked when a port lease should be returned to the pool (e.g., on expiry during cleanup).
+    /// </summary>
+    public event Action<int>? OnPortExpired;
 
     private readonly Timer _cleanupTimer;
     private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(10);
@@ -68,6 +76,63 @@ public sealed class AuthCacheService : IDisposable
         return _byToken.TryGetValue(matchmakerToken, out var info) && !Expired(info) ? info : null;
     }
 
+    /// <summary>
+    ///     Stores auth info keyed by delta port. Also maps the IP for fallback lookups.
+    /// </summary>
+    public void StoreByPort(int port, UserAuthInfo info)
+    {
+        _byPort[port] = info;
+
+        if (info.ClientIp != null)
+        {
+            _byIpDirect[info.ClientIp] = info;
+            _ipToPort[info.ClientIp] = port;
+        }
+    }
+
+    /// <summary>
+    ///     Looks up the delta port assigned to a client IP.
+    ///     Returns 0 if no port is assigned (IP fallback or expired).
+    /// </summary>
+    public int FindPortByIp(IPAddress? clientIp)
+    {
+        if (clientIp == null)
+        {
+            return 0;
+        }
+
+        var key = NormalizeIp(clientIp);
+        return _ipToPort.TryGetValue(key, out var port) ? port : 0;
+    }
+
+    /// <summary>
+    ///     Stores auth info keyed by IP only (used when port pool is exhausted or feature disabled).
+    /// </summary>
+    public void StoreByIp(string ip, UserAuthInfo info)
+    {
+        _byIpDirect[ip] = info;
+    }
+
+    /// <summary>
+    ///     Looks up auth info by delta port number.
+    /// </summary>
+    public UserAuthInfo? FindByPort(int port)
+    {
+        return _byPort.TryGetValue(port, out var info) && !Expired(info) ? info : null;
+    }
+
+    /// <summary>
+    ///     Removes a port entry from all lookup dictionaries.
+    /// </summary>
+    public void RemoveByPort(int port)
+    {
+        if (_byPort.TryRemove(port, out var info) && info.ClientIp != null)
+        {
+            _byIpDirect.TryRemove(info.ClientIp, out _);
+            _ipToPort.TryRemove(info.ClientIp, out _);
+        }
+    }
+
     public UserAuthInfo? FindByIp(IPAddress? clientIp)
     {
         if (clientIp == null)
@@ -76,6 +141,14 @@ public sealed class AuthCacheService : IDisposable
         }
 
         var key = NormalizeIp(clientIp);
+
+        // Try direct IP storage first (new path: port-based or IP-only)
+        if (_byIpDirect.TryGetValue(key, out var info) && !Expired(info))
+        {
+            return info;
+        }
+
+        // Fall back to legacy token-based lookup
         return _byIp.TryGetValue(key, out var token) ? FindByToken(token) : null;
     }
 
@@ -96,6 +169,7 @@ public sealed class AuthCacheService : IDisposable
 
     private void Cleanup()
     {
+        // Clean token-based entries
         var expired = _byToken.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
         foreach (var token in expired)
         {
@@ -105,9 +179,35 @@ public sealed class AuthCacheService : IDisposable
             }
         }
 
-        if (expired.Count > 0)
+        // Clean port-based entries
+        var expiredPorts = _byPort.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
+        foreach (var port in expiredPorts)
         {
-            _logger.LogDebug("[Auth] Cleaned {Count} expired entries", expired.Count);
+            if (_byPort.TryRemove(port, out var info))
+            {
+                if (info.ClientIp != null)
+                {
+                    _byIpDirect.TryRemove(info.ClientIp, out _);
+                    _ipToPort.TryRemove(info.ClientIp, out _);
+                }
+
+                OnPortExpired?.Invoke(port);
+            }
+        }
+
+        // Clean direct IP entries
+        var expiredIps = _byIpDirect.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
+        foreach (var ip in expiredIps)
+        {
+            _byIpDirect.TryRemove(ip, out _);
+            _ipToPort.TryRemove(ip, out _);
+        }
+
+        var totalExpired = expired.Count + expiredPorts.Count + expiredIps.Count;
+        if (totalExpired > 0)
+        {
+            _logger.LogDebug("[Auth] Cleaned {Count} expired entries (token={T}, port={P}, ip={I})",
+                totalExpired, expired.Count, expiredPorts.Count, expiredIps.Count);
         }
     }
 

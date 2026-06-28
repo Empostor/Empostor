@@ -16,7 +16,7 @@ namespace Empostor.Api.Net.Messages.C2S
         ///
         /// Note: UDP handshake packets do not include matchmakerToken or friendCode.
         /// Authentication data is exchanged beforehand via the HTTP /api/user endpoint
-        /// and associated on the server side by IP address.
+        /// and the TCP/UDP matching is done via dynamic delta port allocation (nonce).
         /// </summary>
         public static void Deserialize(
             IMessageReader reader,
@@ -24,8 +24,7 @@ namespace Empostor.Api.Net.Messages.C2S
             out string name,
             out Language language,
             out QuickChatModes chatMode,
-            out PlatformSpecificData? platformSpecificData,
-            out string? matchmakerToken)
+            out PlatformSpecificData? platformSpecificData)
         {
             clientVersion = reader.ReadGameVersion();
             name = reader.ReadString();
@@ -48,47 +47,22 @@ namespace Empostor.Api.Net.Messages.C2S
                 chatMode = QuickChatModes.FreeChatOrQuickChat;
             }
 
-            // V3+: platform data (message) + ProductUserId/matchmakerToken (string) + CrossplayFlags (uint32)
-            matchmakerToken = null;
+            // V3+: platform data (message) + ProductUserId (string) + CrossplayFlags (uint32)
             if (clientVersion >= Version.V3)
             {
                 using var platformReader = reader.ReadMessage();
                 platformSpecificData = new PlatformSpecificData(platformReader);
 
-                // Read the string at the ProductUserId position:
-                // - Standard client: this is the actual ProductUserId (ignored)
-                // - Custom client: may carry a base64 JSON matchmakerToken (starts with 'ey')
-                string? productUserIdOrToken = null;
+                // ProductUserId (string) — ignored, we use the port-based matching
                 if (reader.Position < reader.Length)
                 {
-                    try { productUserIdOrToken = reader.ReadString(); } catch { /* ignore */ }
+                    try { reader.ReadString(); } catch { /* ignore */ }
                 }
 
                 // CrossplayFlags (uint32)
                 if (reader.Position < reader.Length)
                 {
                     try { reader.ReadUInt32(); } catch { /* ignore */ }
-                }
-
-                // Try to read extra appended fields (custom client extension)
-                if (reader.Position < reader.Length)
-                {
-                    try { matchmakerToken = reader.ReadString(); } catch { /* ignore */ }
-                }
-
-                if (reader.Position < reader.Length)
-                {
-                    try { var friendCode = reader.ReadString(); } catch { /* ignore */ }
-                }
-
-                // Fallback: if no extra matchmakerToken was found, check whether the
-                // productUserIdOrToken looks like a base64-encoded JSON token.
-                if (matchmakerToken == null
-                    && productUserIdOrToken != null
-                    && productUserIdOrToken.Length > 10
-                    && productUserIdOrToken.StartsWith("ey", System.StringComparison.Ordinal))
-                {
-                    matchmakerToken = productUserIdOrToken;
                 }
             }
             else

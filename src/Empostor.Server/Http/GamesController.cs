@@ -9,6 +9,7 @@ using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Server.Extensions;
+using Empostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -20,14 +21,19 @@ public sealed class GamesController : ControllerBase
 {
     private readonly IGameManager _gameManager;
     private readonly ListingManager _listingManager;
-    private readonly HostServer _hostServer;
+    private readonly ServerConfig _serverConfig;
+    private readonly AuthCacheService _authCache;
 
-    public GamesController(IGameManager gameManager, ListingManager listingManager, IOptions<ServerConfig> serverConfig)
+    public GamesController(
+        IGameManager gameManager,
+        ListingManager listingManager,
+        IOptions<ServerConfig> serverConfig,
+        AuthCacheService authCache)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
-        var config = serverConfig.Value;
-        _hostServer = HostServer.From(IPAddress.Parse(config.ResolvePublicIp()), config.PublicPort);
+        _serverConfig = serverConfig.Value;
+        _authCache = authCache;
     }
 
     /// <summary>
@@ -59,7 +65,8 @@ public sealed class GamesController : ControllerBase
         }
 
         var listings = _listingManager.FindListings(HttpContext, mapId, numImpostors, lang, clientVersion);
-        return Ok(listings.Select(GameListing.From));
+        var port = GetDeltaPort();
+        return Ok(listings.Select(g => GameListing.From(g, port)));
     }
 
     /// <summary>
@@ -75,14 +82,19 @@ public sealed class GamesController : ControllerBase
             return NotFound(new MatchmakerResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        return Ok(HostServer.From(game.PublicIp));
+        var port = GetDeltaPort();
+        return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
     }
 
     /// <summary>
     /// Legacy: get server address to host a new game.
     /// </summary>
     [HttpPut]
-    public IActionResult Put() => Ok(_hostServer);
+    public IActionResult Put()
+    {
+        var port = GetDeltaPort();
+        return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
+    }
 
     /// <summary>
     /// Get a specific game by code.
@@ -97,7 +109,8 @@ public sealed class GamesController : ControllerBase
             return NotFound(new FindGameByCodeResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        return Ok(new FindGameByCodeResponse(GameListing.From(game)));
+        var port = GetDeltaPort();
+        return Ok(new FindGameByCodeResponse(GameListing.From(game, port)));
     }
 
     /// <summary>
@@ -107,9 +120,10 @@ public sealed class GamesController : ControllerBase
     [HttpGet("filtered")]
     public IActionResult ShowFilteredLobbies()
     {
+        var port = GetDeltaPort();
         var listings = _gameManager.Games
             .Where(g => g.IsPublic)
-            .Select(GameListing.From)
+            .Select(g => GameListing.From(g, port))
             .ToList();
 
         return Ok(new
@@ -165,6 +179,51 @@ public sealed class GamesController : ControllerBase
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         });
     }
+
+    /// <summary>
+    ///     Gets the delta port assigned to the requesting client.
+    ///     Falls back to the static public port if no delta port is allocated.
+    /// </summary>
+    private ushort GetDeltaPort()
+    {
+        var clientIp = GetClientIp();
+        if (clientIp == null)
+        {
+            return _serverConfig.PublicPort;
+        }
+
+        var deltaPort = _authCache.FindPortByIp(clientIp);
+        if (deltaPort > 0)
+        {
+            return (ushort)deltaPort;
+        }
+
+        return _serverConfig.PublicPort;
+    }
+
+    private IPAddress? GetClientIp()
+    {
+        var xRealIp = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(xRealIp) && IPAddress.TryParse(xRealIp, out var realIp))
+        {
+            return Normalize(realIp);
+        }
+
+        var xForwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(xForwardedFor))
+        {
+            var first = xForwardedFor.Split(',')[0].Trim();
+            if (IPAddress.TryParse(first, out var fwdIp))
+            {
+                return Normalize(fwdIp);
+            }
+        }
+
+        return Normalize(HttpContext.Connection.RemoteIpAddress);
+    }
+
+    private static IPAddress? Normalize(IPAddress? ip)
+        => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4() : ip;
 
     private static uint ConvertAddressToNumber(IPAddress address)
     {
@@ -249,13 +308,13 @@ public sealed class GamesController : ControllerBase
 
         [JsonPropertyName("Options")] public required string Options { get; init; }
 
-        public static GameListing From(IGame game)
+        public static GameListing From(IGame game, ushort port)
         {
             var platform = game.Host?.Client.PlatformSpecificData;
             return new GameListing
             {
                 Ip = ConvertAddressToNumber(game.PublicIp.Address),
-                Port = (ushort)game.PublicIp.Port,
+                Port = port,
                 GameId = game.Code,
                 PlayerCount = game.PlayerCount,
                 HostName = game.DisplayName ?? game.Host?.Client.Name ?? "Unknown host",

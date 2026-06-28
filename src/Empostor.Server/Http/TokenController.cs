@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
+using Empostor.Server.Net;
 using Empostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -36,17 +37,23 @@ public sealed class TokenController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AuthCacheService _authCache;
     private readonly AuthApiConfig _authApiConfig;
+    private readonly PortPoolService _portPool;
+    private readonly IDeltaListenerManager _deltaListenerManager;
 
     public TokenController(
         ILogger<TokenController> logger,
         IHttpClientFactory httpClientFactory,
         AuthCacheService authCache,
-        IOptions<AuthApiConfig> authApiConfig)
+        IOptions<AuthApiConfig> authApiConfig,
+        PortPoolService portPool,
+        IDeltaListenerManager deltaListenerManager)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _authCache = authCache;
         _authApiConfig = authApiConfig.Value;
+        _portPool = portPool;
+        _deltaListenerManager = deltaListenerManager;
     }
 
     [HttpPost]
@@ -80,9 +87,42 @@ public sealed class TokenController : ControllerBase
             _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp,
                 verifyCode: _nikoVerifyCode, friendCodeConfirmed: _nikoFriendCodeConfirmed);
 
-            _logger.LogInformation(
-                "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} IP={Ip}",
-                productUserId, friendCode, clientIp);
+            // Allocate a delta UDP port to match the TCP auth session to the subsequent UDP connection
+            var deltaPort = _portPool.AllocatePort(productUserId);
+
+            var authInfo = new UserAuthInfo
+            {
+                ProductUserId = productUserId,
+                MatchmakerToken = matchmakerToken,
+                FriendCode = friendCode ?? string.Empty,
+                ClientIp = clientIp != null ? NormalizeIpString(clientIp) : null,
+                CreatedAt = DateTime.UtcNow,
+                VerifyCode = _nikoVerifyCode,
+                FriendCodeConfirmed = _nikoFriendCodeConfirmed,
+            };
+
+            if (deltaPort > 0)
+            {
+                // Port allocated — store by port and start delta listener for UDP matching
+                _authCache.StoreByPort(deltaPort, authInfo);
+                _ = _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
+
+                _logger.LogInformation(
+                    "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} DeltaPort={Port} IP={Ip}",
+                    productUserId, friendCode, deltaPort, clientIp);
+            }
+            else
+            {
+                // Pool exhausted or feature disabled — fall back to IP-based matching
+                if (clientIp != null)
+                {
+                    _authCache.StoreByIp(NormalizeIpString(clientIp), authInfo);
+                }
+
+                _logger.LogInformation(
+                    "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} Port=0 (IP fallback) IP={Ip}",
+                    productUserId, friendCode, clientIp);
+            }
 
             var response = new TokenResponse
             {
@@ -92,6 +132,7 @@ public sealed class TokenController : ControllerBase
                     FriendCode = friendCode,
                 },
                 Hash = matchmakerToken,
+                Port = deltaPort,
             };
 
             return Ok(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(response)));
@@ -138,6 +179,9 @@ public sealed class TokenController : ControllerBase
 
     private static IPAddress? Normalize(IPAddress? ip)
         => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4() : ip;
+
+    private static string NormalizeIpString(IPAddress? ip)
+        => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4().ToString() : ip?.ToString() ?? "unknown";
 
     private async Task<string> GetFriendCodeAsync(string eosToken, string productUserId)
     {
@@ -281,7 +325,7 @@ public sealed class TokenController : ControllerBase
         {
             using var client = _httpClientFactory.CreateClient("innersloth");
             var req = new HttpRequestMessage(HttpMethod.Get,
-                "https://backend.innersloth.com/api/user/username");
+                "https://backend.innersloth.proxy.amongusclub.cn/api/user/username");
             req.Headers.Add("Authorization", "Bearer " + eosToken);
             req.Headers.TryAddWithoutValidation("Accept", "application/vnd.api+json");
 
@@ -665,6 +709,9 @@ public sealed class TokenController : ControllerBase
 
         [JsonPropertyName("Hash")]
         public required string Hash { get; init; }
+
+        [JsonPropertyName("Port")]
+        public int Port { get; init; }
     }
 
     public sealed class TokenContent

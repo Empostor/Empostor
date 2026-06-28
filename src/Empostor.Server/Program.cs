@@ -32,6 +32,7 @@ using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
 using Empostor.Api.Service;
 using Empostor.Server.Service.Auth;
+using Empostor.Server.Service.Firewall;
 using Empostor.Server.Service.Stat;
 using Empostor.Server.Utils;
 using Microsoft.AspNetCore.Builder;
@@ -40,6 +41,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
 using Next.Hazel.Extensions;
 using Serilog;
 using Serilog.Events;
@@ -114,6 +116,22 @@ namespace Empostor.Server
 
                     services.AddSingleton<AuthCacheService>();
                     services.AddSingleton<PlayerConnectStore>();
+                    services.AddSingleton<PortPoolService>();
+                    services.AddSingleton<IFirewallService>(sp =>
+                    {
+                        var cfg = sp.GetRequiredService<IOptions<ServerConfig>>().Value;
+                        if (cfg.UseUfw)
+                        {
+                            return ActivatorUtilities.CreateInstance<UfwFirewallService>(sp);
+                        }
+
+                        if (cfg.UseFirewalld)
+                        {
+                            return ActivatorUtilities.CreateInstance<FirewalldFirewallService>(sp);
+                        }
+
+                        return ActivatorUtilities.CreateInstance<NoopFirewallService>(sp);
+                    });
                     services.AddHttpClient("innersloth", client =>
                     {
                         client.Timeout = TimeSpan.FromSeconds(15);
@@ -191,6 +209,7 @@ namespace Empostor.Server
                     services.AddSingleton<IGameCodeFactory, GameCodeFactory>();
                     services.AddSingleton<IEventManager, EventManager>();
                     services.AddSingleton<Matchmaker>();
+                    services.AddSingleton<IDeltaListenerManager>(sp => sp.GetRequiredService<Matchmaker>());
                     services.AddHostedService<MatchmakerService>();
                 })
                 .UseSerilog((context, logCfg) =>
