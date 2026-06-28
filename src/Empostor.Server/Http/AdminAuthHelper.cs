@@ -4,14 +4,10 @@ using System.Text;
 
 namespace Empostor.Server.Http;
 
-/// <summary>
-/// Shared admin authentication utilities: SHA256 hashing and constant-time comparison.
-/// </summary>
 internal static class AdminAuthHelper
 {
     /// <summary>
-    /// Computes the hex-encoded SHA256 hash of the input string.
-    /// Used so the plaintext password never enters a cookie or lingers in memory.
+    ///     Used so the plaintext password never enters a cookie or lingers in memory.
     /// </summary>
     internal static string ComputeHash(string input)
     {
@@ -20,8 +16,7 @@ internal static class AdminAuthHelper
     }
 
     /// <summary>
-    /// Compares two strings in constant time to prevent timing side-channel attacks.
-    /// Uses CryptographicOperations.FixedTimeEquals on the UTF-8 byte representations.
+    ///     Uses CryptographicOperations.FixedTimeEquals to prevent timing side-channel attacks.
     /// </summary>
     internal static bool ConstantTimeEquals(string a, string b)
     {

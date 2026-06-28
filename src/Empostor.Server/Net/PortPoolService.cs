@@ -76,7 +76,7 @@ public sealed class PortPoolService : IDisposable
     }
 
     /// <summary>
-    ///     Allocates a port from the pool. Returns 0 if the pool is empty or disabled.
+    ///     Returns 0 if the pool is empty or disabled.
     /// </summary>
     public int AllocatePort(string puid)
     {
@@ -109,9 +109,6 @@ public sealed class PortPoolService : IDisposable
         return port;
     }
 
-    /// <summary>
-    ///     Returns a port to the pool, cancelling its timeout.
-    /// </summary>
     public void ReturnPort(int port)
     {
         if (port <= 0)
@@ -134,7 +131,6 @@ public sealed class PortPoolService : IDisposable
     }
 
     /// <summary>
-    ///     Confirms that a client has successfully connected on this port.
     ///     Cancels the 5-minute allocation timeout so the port stays allocated
     ///     while the player is connected.
     /// </summary>
@@ -153,9 +149,6 @@ public sealed class PortPoolService : IDisposable
         }
     }
 
-    /// <summary>
-    ///     Checks whether a port has an active lease (not expired).
-    /// </summary>
     public bool HasLease(int port)
     {
         return _activeLeases.ContainsKey(port);

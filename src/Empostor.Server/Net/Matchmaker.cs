@@ -130,9 +130,6 @@ namespace Empostor.Server.Net
             }
         }
 
-        /// <summary>
-        ///     Stops and removes a delta listener for the given port.
-        /// </summary>
         public async ValueTask StopDeltaListenerAsync(int port)
         {
             if (_deltaListeners.TryRemove(port, out var listener))
@@ -192,9 +189,6 @@ namespace Empostor.Server.Net
                 deltaPort: port);
         }
 
-        /// <summary>
-        ///     Callback when a port is returned to the pool (timeout or explicit return).
-        /// </summary>
         private void OnPortReturned(int port)
         {
             _authCache.RemoveByPort(port);

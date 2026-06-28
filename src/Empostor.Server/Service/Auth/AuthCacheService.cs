@@ -113,17 +113,11 @@ public sealed class AuthCacheService : IDisposable
         _byIpDirect[ip] = info;
     }
 
-    /// <summary>
-    ///     Looks up auth info by delta port number.
-    /// </summary>
     public UserAuthInfo? FindByPort(int port)
     {
         return _byPort.TryGetValue(port, out var info) && !Expired(info) ? info : null;
     }
 
-    /// <summary>
-    ///     Removes a port entry from all lookup dictionaries.
-    /// </summary>
     public void RemoveByPort(int port)
     {
         if (_byPort.TryRemove(port, out var info) && info.ClientIp != null)

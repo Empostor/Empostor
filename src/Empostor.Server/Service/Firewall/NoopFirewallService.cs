@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace Empostor.Server.Service.Firewall;
 
 /// <summary>
-///     No-op firewall service used when neither UFW nor firewalld is enabled.
+///     No-op backend used when neither UFW nor firewalld is enabled.
 /// </summary>
 public sealed class NoopFirewallService : IFirewallService
 {

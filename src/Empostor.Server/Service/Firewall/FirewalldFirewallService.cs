@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace Empostor.Server.Service.Firewall;
 
 /// <summary>
-///     Manages firewalld rules on Linux (RHEL/Fedora/CentOS).
+///     firewalld backend (RHEL/Fedora/CentOS).
 ///     Best-effort: failures are logged as warnings and do not throw.
 /// </summary>
 public sealed class FirewalldFirewallService : IFirewallService

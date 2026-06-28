@@ -96,9 +96,6 @@ public sealed class GamesController : ControllerBase
         return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
     }
 
-    /// <summary>
-    /// Get a specific game by code.
-    /// </summary>
     [HttpGet("{gameId}")]
     public IActionResult Show([FromRoute] int gameId)
     {
@@ -180,10 +177,6 @@ public sealed class GamesController : ControllerBase
         });
     }
 
-    /// <summary>
-    ///     Gets the delta port assigned to the requesting client.
-    ///     Falls back to the static public port if no delta port is allocated.
-    /// </summary>
     private ushort GetDeltaPort()
     {
         var clientIp = GetClientIp();

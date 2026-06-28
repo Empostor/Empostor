@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace Empostor.Server.Service.Firewall;
 
 /// <summary>
-///     Manages UFW (Uncomplicated Firewall) rules on Linux.
+///     UFW (Uncomplicated Firewall) backend.
 ///     Best-effort: failures are logged as warnings and do not throw.
 /// </summary>
 public sealed class UfwFirewallService : IFirewallService
