@@ -86,7 +86,7 @@ namespace Empostor.Server.Http
 
         private static Dictionary<string, string> LoadStrings()
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Pages", "AdminStrings.json");
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Pages", "AdminStrings.json");
             if (!System.IO.File.Exists(path))
             {
                 return new Dictionary<string, string>();
@@ -896,77 +896,35 @@ namespace Empostor.Server.Http
 
         public sealed record DiscordWebhookSettingsReq(bool? Enabled, string? WebhookUrl, bool? NotifyOnGameCreated, bool? NotifyOnBan, bool? NotifyOnReport, bool? NotifyOnPlayerJoin, bool? NotifyOnGameEnded);
 
-        // HTML pages are loaded from disk on first access so server operators can
-        // customize them. Falls back to minimal embedded pages if the files are missing.
+        // HTML pages are auto-generated to BaseDirectory/Pages/ on first access.
+        // Server operators can customize them by editing the files on disk.
         private static string? _loginHtml;
         private static string? _adminHtml;
 
-        private string LoginHtml => _loginHtml ??= LoadPage("Pages/login.html", _fallbackLogin);
-        private string AdminHtml => _adminHtml ??= LoadPage("Pages/admin.html", _fallbackAdmin);
+        private string LoginHtml => _loginHtml ??= GetPage("login.html", AdminTemplateDefaults.LoginHtml);
+        private string AdminHtml => _adminHtml ??= GetPage("admin.html", AdminTemplateDefaults.AdminHtml);
 
-        private static string LoadPage(string path, string fallback)
+        private static string GetPage(string fileName, string defaultContent)
         {
             try
             {
-                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), path);
-                if (System.IO.File.Exists(fullPath)) return System.IO.File.ReadAllText(fullPath);
+                var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Pages");
+                var fullPath = Path.Combine(dir, fileName);
+
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(dir);
+                    System.IO.File.WriteAllText(fullPath, defaultContent);
+                }
+
+                return System.IO.File.ReadAllText(fullPath);
             }
-            catch { }
-            return fallback;
+            catch
+            {
+                return defaultContent;
+            }
         }
 
-        private static readonly string _fallbackLogin = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Empostor Admin</title>
-<style>
-:root{--bg:#0d1117;--s:#161b22;--b:#30363d;--t:#e6edf3;--a:#2f81f7;--r:#f85149}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--t);font:14px/1.5 'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:36px 40px;width:340px}
-h1{font-size:18px;font-weight:700;margin-bottom:24px;text-align:center;color:var(--t)}
-input{width:100%;background:#0d1117;border:1px solid var(--b);border-radius:6px;color:var(--t);padding:9px 12px;font-size:14px;outline:none;margin-bottom:14px}
-input:focus{border-color:var(--a)}
-button{width:100%;background:var(--a);color:#fff;border:none;border-radius:6px;padding:10px;font-size:14px;font-weight:600;cursor:pointer}
-</style>
-</head>
-<body>
-<div class="card">
-<h1>Empostor Admin</h1>
-<form method="POST" action="/admin/login">
-<label>Password</label><input type="password" name="password" autofocus placeholder="Enter admin password">
-<button type="submit">Sign in</button><!--ERR-->
-</form>
-<p style="font-size:11px;color:var(--r);margin-top:12px">Template file not found. Place login.html in the Pages directory.</p>
-</div>
-</body>
-</html>
-""";
-
-        private static readonly string _fallbackAdmin = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Empostor Admin</title>
-<style>
-:root{--bg:#0d1117;--s:#161b22;--t:#e6edf3;--m:#7d8590;--a:#2f81f7;--r:#f85149}
-body{background:var(--bg);color:var(--t);font:14px/1.5 'Segoe UI',system-ui,sans-serif}
-</style>
-</head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh">
-<div style="text-align:center;background:var(--s);padding:40px;border-radius:12px;border:1px solid var(--r)">
-<h2>Admin Template Missing</h2>
-<p style="color:var(--m)">Place <code>admin.html</code> in the <code>Pages/</code> directory.</p>
-<form method="POST" action="/admin/logout" style="margin-top:20px"><button style="background:var(--r);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer">Sign out</button></form>
-</div>
-</body>
-</html>
-""";
 
     }
 }

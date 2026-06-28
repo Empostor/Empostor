@@ -1,3 +1,151 @@
+using System;
+using System.IO;
+
+namespace Empostor.Server.Http;
+
+internal static class AdminTemplateDefaults
+{
+    private static readonly string PagesDir =
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Pages");
+
+    internal static string PagesDirectory => PagesDir;
+
+    internal static void EnsureCreated()
+    {
+        try
+        {
+            Directory.CreateDirectory(PagesDir);
+            var loginPath = Path.Combine(PagesDir, "login.html");
+            var adminPath = Path.Combine(PagesDir, "admin.html");
+            if (!File.Exists(loginPath))
+                File.WriteAllText(loginPath, LoginHtml);
+            if (!File.Exists(adminPath))
+                File.WriteAllText(adminPath, AdminHtml);
+        }
+        catch
+        {
+            // Best-effort; controller falls back to in-memory defaults
+        }
+    }
+
+    internal static string LoginHtml { get; } = """
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Empostor Admin</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --s: #161b22;
+            --b: #30363d;
+            --t: #e6edf3;
+            --m: #7d8590;
+            --a: #2f81f7;
+            --r: #f85149
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--t);
+            font: 14px/1.5 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .card {
+            background: var(--s);
+            border: 1px solid var(--b);
+            border-radius: 12px;
+            padding: 36px 40px;
+            width: 340px
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px
+        }
+
+        h1 svg {
+            color: var(--a);
+            flex-shrink: 0
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--m);
+            margin-bottom: 5px
+        }
+
+        input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid var(--b);
+            border-radius: 6px;
+            color: var(--t);
+            padding: 9px 12px;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 14px
+        }
+
+        input:focus {
+            border-color: var(--a)
+        }
+
+        button {
+            width: 100%;
+            background: var(--a);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        button:hover {
+            opacity: .88
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="login.title">Empostor Admin</span></h1>
+        <form method="POST" action="/admin/login"><label data-i18n="login.password">Password</label><input type="password" name="password"
+                autofocus data-i18n-placeholder="login.placeholder" placeholder="Enter admin password"><button type="submit" data-i18n="login.signin">Sign in</button><!--ERR--></form>
+    </div>
+    <script>
+        fetch('/api/admin/strings').then(r => r.json()).then(s => {
+            document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (s[k]) el.textContent = s[k]; });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const k = el.getAttribute('data-i18n-placeholder'); if (s[k]) el.placeholder = s[k]; });
+        }).catch(() => {});
+    </script>
+</body>
+
+</html>
+""";
+
+    internal static string AdminHtml { get; } = """
 <!DOCTYPE html>
 <html lang="en-US">
 
@@ -1553,3 +1701,5 @@ You must require that all players read and acknowledge this policy before joinin
 </body>
 
 </html>
+""";
+}
