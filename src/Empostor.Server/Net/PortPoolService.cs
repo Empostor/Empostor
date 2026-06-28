@@ -60,17 +60,17 @@ public sealed class PortPoolService : IDisposable
             if (skipped > 0)
             {
                 _logger.LogWarning(
-                    "[PortPool] Skipped {Count} port(s) overlapping with main listen port {ListenPort}",
+                    "PortPool skipped {Count} port(s) overlapping with main listen port {ListenPort}",
                     skipped, _listenPort);
             }
 
             _logger.LogInformation(
-                "[PortPool] Initialized with {Count} ports ({Start}-{End})",
+                "PortPool initialized with {Count} ports ({Start}-{End})",
                 _availablePorts.Count, _deltaPortStart, _deltaPortEnd);
         }
         else
         {
-            _logger.LogInformation("[PortPool] Disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
+            _logger.LogInformation("PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
                 _deltaPortStart, _deltaPortEnd);
         }
     }
@@ -87,7 +87,7 @@ public sealed class PortPoolService : IDisposable
 
         if (!_availablePorts.TryTake(out var port))
         {
-            _logger.LogWarning("[PortPool] Pool exhausted for PUID={Puid}", puid);
+            _logger.LogWarning("PortPool exhausted for PUID={Puid}", puid);
             return 0;
         }
 
@@ -105,7 +105,7 @@ public sealed class PortPoolService : IDisposable
         _timeouts[port] = cts;
         _ = TimeoutAsync(port, cts.Token);
 
-        _logger.LogDebug("[PortPool] Allocated port {Port} to PUID={Puid}", port, puid);
+        _logger.LogDebug("PortPool allocated port {Port} to PUID={Puid}", port, puid);
         return port;
     }
 
@@ -125,7 +125,7 @@ public sealed class PortPoolService : IDisposable
         _activeLeases.TryRemove(port, out _);
         _availablePorts.Add(port);
 
-        _logger.LogInformation("[PortPool] Returned port {Port} to pool", port);
+        _logger.LogInformation("PortPool returned port {Port} to pool", port);
 
         OnPortReturned?.Invoke(port);
     }
@@ -145,7 +145,7 @@ public sealed class PortPoolService : IDisposable
         {
             cts.Cancel();
             cts.Dispose();
-            _logger.LogDebug("[PortPool] Port {Port} confirmed (timeout cancelled)", port);
+            _logger.LogDebug("PortPool port {Port} confirmed (timeout cancelled)", port);
         }
     }
 
@@ -161,7 +161,7 @@ public sealed class PortPoolService : IDisposable
             await Task.Delay(TimeSpan.FromMinutes(5), ct);
 
             // Timer fired — no connection came in
-            _logger.LogWarning("[PortPool] Port {Port} lease expired (no connection), returning to pool", port);
+            _logger.LogWarning("PortPool port {Port} lease expired (no connection), returning to pool", port);
             ReturnPort(port);
         }
         catch (OperationCanceledException)

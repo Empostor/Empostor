@@ -80,7 +80,7 @@ namespace Empostor.Server.Http
                 || _config.Password == "admin123")
             {
                 _logger.LogWarning(
-                    "[Admin] SECURITY: Default or empty admin password detected! Set a strong password in config.json -> Admin.Password to protect the admin panel.");
+                    "AdminSECURITY: Default or empty admin password detected! Set a strong password in config.json -> Admin.Password to protect the admin panel.");
             }
         }
 
@@ -117,7 +117,7 @@ namespace Empostor.Server.Http
                     && DateTime.UtcNow - entry.FirstAttempt < LoginLockoutDuration)
                 {
                     var remaining = (int)(LoginLockoutDuration - (DateTime.UtcNow - entry.FirstAttempt)).TotalMinutes;
-                    _logger.LogWarning("[Admin] Rate-limited login attempt from {Ip} (locked out for ~{Min}m more)", ip, Math.Max(1, remaining));
+                    _logger.LogWarning("AdminRate-limited login attempt from {Ip} (locked out for ~{Min}m more)", ip, Math.Max(1, remaining));
                     return Content(LoginHtml.Replace("<!--ERR-->",
                         $"<p style='color:var(--r);margin-top:8px'>Too many failed attempts. Try again in {Math.Max(1, remaining)} minute(s).</p>"),
                         "text/html; charset=utf-8");
@@ -138,7 +138,7 @@ namespace Empostor.Server.Http
                     _ => (1, DateTime.UtcNow),
                     (_, e) => (e.Count + 1, e.FirstAttempt));
 
-                _logger.LogWarning("[Admin] Failed login from {Ip} (attempt {Count})", ip,
+                _logger.LogWarning("AdminFailed login from {Ip} (attempt {Count})", ip,
                     _loginFailures.TryGetValue(ip, out var updated) ? updated.Count : 1);
                 return Content(LoginHtml.Replace("<!--ERR-->",
                     "<p style='color:var(--r);margin-top:8px'>Incorrect password.</p>"),
@@ -291,7 +291,7 @@ namespace Empostor.Server.Http
                 return BadRequest(Err("No host character"));
             }
 
-            await host.SendChatAsync($"[Admin] {req.Message}");
+            await host.SendChatAsync($"Admin{req.Message}");
             return Ok(new { ok = true });
         }
 

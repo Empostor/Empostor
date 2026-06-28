@@ -52,17 +52,17 @@ public sealed class UfwFirewallService : IFirewallService
             if (process.ExitCode != 0)
             {
                 var stderr = await process.StandardError.ReadToEndAsync(ct);
-                _logger.LogWarning("[Firewall] ufw {Args} failed (exit={Code}): {Error}",
+                _logger.LogWarning("Firewallufw {Args} failed (exit={Code}): {Error}",
                     arguments, process.ExitCode, stderr.Trim());
             }
             else
             {
-                _logger.LogInformation("[Firewall] ufw {Args} succeeded", arguments);
+                _logger.LogInformation("Firewallufw {Args} succeeded", arguments);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[Firewall] Failed to run ufw {Args}", arguments);
+            _logger.LogWarning(ex, "FirewallFailed to run ufw {Args}", arguments);
         }
     }
 }

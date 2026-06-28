@@ -63,7 +63,7 @@ public sealed class AuthCacheService : IDisposable
             }
         }
 
-        _logger.LogDebug("[Auth] Stored PUID={Puid} FC={FC}", productUserId, friendCode ?? "(none)");
+        _logger.LogDebug("AuthCache stored PUID={Puid} FC={FC}", productUserId, friendCode ?? "(none)");
     }
 
     public UserAuthInfo? FindByToken(string? matchmakerToken)
@@ -185,6 +185,10 @@ public sealed class AuthCacheService : IDisposable
                     _ipToPort.TryRemove(info.ClientIp, out _);
                 }
 
+                _logger.LogInformation(
+                    "TokenUser {Name} {FriendCode} removed for inactivity timer. Port: {Port}",
+                    info.Name, info.FriendCode, port);
+
                 OnPortExpired?.Invoke(port);
             }
         }
@@ -193,15 +197,22 @@ public sealed class AuthCacheService : IDisposable
         var expiredIps = _byIpDirect.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
         foreach (var ip in expiredIps)
         {
-            _byIpDirect.TryRemove(ip, out _);
-            _ipToPort.TryRemove(ip, out _);
+            if (_byIpDirect.TryRemove(ip, out var info))
+            {
+                var port = _ipToPort.TryGetValue(ip, out var p) ? p : 0;
+                _ipToPort.TryRemove(ip, out _);
+
+                _logger.LogInformation(
+                    "TokenUser {Name} {FriendCode} removed for inactivity timer. Port: {Port}",
+                    info.Name, info.FriendCode, port);
+            }
         }
 
         var totalExpired = expired.Count + expiredPorts.Count + expiredIps.Count;
         if (totalExpired > 0)
         {
-            _logger.LogDebug("[Auth] Cleaned {Count} expired entries (token={T}, port={P}, ip={I})",
-                totalExpired, expired.Count, expiredPorts.Count, expiredIps.Count);
+            _logger.LogDebug("AuthCache cleaned {Count} expired entries",
+                totalExpired);
         }
     }
 
@@ -221,6 +232,8 @@ public sealed class UserAuthInfo
     public string MatchmakerToken { get; set; } = string.Empty;
 
     public string FriendCode { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
 
     public string? ClientIp { get; set; }
 

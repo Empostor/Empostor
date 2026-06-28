@@ -53,10 +53,12 @@ namespace Empostor.Server
     {
         private static int Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .CreateBootstrapLogger();
             try
             {
-                Log.Information("Starting Empostor v{0}", DotnetUtils.Version);
+                Log.Information("Empostor v{Version} starting", DotnetUtils.Version);
                 CreateHostBuilder(args).Build().Run();
                 return 0;
             }
@@ -246,7 +248,7 @@ namespace Empostor.Server
 #endif
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                         .Enrich.FromLogContext()
-                        .WriteTo.Console()
+                        .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                         .WriteTo.File(
                             "Log/empostor-.log",
                             rollingInterval: RollingInterval.Day,

@@ -72,7 +72,7 @@ namespace Empostor.Server.Service.Admin.Report
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[Report] Failed to save reports");
+                    _logger.LogWarning(ex, "ReportFailed to save reports");
                 }
                 finally
                 {
@@ -98,12 +98,12 @@ namespace Empostor.Server.Service.Admin.Report
                         _reports.AddRange(list.Take(Max));
                     }
 
-                    _logger.LogInformation("[Report] Loaded {Count} report(s)", _reports.Count);
+                    _logger.LogInformation("ReportLoaded {Count} report(s)", _reports.Count);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Report] Failed to load reports file");
+                _logger.LogWarning(ex, "ReportFailed to load reports file");
             }
         }
 

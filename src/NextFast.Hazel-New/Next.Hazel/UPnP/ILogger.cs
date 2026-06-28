@@ -37,16 +37,16 @@ public class ConsoleLogger : ILogger
 
     public void WriteVerbose(string msg)
     {
-        if (verbose) Console.WriteLine($"{DateTime.Now} [VERBOSE] {msg}");
+        if (verbose) Console.WriteLine($"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff zzz} [VRB] {msg}");
     }
 
     public void WriteError(string msg)
     {
-        Console.WriteLine($"{DateTime.Now} [ERROR] {msg}");
+        Console.WriteLine($"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff zzz} [ERR] {msg}");
     }
 
     public void WriteInfo(string msg)
     {
-        Console.WriteLine($"{DateTime.Now} [INFO] {msg}");
+        Console.WriteLine($"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff zzz} [INF] {msg}");
     }
 }

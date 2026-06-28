@@ -65,7 +65,7 @@ namespace Empostor.Server.Net
 
             bool LogUnknownCategory(CheatCategory category)
             {
-                _logger.LogWarning("Unknown cheat category {Category} was used when reporting", category);
+                _logger.LogWarning("Client [{Id}] unknown cheat category {Category} when reporting", Id, category);
                 return true;
             }
 
@@ -91,7 +91,7 @@ namespace Empostor.Server.Net
 
             var supportCode = Random.Shared.Next(0, 999_999).ToString("000-000");
 
-            _logger.LogWarning("Client {Name} ({Id}) was caught cheating: [{SupportCode}] [{Context}-{Category}] {Message}", Name, Id, supportCode, context.Name, category, message);
+            _logger.LogWarning("Client [{Id}]{Name} was caught cheating: [{SupportCode}] [{Context}-{Category}] {Message}", Id, Name, supportCode, context.Name, category, message);
 
             if (Player is { } player)
             {
@@ -118,7 +118,7 @@ namespace Empostor.Server.Net
         {
             var flag = reader.Tag;
 
-            _logger.LogTrace("[{0}] Server got {1}.", Id, MessageFlags.FlagToString(flag));
+            _logger.LogTrace("Client [{Id}] received {Flag}", Id, MessageFlags.FlagToString(flag));
 
             switch (flag)
             {
@@ -278,13 +278,13 @@ namespace Empostor.Server.Net
 
                         if (packed.Tag != MessageFlags.GameDataTo)
                         {
-                            _logger.LogWarning("PackedGameDataTo contained non-GameDataTo flag {0}.", packed.Tag);
+                            _logger.LogWarning("Client [{Id}] PackedGameDataTo contained non-GameDataTo flag {Flag}", Id, packed.Tag);
                             return;
                         }
 
                         if (packed.ReadInt32() != Player!.Game.Code)
                         {
-                            _logger.LogWarning("PackedGameDataTo contained GameDataTo for the wrong game.");
+                            _logger.LogWarning("Client [{Id}] PackedGameDataTo contained GameDataTo for wrong game", Id);
                             return;
                         }
 
@@ -390,7 +390,7 @@ namespace Empostor.Server.Net
                         break;
                     }
 
-                    _logger.LogWarning("Server received unknown flag {0}.", flag);
+                    _logger.LogWarning("Client [{Id}] sent unknown flag {Flag}", Id, flag);
                     break;
             }
 
@@ -402,7 +402,8 @@ namespace Empostor.Server.Net
                 reader.Position < reader.Length)
             {
                 _logger.LogWarning(
-                    "Server did not consume all bytes from {0} ({1} < {2}).",
+                    "Client [{Id}] unconsumed bytes for flag {Flag} ({Pos} < {Len})",
+                    Id,
                     flag,
                     reader.Position,
                     reader.Length);
@@ -423,10 +424,14 @@ namespace Empostor.Server.Net
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception caught in client disconnection.");
+                _logger.LogError(ex, "Exception caught in client [{Id}] disconnection.", Id);
             }
 
-            _logger.LogInformation("Client {0} disconnecting, reason: {1}", Id, reason);
+            var platform = PlatformSpecificData?.Platform.ToString().ToLowerInvariant() ?? "unknown";
+            var hashPuid = ProductUserId?.Length >= 9 ? ProductUserId[..9] : ProductUserId ?? "0";
+            var fc = FriendCode ?? "unknown";
+            _logger.LogInformation("Client {Id} {Name} {FriendCode} {HashPuid} {Platform} disconnecting, reason: {Reason}",
+                Id, Name, fc, hashPuid, platform, reason);
             _clientManager.Remove(this);
             await _gameManager.OnClientDisconnectAsync(this);
         }
@@ -454,7 +459,7 @@ namespace Empostor.Server.Net
                     return true;
                 }
 
-                _logger.LogWarning("[{0}] Client sent packet only allowed by the host ({1}).", Id, game.HostId);
+                _logger.LogWarning("Client [{Id}] sent packet only allowed by the host ({HostId})", Id, game.HostId);
                 return false;
             }
 
@@ -480,7 +485,7 @@ namespace Empostor.Server.Net
                 return true;
             }
 
-            _logger.LogWarning("[{0}] Client sent PackedGameDataTo only allowed by the host ({1}).", Id, game.HostId);
+            _logger.LogWarning("Client [{Id}] sent PackedGameDataTo only allowed by the host ({HostId})", Id, game.HostId);
             return false;
         }
 

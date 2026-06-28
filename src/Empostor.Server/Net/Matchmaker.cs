@@ -79,7 +79,7 @@ namespace Empostor.Server.Net
             };
 
             await _mainListener.StartAsync();
-            _logger.LogInformation("[Matchmaker] UDP listener started on {EP}", ipEndPoint);
+            _logger.LogInformation("Matchmaker UDP listener started on {EP}", ipEndPoint);
         }
 
         /// <summary>
@@ -89,13 +89,13 @@ namespace Empostor.Server.Net
         {
             if (_mainEndPoint == null)
             {
-                _logger.LogError("[Matchmaker] Cannot start delta listener: main endpoint not initialized");
+                _logger.LogError("Matchmaker cannot start delta listener: main endpoint not initialized");
                 return;
             }
 
             if (_deltaListeners.ContainsKey(port))
             {
-                _logger.LogDebug("[Matchmaker] Delta listener for port {Port} already running", port);
+                _logger.LogDebug("Matchmaker delta listener for port {Port} already running", port);
                 return;
             }
 
@@ -120,11 +120,11 @@ namespace Empostor.Server.Net
                 // Open firewall for this port
                 await _firewall.OpenPortAsync((ushort)port);
 
-                _logger.LogInformation("[Matchmaker] Delta UDP listener started on port {Port}", port);
+                _logger.LogInformation("Matchmaker delta UDP listener started on port {Port}", port);
             }
             catch (SocketException ex)
             {
-                _logger.LogError(ex, "[Matchmaker] Failed to start delta listener on port {Port} (may be in use)", port);
+                _logger.LogError(ex, "Matchmaker failed to start delta listener on port {Port} (may be in use)", port);
                 // Return the port — it's unusable
                 _portPool.ReturnPort(port);
             }
@@ -140,11 +140,11 @@ namespace Empostor.Server.Net
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[Matchmaker] Error disposing delta listener on port {Port}", port);
+                    _logger.LogWarning(ex, "Matchmaker error disposing delta listener on port {Port}", port);
                 }
 
                 await _firewall.ClosePortAsync((ushort)port);
-                _logger.LogInformation("[Matchmaker] Delta UDP listener stopped on port {Port}", port);
+                _logger.LogInformation("Matchmaker delta UDP listener stopped on port {Port}", port);
             }
         }
 
@@ -160,11 +160,11 @@ namespace Empostor.Server.Net
                 try
                 {
                     await listener.DisposeAsync();
-                    _logger.LogDebug("[Matchmaker] Stopped delta listener on port {Port}", port);
+                    _logger.LogDebug("Matchmaker stopped delta listener on port {Port}", port);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[Matchmaker] Error stopping delta listener on port {Port}", port);
+                    _logger.LogWarning(ex, "Matchmaker error stopping delta listener on port {Port}", port);
                 }
             }
 

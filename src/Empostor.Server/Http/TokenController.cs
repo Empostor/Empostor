@@ -65,7 +65,7 @@ public sealed class TokenController : ControllerBase
         {
             if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
             {
-                _logger.LogWarning("[TokenController] Missing or invalid Authorization header");
+                _logger.LogWarning("TokenController missing or invalid Authorization header");
                 return Unauthorized(new { error = "Missing or invalid authorization" });
             }
 
@@ -73,7 +73,7 @@ public sealed class TokenController : ControllerBase
             var productUserId = ExtractProductUserIdFromJwt(eosToken);
             if (string.IsNullOrEmpty(productUserId))
             {
-                _logger.LogWarning("[TokenController] Could not extract PUID from token");
+                _logger.LogWarning("TokenController could not extract PUID from token");
                 return Unauthorized(new { error = "Invalid token content" });
             }
 
@@ -101,6 +101,10 @@ public sealed class TokenController : ControllerBase
                 FriendCodeConfirmed = _nikoFriendCodeConfirmed,
             };
 
+            // Extract name from friend code (e.g., "ufolud" from "ufolud#1234")
+            var playerName = friendCode?.Split('#')[0] ?? productUserId[..Math.Min(8, productUserId.Length)];
+            authInfo.Name = playerName;
+
             if (deltaPort > 0)
             {
                 // Port allocated — store by port and start delta listener for UDP matching
@@ -108,8 +112,8 @@ public sealed class TokenController : ControllerBase
                 _ = _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
 
                 _logger.LogInformation(
-                    "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} DeltaPort={Port} IP={Ip}",
-                    productUserId, friendCode, deltaPort, clientIp);
+                    "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
+                    playerName, productUserId, friendCode, clientIp, deltaPort);
             }
             else
             {
@@ -120,8 +124,8 @@ public sealed class TokenController : ControllerBase
                 }
 
                 _logger.LogInformation(
-                    "[TokenController] Authenticated: PUID={Puid} FriendCode={FC} Port=0 (IP fallback) IP={Ip}",
-                    productUserId, friendCode, clientIp);
+                    "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
+                    playerName, productUserId, friendCode, clientIp, 0);
             }
 
             var response = new TokenResponse
@@ -139,7 +143,7 @@ public sealed class TokenController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TokenController] Unexpected error");
+            _logger.LogError(ex, "TokenController unexpected error");
             return StatusCode(500, new { error = "Internal server error" });
         }
     }
@@ -189,13 +193,13 @@ public sealed class TokenController : ControllerBase
         if (cached != null)
         {
             _logger.LogInformation(
-                "[TokenController] FriendCode found in cache: PUID={Puid} FC={FC}",
+                "TokenControllerFriendCode found in cache: PUID={Puid} FC={FC}",
                 productUserId, cached);
             return cached;
         }
 
         var mode = _authApiConfig.Mode;
-        _logger.LogDebug("[TokenController] AuthApi mode: {Mode}", mode);
+        _logger.LogDebug("TokenControllerAuthApi mode: {Mode}", mode);
 
         string? friendCode = null;
 
@@ -221,7 +225,7 @@ public sealed class TokenController : ControllerBase
 
             if (nikoKeyIsCustom)
             {
-                _logger.LogDebug("[TokenController] Both mode: trying Niko first (custom key)");
+                _logger.LogDebug("TokenController Both mode: trying Niko first (custom key)");
                 friendCode = await FetchFromNikoAsync(eosToken, productUserId);
                 if (string.IsNullOrEmpty(friendCode))
                 {
@@ -230,7 +234,7 @@ public sealed class TokenController : ControllerBase
             }
             else
             {
-                _logger.LogDebug("[TokenController] Both mode: trying Ume first (default Niko key)");
+                _logger.LogDebug("TokenController Both mode: trying Ume first (default Niko key)");
                 friendCode = await FetchFromUmeAsync(eosToken, productUserId);
                 if (string.IsNullOrEmpty(friendCode))
                 {
@@ -253,7 +257,7 @@ public sealed class TokenController : ControllerBase
         {
             friendCode = GenerateFallbackFriendCode(productUserId);
             _logger.LogWarning(
-                "[TokenController] FriendCode fetch failed for PUID={Puid}, using fallback: {FC}",
+                "TokenController FriendCode fetch failed for PUID={Puid}, using fallback: {FC}",
                 productUserId, friendCode);
         }
         else
@@ -333,13 +337,13 @@ public sealed class TokenController : ControllerBase
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[TokenController] Innersloth API returned {Status} for PUID={Puid}",
+                    "TokenControllerInnersloth API returned {Status} for PUID={Puid}",
                     response.StatusCode, productUserId);
                 return null;
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("[TokenController] Innersloth raw response: {Json}", json);
+            _logger.LogInformation("TokenControllerInnersloth raw response: {Json}", json);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             var attrs = root.TryGetProperty("data", out var data)
@@ -351,18 +355,18 @@ public sealed class TokenController : ControllerBase
             {
                 var fc = $"{username}#{discriminator}";
                 _logger.LogInformation(
-                    "[TokenController] FriendCode fetched from Innersloth: PUID={Puid} FC={FC}",
+                    "TokenControllerFriendCode fetched from Innersloth: PUID={Puid} FC={FC}",
                     productUserId, fc);
                 return fc;
             }
 
             _logger.LogWarning(
-                "[TokenController] Missing username/discriminator in Innersloth response for PUID={Puid}",
+                "TokenControllerMissing username/discriminator in Innersloth response for PUID={Puid}",
                 productUserId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TokenController] Exception calling Innersloth API for PUID={Puid}", productUserId);
+            _logger.LogError(ex, "TokenControllerException calling Innersloth API for PUID={Puid}", productUserId);
         }
 
         return null;
@@ -372,7 +376,7 @@ public sealed class TokenController : ControllerBase
     {
         if (string.IsNullOrEmpty(_authApiConfig.NikoApiKey))
         {
-            _logger.LogWarning("[TokenController] NikoApiKey is empty, skipping Niko API");
+            _logger.LogWarning("TokenControllerNikoApiKey is empty, skipping Niko API");
             return null;
         }
 
@@ -400,7 +404,7 @@ public sealed class TokenController : ControllerBase
             if (!putResp.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[TokenController] Niko PUT returned {Status} for PUID={Puid}",
+                    "TokenControllerNiko PUT returned {Status} for PUID={Puid}",
                     putResp.StatusCode, productUserId);
                 return null;
             }
@@ -410,14 +414,14 @@ public sealed class TokenController : ControllerBase
             if (createResult == null || string.IsNullOrEmpty(createResult.VerifyCode))
             {
                 _logger.LogWarning(
-                    "[TokenController] Niko PUT response missing VerifyCode for PUID={Puid}", productUserId);
+                    "TokenControllerNiko PUT response missing VerifyCode for PUID={Puid}", productUserId);
                 return null;
             }
 
             var verifyCode = createResult.VerifyCode;
             _nikoVerifyCode = verifyCode;
             _logger.LogInformation(
-                "[TokenController] Niko verify request created: Code={Code} for PUID={Puid}",
+                "TokenControllerNiko verify request created: Code={Code} for PUID={Puid}",
                 verifyCode, productUserId);
 
             // Proxy EOS token to Niko to trigger HTTP auth
@@ -454,14 +458,14 @@ public sealed class TokenController : ControllerBase
                         && !string.Equals(result.Puid, productUserId, StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogWarning(
-                            "[TokenController] Niko PUID mismatch: expected={Expected} got={Got}",
+                            "TokenControllerNiko PUID mismatch: expected={Expected} got={Got}",
                             productUserId, result.Puid);
                         return null;
                     }
 
                     _nikoFriendCodeConfirmed = true;
                     _logger.LogInformation(
-                        "[TokenController] FriendCode fetched from Niko: PUID={Puid} FC={FC} Status={Status}",
+                        "TokenControllerFriendCode fetched from Niko: PUID={Puid} FC={FC} Status={Status}",
                         productUserId, result.FriendCode, result.VerifyStatus);
 
                     _ = DeleteNikoVerificationAsync(client, apiUrl, verifyCode);
@@ -470,17 +474,17 @@ public sealed class TokenController : ControllerBase
                 }
 
                 _logger.LogDebug(
-                    "[TokenController] Niko poll {Attempt}: Status={Status} for PUID={Puid}",
+                    "TokenControllerNiko poll {Attempt}: Status={Status} for PUID={Puid}",
                     i + 1, result.VerifyStatus ?? "null", productUserId);
             }
 
             _logger.LogInformation(
-                "[TokenController] Niko friend code not yet available for PUID={Puid}, VerifyCode={Code} deferred to handshake",
+                "TokenControllerNiko friend code not yet available for PUID={Puid}, VerifyCode={Code} deferred to handshake",
                 productUserId, verifyCode);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TokenController] Exception calling Niko API for PUID={Puid}", productUserId);
+            _logger.LogError(ex, "TokenControllerException calling Niko API for PUID={Puid}", productUserId);
         }
 
         return null;
@@ -500,13 +504,13 @@ public sealed class TokenController : ControllerBase
 
             var resp = await client.SendAsync(req);
             _logger.LogDebug(
-                "[TokenController] Niko proxy auth returned {Status} for PUID={Puid}",
+                "TokenControllerNiko proxy auth returned {Status} for PUID={Puid}",
                 resp.StatusCode, productUserId);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "[TokenController] Failed to proxy EOS token to Niko for PUID={Puid}", productUserId);
+                "TokenControllerFailed to proxy EOS token to Niko for PUID={Puid}", productUserId);
         }
     }
 
@@ -537,7 +541,7 @@ public sealed class TokenController : ControllerBase
         if (string.IsNullOrEmpty(_authApiConfig.RelayApiBaseUrl)
             || string.IsNullOrEmpty(_authApiConfig.RelayApiKey))
         {
-            _logger.LogWarning("[TokenController] RelayApi config incomplete, skipping relay");
+            _logger.LogWarning("TokenControllerRelayApi config incomplete, skipping relay");
             return null;
         }
 
@@ -563,7 +567,7 @@ public sealed class TokenController : ControllerBase
             if (!resp.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[TokenController] Relay returned {Status} for PUID={Puid}",
+                    "TokenControllerRelay returned {Status} for PUID={Puid}",
                     resp.StatusCode, productUserId);
                 return null;
             }
@@ -573,7 +577,7 @@ public sealed class TokenController : ControllerBase
             if (result == null || string.IsNullOrEmpty(result.FriendCode))
             {
                 _logger.LogWarning(
-                    "[TokenController] Relay response missing FriendCode for PUID={Puid}",
+                    "TokenControllerRelay response missing FriendCode for PUID={Puid}",
                     productUserId);
                 return null;
             }
@@ -582,19 +586,19 @@ public sealed class TokenController : ControllerBase
                 || !string.Equals(result.ProductUserId, productUserId, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning(
-                    "[TokenController] Relay PUID mismatch: expected={Expected} got={Got}",
+                    "TokenControllerRelay PUID mismatch: expected={Expected} got={Got}",
                     productUserId, result.ProductUserId);
                 return null;
             }
 
             _logger.LogInformation(
-                "[TokenController] FriendCode from Relay: PUID={Puid} FC={FC}",
+                "TokenControllerFriendCode from Relay: PUID={Puid} FC={FC}",
                 productUserId, result.FriendCode);
             return result.FriendCode;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TokenController] Exception calling Relay for PUID={Puid}", productUserId);
+            _logger.LogError(ex, "TokenControllerException calling Relay for PUID={Puid}", productUserId);
         }
 
         return null;
@@ -605,7 +609,7 @@ public sealed class TokenController : ControllerBase
         if (string.IsNullOrEmpty(_authApiConfig.UmeApiBaseUrl)
             || string.IsNullOrEmpty(_authApiConfig.UmeApiKey))
         {
-            _logger.LogWarning("[TokenController] UmeApi config incomplete, skipping Ume");
+            _logger.LogWarning("TokenControllerUmeApi config incomplete, skipping Ume");
             return null;
         }
 
@@ -629,13 +633,13 @@ public sealed class TokenController : ControllerBase
             if (!resp.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[TokenController] Ume returned {Status} for PUID={Puid}",
+                    "TokenControllerUme returned {Status} for PUID={Puid}",
                     resp.StatusCode, productUserId);
                 return null;
             }
 
             var json = await resp.Content.ReadAsStringAsync();
-            _logger.LogInformation("[TokenController] Ume raw response: {Json}", json);
+            _logger.LogInformation("TokenControllerUme raw response: {Json}", json);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -643,7 +647,7 @@ public sealed class TokenController : ControllerBase
             if (status != "Verified")
             {
                 _logger.LogWarning(
-                    "[TokenController] Ume VerifyStatus={Status} for PUID={Puid}",
+                    "TokenControllerUme VerifyStatus={Status} for PUID={Puid}",
                     status, productUserId);
                 return null;
             }
@@ -652,7 +656,7 @@ public sealed class TokenController : ControllerBase
             if (string.IsNullOrEmpty(friendCode))
             {
                 _logger.LogWarning(
-                    "[TokenController] Ume response missing FriendCode for PUID={Puid}",
+                    "TokenControllerUme response missing FriendCode for PUID={Puid}",
                     productUserId);
                 return null;
             }
@@ -662,19 +666,19 @@ public sealed class TokenController : ControllerBase
                 || !string.Equals(returnedPuid, productUserId, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning(
-                    "[TokenController] Ume PUID mismatch: expected={Expected} got={Got}",
+                    "TokenControllerUme PUID mismatch: expected={Expected} got={Got}",
                     productUserId, returnedPuid);
                 return null;
             }
 
             _logger.LogInformation(
-                "[TokenController] FriendCode from Ume: PUID={Puid} FC={FC}",
+                "TokenControllerFriendCode from Ume: PUID={Puid} FC={FC}",
                 productUserId, friendCode);
             return friendCode;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TokenController] Exception calling Ume for PUID={Puid}", productUserId);
+            _logger.LogError(ex, "TokenControllerException calling Ume for PUID={Puid}", productUserId);
         }
 
         return null;

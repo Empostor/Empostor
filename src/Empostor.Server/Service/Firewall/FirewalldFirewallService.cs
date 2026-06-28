@@ -54,17 +54,17 @@ public sealed class FirewalldFirewallService : IFirewallService
             if (process.ExitCode != 0)
             {
                 var stderr = await process.StandardError.ReadToEndAsync(ct);
-                _logger.LogWarning("[Firewall] firewall-cmd {Args} failed (exit={Code}): {Error}",
+                _logger.LogWarning("Firewallfirewall-cmd {Args} failed (exit={Code}): {Error}",
                     arguments, process.ExitCode, stderr.Trim());
             }
             else
             {
-                _logger.LogInformation("[Firewall] firewall-cmd {Args} succeeded", arguments);
+                _logger.LogInformation("Firewallfirewall-cmd {Args} succeeded", arguments);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[Firewall] Failed to run firewall-cmd {Args}", arguments);
+            _logger.LogWarning(ex, "FirewallFailed to run firewall-cmd {Args}", arguments);
         }
     }
 }

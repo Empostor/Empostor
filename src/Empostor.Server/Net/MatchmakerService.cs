@@ -38,7 +38,7 @@ namespace Empostor.Server.Net
             await _matchmaker.StartAsync(endpoint);
 
             _logger.LogInformation(
-                "Matchmaker is listening on {0}:{1}, the public server ip is {2}:{3}.",
+                "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",
                 endpoint.Address,
                 endpoint.Port,
                 _serverConfig.ResolvePublicIp(),
@@ -47,16 +47,12 @@ namespace Empostor.Server.Net
             if (_portPool.IsEnabled)
             {
                 _logger.LogInformation(
-                    "Delta port pool enabled: range {Start}-{End}, firewall UFW={Ufw} Firewalld={Fwd}",
-                    _serverConfig.DeltaPortStart,
-                    _serverConfig.DeltaPortEnd,
-                    _serverConfig.UseUfw,
-                    _serverConfig.UseFirewalld);
+                    "Delta Matchmaker is enabled.");
             }
             else
             {
                 _logger.LogInformation(
-                    "Delta port pool disabled (DeltaPortStart={Start}, DeltaPortEnd={End}). Using IP-based matching.",
+                    "Delta Matchmaker is disabled (DeltaPortStart={Start}, DeltaPortEnd={End}). Using IP-based matching.",
                     _serverConfig.DeltaPortStart,
                     _serverConfig.DeltaPortEnd);
             }

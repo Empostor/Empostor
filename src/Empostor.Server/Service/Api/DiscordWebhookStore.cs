@@ -36,13 +36,13 @@ public sealed class DiscordWebhookStore
                     NotifyOnReport = saved.NotifyOnReport;
                     NotifyOnPlayerJoin = saved.NotifyOnPlayerJoin;
                     NotifyOnGameEnded = saved.NotifyOnGameEnded;
-                    _logger.LogInformation("[DiscordWebhook] Loaded from {File}", ConfigFile);
+                    _logger.LogInformation("DiscordWebhookLoaded from {File}", ConfigFile);
                     return;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[DiscordWebhook] Failed to load {File}, using defaults", ConfigFile);
+                _logger.LogWarning(ex, "DiscordWebhookFailed to load {File}, using defaults", ConfigFile);
             }
         }
 
@@ -93,11 +93,11 @@ public sealed class DiscordWebhookStore
         {
             var json = JsonSerializer.Serialize(Snapshot, JsonOpts);
             await File.WriteAllTextAsync(ConfigFile, json);
-            _logger.LogInformation("[DiscordWebhook] Saved to {File}", ConfigFile);
+            _logger.LogInformation("DiscordWebhookSaved to {File}", ConfigFile);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[DiscordWebhook] Failed to save {File}", ConfigFile);
+            _logger.LogWarning(ex, "DiscordWebhookFailed to save {File}", ConfigFile);
         }
         finally
         {

@@ -59,7 +59,7 @@ public sealed class LanguageService
     {
         _tables.Clear();
         LoadAll();
-        _logger.LogInformation("[Language] Reloaded all language files.");
+        _logger.LogInformation("LanguageReloaded all language files.");
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public sealed class LanguageService
                 }
             }
 
-            _logger.LogDebug("[Language] Plugin added {Count} keys for {Lang}", table.Count, langCode);
+            _logger.LogDebug("LanguagePlugin added {Count} keys for {Lang}", table.Count, langCode);
         }
     }
 
@@ -111,15 +111,15 @@ public sealed class LanguageService
                 var table = JsonSerializer.Deserialize<Dictionary<string, string>>(json)
                     ?? new Dictionary<string, string>();
                 _tables[code] = table;
-                _logger.LogDebug("[Language] Loaded {Code} ({Count} keys)", code, table.Count);
+                _logger.LogDebug("LanguageLoaded {Code} ({Count} keys)", code, table.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Language] Failed to load {File}", file);
+                _logger.LogWarning(ex, "LanguageFailed to load {File}", file);
             }
         }
 
-        _logger.LogInformation("[Language] Loaded {Count} language file(s).", _tables.Count);
+        _logger.LogInformation("LanguageLoaded {Count} language file(s).", _tables.Count);
     }
 
     private void EnsureDefaults()
