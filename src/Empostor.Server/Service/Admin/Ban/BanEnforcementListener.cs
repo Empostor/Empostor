@@ -25,7 +25,7 @@ public sealed class BanEnforcementListener : IEventListener
         // IP 封禁检查
         if (ip != null && _bans.IsIpBanned(ip))
         {
-            _logger.LogWarning("[Ban] Rejecting banned IP {Ip} ({Name})", ip, client.Name);
+            _logger.LogWarning("BanRejecting banned IP {Ip} ({Name})", ip, client.Name);
             await client.DisconnectAsync(DisconnectReason.Banned, "You are banned from this server.");
             return;
         }
@@ -33,7 +33,7 @@ public sealed class BanEnforcementListener : IEventListener
         // FriendCode 封禁检查
         if (_bans.IsFriendCodeBanned(client.FriendCode))
         {
-            _logger.LogWarning("[Ban] Rejecting banned FriendCode {FC} ({Name})", client.FriendCode, client.Name);
+            _logger.LogWarning("BanRejecting banned FriendCode {FC} ({Name})", client.FriendCode, client.Name);
             await client.DisconnectAsync(DisconnectReason.Banned, "You are banned from this server.");
         }
     }

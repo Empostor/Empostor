@@ -54,7 +54,7 @@ public sealed class PrivacyController : ControllerBase
                 return Unauthorized(new { error = "Invalid token." });
 
             System.IO.File.WriteAllText(PrivacyFile, content);
-            _logger.LogInformation("[PrivacyController] Privacy policy updated.");
+            _logger.LogInformation("PrivacyControllerPrivacy policy updated.");
             return Ok(new { success = true });
         }
         catch (Exception ex)
@@ -78,7 +78,7 @@ public sealed class PrivacyController : ControllerBase
             if (!System.IO.File.Exists(PrivacyFile))
             {
                 System.IO.File.WriteAllText(PrivacyFile, DefaultPrivacyHtml());
-                _logger.LogInformation("[PrivacyController] Written default Pages/privacy.html");
+                _logger.LogInformation("PrivacyControllerWritten default Pages/privacy.html");
             }
         }
     }

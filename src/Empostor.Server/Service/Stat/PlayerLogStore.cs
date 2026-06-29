@@ -109,7 +109,7 @@ public sealed class PlayerLogStore : IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[PlayerLog] Failed to save logs");
+                _logger.LogWarning(ex, "PlayerLogFailed to save logs");
             }
             finally
             {
@@ -142,12 +142,12 @@ public sealed class PlayerLogStore : IDisposable
                     Interlocked.Decrement(ref _count);
                 }
 
-                _logger.LogInformation("[PlayerLog] Loaded {Count} log(s)", _count);
+                _logger.LogInformation("PlayerLogLoaded {Count} log(s)", _count);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[PlayerLog] Failed to load logs file");
+            _logger.LogWarning(ex, "PlayerLogFailed to load logs file");
         }
     }
 

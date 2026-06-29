@@ -10,9 +10,6 @@ using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Http;
 
-/// <summary>
-/// Perform game listing filtering.
-/// </summary>
 public sealed class ListingManager
 {
     private readonly IGameManager _gameManager;
@@ -28,16 +25,6 @@ public sealed class ListingManager
         _compatibilityConfig = compatibilityConfig.Value;
     }
 
-    /// <summary>
-    /// Find listings that match the requested settings.
-    /// </summary>
-    /// <param name="ctx">The context of this http request.</param>
-    /// <param name="map">The selected maps.</param>
-    /// <param name="impostorCount">The amount of impostors. 0 is any.</param>
-    /// <param name="language">Chat language of the game.</param>
-    /// <param name="gameVersion">Game version of the client.</param>
-    /// <param name="maxListings">Maximum amount of games to return.</param>
-    /// <returns>Listings that match the required criteria.</returns>
     public IEnumerable<IGame> FindListings(HttpContext ctx, int map, int impostorCount, GameKeywords language, GameVersion gameVersion, int maxListings = 10)
     {
         var resultCount = 0;

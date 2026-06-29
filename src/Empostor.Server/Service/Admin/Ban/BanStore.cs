@@ -96,7 +96,7 @@ namespace Empostor.Server.Service.Admin.Ban
                     var data = new BanData { Ips = new(_ips), FriendCodes = new(_friendCodes) };
                     await File.WriteAllTextAsync(BanFile, JsonSerializer.Serialize(data, JsonOpts));
                 }
-                catch (Exception ex) { _logger.LogWarning(ex, "[BanStore] Failed to save bans.json"); }
+                catch (Exception ex) { _logger.LogWarning(ex, "BanStoreFailed to save bans.json"); }
                 finally { _saveLock.Release(); }
             });
         }
@@ -115,10 +115,10 @@ namespace Empostor.Server.Service.Admin.Ban
                 {
                     _ips = new(data.Ips ?? new());
                     _friendCodes = new(data.FriendCodes ?? new());
-                    _logger.LogInformation("[BanStore] Loaded {I} IP bans + {F} FC bans", _ips.Count, _friendCodes.Count);
+                    _logger.LogInformation("BanStoreLoaded {I} IP bans + {F} FC bans", _ips.Count, _friendCodes.Count);
                 }
             }
-            catch (Exception ex) { _logger.LogWarning(ex, "[BanStore] Failed to load bans.json"); }
+            catch (Exception ex) { _logger.LogWarning(ex, "BanStoreFailed to load bans.json"); }
         }
 
         private static string Normalize(IPAddress ip)

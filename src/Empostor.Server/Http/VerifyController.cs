@@ -16,8 +16,8 @@ public sealed class VerifyController : ControllerBase
     }
 
     /// <summary>
-    /// Called by the QQ bot when a user sends /验证 &lt;好友代码&gt; in a group.
-    /// Validates the FriendCode ↔ QQ pairing and removes the pending entry on success.
+    ///     Called by the QQ bot when a user sends /验证 &lt;好友代码&gt; in a group.
+    ///     Validates the FriendCode ↔ QQ pairing and removes the pending entry on success.
     /// </summary>
     [HttpPost("confirm")]
     public IActionResult Confirm([FromBody] VerifyConfirmRequest req)

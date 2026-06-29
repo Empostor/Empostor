@@ -96,7 +96,7 @@ namespace Empostor.Server.Http
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Marketplace] Failed to fetch {Url}", url);
+                _logger.LogWarning(ex, "MarketplaceFailed to fetch {Url}", url);
                 return StatusCode(502, new { error = "Failed to fetch marketplace: " + ex.Message });
             }
         }
@@ -148,12 +148,12 @@ namespace Empostor.Server.Http
                 var bytes = await client.GetByteArrayAsync(req.DownloadUrl);
                 await System.IO.File.WriteAllBytesAsync(Path.Combine(PluginsDir, fileName), bytes);
 
-                _logger.LogInformation("[Marketplace] Installed {File} from {Url}", fileName, req.DownloadUrl);
+                _logger.LogInformation("MarketplaceInstalled {File} from {Url}", fileName, req.DownloadUrl);
                 return Ok(new { installed = fileName, restartRequired = true });
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Marketplace] Install failed: {Url}", req.DownloadUrl);
+                _logger.LogWarning(ex, "MarketplaceInstall failed: {Url}", req.DownloadUrl);
                 return StatusCode(500, new { error = ex.Message });
             }
         }
@@ -184,7 +184,7 @@ namespace Empostor.Server.Http
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Update] GitHub check failed");
+                _logger.LogWarning(ex, "UpdateGitHub check failed");
                 return StatusCode(502, new { error = ex.Message });
             }
         }

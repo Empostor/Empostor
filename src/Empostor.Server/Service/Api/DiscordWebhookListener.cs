@@ -158,12 +158,12 @@ internal sealed class DiscordWebhookListener : IEventListener
             var resp = await client.PostAsync(url, new StringContent(json, Encoding.UTF8, "application/json"));
             if (!resp.IsSuccessStatusCode)
             {
-                _logger.LogWarning("[Discord] Webhook returned {Status}", (int)resp.StatusCode);
+                _logger.LogWarning("DiscordWebhook returned {Status}", (int)resp.StatusCode);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[Discord] Failed to send webhook");
+            _logger.LogWarning(ex, "DiscordFailed to send webhook");
         }
     }
 }
