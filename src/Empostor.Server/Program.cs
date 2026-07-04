@@ -54,7 +54,8 @@ namespace Empostor.Server
         private static int Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
+                .Enrich.With<ShortSourceEnricher>()
                 .CreateBootstrapLogger();
             try
             {
@@ -156,7 +157,12 @@ namespace Empostor.Server
                     {
                         client.Timeout = TimeSpan.FromSeconds(15);
                     });
+                    services.AddHttpClient("ipgeo", client =>
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(5);
+                    });
 
+                    services.AddSingleton<IpGeolocationService>();
                     services.AddSingleton<ICompatibilityManager, CompatibilityManager>();
                     services.AddSingleton<ClientManager>();
                     services.AddSingleton<IClientManager>(p => p.GetRequiredService<ClientManager>());
@@ -248,12 +254,13 @@ namespace Empostor.Server
 #endif
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                         .Enrich.FromLogContext()
-                        .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                        .Enrich.With<ShortSourceEnricher>()
+                        .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
                         .WriteTo.File(
                             "Log/empostor-.log",
                             rollingInterval: RollingInterval.Day,
                             retainedFileCountLimit: 31,
-                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
                         .ReadFrom.Configuration(context.Configuration,
                             new ConfigurationReaderOptions(ConfigurationAssemblySource.AlwaysScanDllFiles));
                     AssemblyLoadContext.Default.Resolving -= TryLoad;

@@ -126,9 +126,10 @@ namespace Empostor.Server.Net.State
             var version = client.GameVersion.ToString();
             var hashPuid = client.ProductUserId?.Length >= 9 ? client.ProductUserId[..9] : client.ProductUserId ?? "0";
             var deltaPort = client.DeltaPort;
+            var location = await _ipGeo.GetLocationAsync(clientIp);
 
-            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) is joining from ({Ip}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}",
-                Code, sender.Client.Name, hashPuid, sender.Client.Id, ipStr, remotePort, version, authority, deltaPort);
+            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) is joining from ({Ip} {Location}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}",
+                Code, sender.Client.Name, hashPuid, sender.Client.Id, ipStr, location, remotePort, version, authority, deltaPort);
 
             if (isNew)
             {

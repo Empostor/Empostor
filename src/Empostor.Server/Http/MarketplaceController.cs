@@ -37,12 +37,12 @@ namespace Empostor.Server.Http
             _http = http;
             _config = config.Value;
             _pluginLoaderService = pluginLoaderService;
-            _passwordHash = AdminAuthHelper.ComputeHash(_config.Password);
+            _passwordHash = AdminController.ComputeHash(_config.Password);
         }
 
         private bool IsAuthenticated()
             => Request.Cookies.TryGetValue("empostor_admin", out var v)
-               && AdminAuthHelper.ConstantTimeEquals(v, _passwordHash);
+               && AdminController.ConstantTimeEquals(v, _passwordHash);
 
         [HttpGet("/api/admin/marketplace/plugins")]
         public async Task<IActionResult> ListPlugins()

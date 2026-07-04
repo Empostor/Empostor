@@ -16,6 +16,7 @@ using Empostor.Api.Net.Manager;
 using Empostor.Api.Net.Messages.S2C;
 using Empostor.Server.Events;
 using Empostor.Server.Net.Manager;
+using Empostor.Server.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -33,6 +34,7 @@ namespace Empostor.Server.Net.State
         private readonly ICompatibilityManager _compatibilityManager;
         private readonly CompatibilityConfig _compatibilityConfig;
         private readonly TimeoutConfig _timeoutConfig;
+        private readonly IpGeolocationService _ipGeo;
 
         public Game(
             ILogger<Game> logger,
@@ -46,7 +48,8 @@ namespace Empostor.Server.Net.State
             IEventManager eventManager,
             ICompatibilityManager compatibilityManager,
             IOptions<CompatibilityConfig> compatibilityConfig,
-            IOptions<TimeoutConfig> timeoutConfig)
+            IOptions<TimeoutConfig> timeoutConfig,
+            IpGeolocationService ipGeo)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -65,6 +68,7 @@ namespace Empostor.Server.Net.State
             _compatibilityManager = compatibilityManager;
             _compatibilityConfig = compatibilityConfig.Value;
             _timeoutConfig = timeoutConfig.Value;
+            _ipGeo = ipGeo;
             Items = new ConcurrentDictionary<object, object>();
         }
 

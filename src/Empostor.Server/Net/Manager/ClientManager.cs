@@ -14,6 +14,7 @@ using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Factories;
 using Empostor.Api.Service;
 using Empostor.Server.Service.Auth;
+using Empostor.Server.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Next.Hazel;
@@ -33,6 +34,7 @@ namespace Empostor.Server.Net.Manager
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly AuthApiConfig _authApiConfig;
         private readonly PortPoolService _portPool;
+        private readonly IpGeolocationService _ipGeo;
         private int _idLast;
 
         public ClientManager(
@@ -45,7 +47,8 @@ namespace Empostor.Server.Net.Manager
             PlayerConnectStore playerConnectStore,
             IHttpClientFactory httpClientFactory,
             IOptions<AuthApiConfig> authApiConfig,
-            PortPoolService portPool)
+            PortPoolService portPool,
+            IpGeolocationService ipGeo)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -58,6 +61,7 @@ namespace Empostor.Server.Net.Manager
             _httpClientFactory = httpClientFactory;
             _authApiConfig = authApiConfig.Value;
             _portPool = portPool;
+            _ipGeo = ipGeo;
 
             if (_compatibilityConfig.AllowFutureGameVersions)
             {
@@ -138,6 +142,7 @@ namespace Empostor.Server.Net.Manager
             string? friendCode = null;
             UserAuthInfo? authInfo = null;
             var clientIp = connection.EndPoint?.Address;
+            var location = await _ipGeo.GetLocationAsync(clientIp);
 
             // Primary: match by delta port (nonce)
             if (deltaPort > 0)
@@ -172,8 +177,8 @@ namespace Empostor.Server.Net.Manager
                     }
 
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from port {Port} is authorized as {FriendCode} {HashPuid}",
-                        id, name, deltaPort, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
+                        "Client [{Id}]{Name} from port {Port} {Location}is authorized as {FriendCode} {HashPuid}",
+                        id, name, deltaPort, location, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
                 }
                 else
                 {
@@ -191,14 +196,14 @@ namespace Empostor.Server.Net.Manager
                 {
                     friendCode = authInfo.FriendCode;
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from {Ip} is authorized as {FriendCode} {HashPuid}",
-                        id, name, NormalizeIp(clientIp), friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
+                        "Client [{Id}]{Name} from {Ip} {Location}is authorized as {FriendCode} {HashPuid}",
+                        id, name, NormalizeIp(clientIp), location, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip})",
-                        id, name, deltaPort, NormalizeIp(clientIp));
+                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip} {Location})",
+                        id, name, deltaPort, NormalizeIp(clientIp), location);
                 }
             }
 
