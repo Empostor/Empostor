@@ -1419,7 +1419,10 @@ internal static class AdminTemplateDefaults
         async function fDiscordWebhook() {
             const { data } = await api('GET', '/api/admin/discord');
             document.getElementById('dw-enabled').checked = data.enabled;
-            document.getElementById('dw-url').value = data.webhookUrl || '';
+            const urlEl = document.getElementById('dw-url');
+            if (document.activeElement !== urlEl) {
+                urlEl.value = data.webhookUrl || '';
+            }
             document.getElementById('dw-game-created').checked = data.notifyOnGameCreated;
             document.getElementById('dw-ban').checked = data.notifyOnBan;
             document.getElementById('dw-report').checked = data.notifyOnReport;
