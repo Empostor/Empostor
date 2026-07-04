@@ -72,7 +72,7 @@ namespace Empostor.Server.Net.State
 
         public async ValueTask HandleKickPlayer(int playerId, bool isBan)
         {
-            _logger.LogInformation("✂ Player {PlayerId} | Ban={IsBan}", playerId, isBan);
+            _logger.LogInformation("✂ Player {PlayerId} │ Ban={IsBan}", playerId, isBan);
             using (var kickMsg = MessageWriter.Get(MessageType.Reliable))
             {
                 WriteKickPlayerMessage(kickMsg, false, playerId, isBan);
@@ -130,10 +130,10 @@ namespace Empostor.Server.Net.State
             var platformStr = string.IsNullOrEmpty(platformName) ? platform : $"{platform}/{platformName}";
             var reactorMods = client.GetReactorMods();
             var reactorStr = reactorMods?.Mods is { Count: > 0 } mods
-                ? $" | Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
+                ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            _logger.LogInformation("▶ {Name} ({Id}) joined | {Lang} | {Platform} | v{Version} | Authority:{Authority} | port {DeltaPort}{Reactor}",
+            _logger.LogInformation("▶ {Name} ({Id}) joined │ {Lang} │ {Platform} │ v{Version} │ Authority:{Authority} │ port {DeltaPort}{Reactor}",
                 sender.Client.Name, sender.Client.Id, lang, platformStr, version, authority, deltaPort, reactorStr);
 
             if (isNew)
@@ -224,7 +224,7 @@ namespace Empostor.Server.Net.State
         private async ValueTask HandleJoinGameNext(ClientPlayer sender, bool isNew)
         {
             var authority = sender.Client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
-            _logger.LogInformation("↻ {Name} ({Id}) rejoined | Authority:{Authority} | port {DeltaPort}",
+            _logger.LogInformation("↻ {Name} ({Id}) rejoined │ Authority:{Authority} │ port {DeltaPort}",
                 sender.Client.Name, sender.Client.Id, authority, sender.Client.DeltaPort);
 
             if (isNew)

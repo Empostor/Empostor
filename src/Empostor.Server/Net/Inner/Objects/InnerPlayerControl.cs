@@ -1008,7 +1008,7 @@ namespace Empostor.Server.Net.Inner.Objects
             {
                 if (PlayerInfo.PlayerLevel != level)
                 {
-                    _logger.LogInformation("★ {Name} ({Id}) | Level {Old} → {New}",
+                    _logger.LogInformation("★ {Name} ({Id}) │ Level {Old} → {New}",
                         sender.Client.Name, sender.Client.Id, PlayerInfo.PlayerLevel, level);
                 }
 

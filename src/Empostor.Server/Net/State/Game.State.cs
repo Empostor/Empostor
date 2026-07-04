@@ -33,7 +33,7 @@ namespace Empostor.Server.Net.State
                 return false;
             }
 
-            _logger.LogInformation("◀ {Name} ({Id}) left | {Reason} | {HashPuid}",
+            _logger.LogInformation("◀ {Name} ({Id}) left │ {Reason} │ {HashPuid}",
                 player.Client.Name, playerId, reason,
                 player.Client.ProductUserId?.Length >= 9 ? player.Client.ProductUserId[..9] : player.Client.ProductUserId ?? "0");
             if (GameState == GameStates.Starting || GameState == GameStates.Started || GameState == GameStates.NotStarted)
@@ -71,7 +71,7 @@ namespace Empostor.Server.Net.State
                 await Task.Delay(_timeoutConfig.ConnectionTimeout);
                 if (player.Client.Connection.IsConnected && player.Client.Connection is HazelConnection hazel)
                 {
-                    _logger.LogInformation("◀ {Name} ({Id}) left | kept connection, disposing", player.Client.Name, playerId);
+                    _logger.LogInformation("◀ {Name} ({Id}) left │ kept connection, disposing", player.Client.Name, playerId);
                     await player.Client.DisconnectAsync(isBan ? DisconnectReason.Banned : DisconnectReason.Kicked);
                 }
             });
