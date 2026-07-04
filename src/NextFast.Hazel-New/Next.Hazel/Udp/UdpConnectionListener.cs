@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
@@ -34,7 +34,7 @@ public class UdpConnectionListener : NetworkConnectionListener
     /// </summary>
     public AcceptConnectionCheck AcceptConnection;
 
-    #nullable enable
+#nullable enable
     /// <summary>
     ///     Creates a new UdpConnectionListener for the given <see cref="IPAddress" />, port and <see cref="IPMode" />.
     /// </summary>

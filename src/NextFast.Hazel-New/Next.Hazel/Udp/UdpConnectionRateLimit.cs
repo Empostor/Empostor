@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -11,7 +11,7 @@ public class UdpConnectionRateLimit : IDisposable
 {
     // Allow burst to 5 connections.
     // Decrease by 1 every second.
-    public int MaxConnections { get;  private set; } = 5;
+    public int MaxConnections { get; private set; } = 5;
 
     public int FalloffMs { get; private set; } = 1000;
     private static readonly ILogger Logger = Log.ForContext<UdpConnectionRateLimit>();
@@ -65,7 +65,7 @@ public class UdpConnectionRateLimit : IDisposable
 
     public bool IsAllowed(IPAddress key)
     {
-        if (_connectionCount.TryGetValue(key, out var value) && value >= MaxConnections) 
+        if (_connectionCount.TryGetValue(key, out var value) && value >= MaxConnections)
             return false;
 
         _connectionCount.AddOrUpdate(key, _ => 1, (_, i) => i + 1);

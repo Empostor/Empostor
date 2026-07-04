@@ -1,4 +1,4 @@
-﻿namespace Empostor.Api.Innersloth
+namespace Empostor.Api.Innersloth
 {
     public static class TextBox
     {

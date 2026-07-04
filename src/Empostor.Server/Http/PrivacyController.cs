@@ -27,7 +27,9 @@ public sealed class PrivacyController : ControllerBase
     public IActionResult GetPrivacy()
     {
         if (!System.IO.File.Exists(PrivacyFile))
+        {
             return Content(DefaultPrivacyHtml(), "text/html; charset=utf-8");
+        }
 
         var html = System.IO.File.ReadAllText(PrivacyFile);
         return Content(html, "text/html; charset=utf-8");
@@ -43,15 +45,17 @@ public sealed class PrivacyController : ControllerBase
         try
         {
             var doc = System.Text.Json.JsonDocument.Parse(body);
-            var content = doc.RootElement.GetProperty("content").GetString() ?? "";
-            var token = doc.RootElement.GetProperty("token").GetString() ?? "";
+            var content = doc.RootElement.GetProperty("content").GetString() ?? string.Empty;
+            var token = doc.RootElement.GetProperty("token").GetString() ?? string.Empty;
 
             var adminToken = Environment.GetEnvironmentVariable("EMP_HTTP_TOKEN")
                           ?? Environment.GetEnvironmentVariable("EMP_ADMIN_TOKEN")
                           ?? "empostor";
 
             if (token != adminToken)
+            {
                 return Unauthorized(new { error = "Invalid token." });
+            }
 
             System.IO.File.WriteAllText(PrivacyFile, content);
             _logger.LogInformation("PrivacyControllerPrivacy policy updated.");
@@ -65,15 +69,24 @@ public sealed class PrivacyController : ControllerBase
 
     private void EnsureFile()
     {
-        if (_initialized) return;
+        if (_initialized)
+        {
+            return;
+        }
 
         lock (_initLock)
         {
-            if (_initialized) return;
+            if (_initialized)
+            {
+                return;
+            }
+
             _initialized = true;
 
             if (!Directory.Exists(PagesDir))
+            {
                 Directory.CreateDirectory(PagesDir);
+            }
 
             if (!System.IO.File.Exists(PrivacyFile))
             {

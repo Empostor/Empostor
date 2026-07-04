@@ -15,13 +15,13 @@ public class AuthApiConfig
 
     public AuthApiMode Mode { get; set; } = AuthApiMode.Innersloth;
 
-    public string NikoApiKey { get; set; } = "";
+    public string NikoApiKey { get; set; } = string.Empty;
 
     public string NikoApiBaseUrl { get; set; } = "https://au-verify.niko233.top";
 
     public string RelayApiBaseUrl { get; set; } = "http://localhost:5100";
 
-    public string RelayApiKey { get; set; } = "";
+    public string RelayApiKey { get; set; } = string.Empty;
 
     public string UmeApiBaseUrl { get; set; } = "https://auverify.hayashiume.top";
 

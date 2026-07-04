@@ -786,7 +786,7 @@ public class DtlsConnectionListener : UdpConnectionListener
                 await SendHelloVerifyRequest(peerAddress, outgoingSequence, record.Epoch, recordProtection, peer.ProtocolVersion);
                 return true;
             }
-        
+
         // Client is initiating a brand new connection. We need
         // to destroy the existing connection and establish a
         // new session.
@@ -881,7 +881,7 @@ public class DtlsConnectionListener : UdpConnectionListener
         serverHelloHandshake.FragmentLength = serverHelloHandshake.Length;
 
         var maxCertFragmentSize = peer.Session.Version == 0 ? MaxCertFragmentSizeV0 : MaxCertFragmentSizeV1;
-        
+
         /*var certificateData = encodedCertificate;
         var initialCertPadding = Record.Size + Handshake.Handshake.Size + serverHello.Size + Handshake.Handshake.Size;
         var certInitialFragmentSize = Math.Min(certificateData.Length, maxCertFragmentSize - initialCertPadding);

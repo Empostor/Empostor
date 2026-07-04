@@ -45,7 +45,9 @@ public sealed class CommandService
     public async ValueTask<bool> TryHandleAsync(CommandContext ctx)
     {
         if (!_commands.TryGetValue(ctx.Name, out var command))
+        {
             return false;
+        }
 
         try
         {

@@ -32,7 +32,9 @@ public sealed class MaxCommand : ICommand
 
         var msg = ctx.GetString("command.max.set").Format(count).Get();
         if (count > 15)
+        {
             msg += "\n" + ctx.GetString("command.max.warning");
+        }
 
         await ctx.PlayerControl.SendChatToPlayerAsync(msg, ctx.PlayerControl);
         return true;

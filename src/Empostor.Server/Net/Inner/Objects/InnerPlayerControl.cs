@@ -1008,8 +1008,8 @@ namespace Empostor.Server.Net.Inner.Objects
             {
                 if (PlayerInfo.PlayerLevel != level)
                 {
-                    _logger.LogInformation("{Code} - Player {Name} ({Id}) level changed {Old} -> {New}",
-                        _game.Code, sender.Client.Name, sender.Client.Id, PlayerInfo.PlayerLevel, level);
+                    _logger.LogInformation("★ {Name} ({Id}) | Level {Old} → {New}",
+                        sender.Client.Name, sender.Client.Id, PlayerInfo.PlayerLevel, level);
                 }
 
                 PlayerInfo.PlayerLevel = level;
@@ -1168,7 +1168,9 @@ namespace Empostor.Server.Net.Inner.Objects
                 };
                 var handled = await _commandService.TryHandleAsync(ctx);
                 if (handled)
+                {
                     return false;
+                }
             }
 
             var @event = new PlayerChatEvent(Game, sender, this, message);

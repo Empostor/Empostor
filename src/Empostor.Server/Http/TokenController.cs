@@ -391,7 +391,7 @@ public sealed class TokenController : ControllerBase
             var putBody = JsonSerializer.SerializeToUtf8Bytes(new NikoPutRequest
             {
                 ApiKey = _authApiConfig.NikoApiKey,
-                FriendCode = "",
+                FriendCode = string.Empty,
             });
 
             var putReq = new HttpRequestMessage(HttpMethod.Put, apiUrl)
@@ -736,7 +736,7 @@ public sealed class TokenController : ControllerBase
         public required string ApiKey { get; init; }
 
         [JsonPropertyName("FriendCode")]
-        public string FriendCode { get; init; } = "";
+        public string FriendCode { get; init; } = string.Empty;
     }
 
     private sealed class NikoCreateResponse

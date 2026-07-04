@@ -51,7 +51,7 @@ public sealed class WelcomeMessageService
             if (colon < 1) continue;
 
             var lang = line[..colon].Trim();
-            var msg  = line[(colon + 1)..].Trim();
+            var msg = line[(colon + 1)..].Trim();
             if (!string.IsNullOrEmpty(msg))
                 _templates[lang] = msg;
         }
@@ -71,7 +71,7 @@ public sealed class WelcomeMessageService
         return template
             .Replace("{Name}", name, StringComparison.OrdinalIgnoreCase)
             .Replace("{FriendCode}", friendCode ?? "None", StringComparison.OrdinalIgnoreCase)
-            .Replace("{GameCode}",   gameCode, StringComparison.OrdinalIgnoreCase);
+            .Replace("{GameCode}", gameCode, StringComparison.OrdinalIgnoreCase);
     }
 
     private const string DefaultContent = """

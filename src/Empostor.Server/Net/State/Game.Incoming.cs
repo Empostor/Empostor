@@ -72,7 +72,7 @@ namespace Empostor.Server.Net.State
 
         public async ValueTask HandleKickPlayer(int playerId, bool isBan)
         {
-            _logger.LogInformation("{Code} - Kicking player {PlayerId} (Ban={IsBan})", Code, playerId, isBan);
+            _logger.LogInformation("✂ Player {PlayerId} | Ban={IsBan}", playerId, isBan);
             using (var kickMsg = MessageWriter.Get(MessageType.Reliable))
             {
                 WriteKickPlayerMessage(kickMsg, false, playerId, isBan);
@@ -121,25 +121,20 @@ namespace Empostor.Server.Net.State
         private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew)
         {
             var client = sender.Client;
-            var clientIp = client.Connection.EndPoint?.Address;
-            var ipStr = clientIp?.IsIPv4MappedToIPv6 == true ? clientIp.MapToIPv4().ToString() : clientIp?.ToString() ?? "?";
-            var remotePort = (client.Connection.EndPoint as System.Net.IPEndPoint)?.Port ?? 0;
             var authority = client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
             var version = client.GameVersion.ToString();
-            var hashPuid = client.ProductUserId?.Length >= 9 ? client.ProductUserId[..9] : client.ProductUserId ?? "0";
             var deltaPort = client.DeltaPort;
-            var location = await _ipGeo.GetLocationAsync(clientIp);
             var lang = LanguageHelper.GetDisplayName(client.Language);
             var platform = client.PlatformSpecificData?.Platform.ToString() ?? "Unknown";
             var platformName = client.PlatformSpecificData?.PlatformName;
             var platformStr = string.IsNullOrEmpty(platformName) ? platform : $"{platform}/{platformName}";
             var reactorMods = client.GetReactorMods();
             var reactorStr = reactorMods?.Mods is { Count: > 0 } mods
-                ? $" [Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}]"
+                ? $" | Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) [{Lang}] [{Platform}] is joining from ({Ip} {Location}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}{Reactor}",
-                Code, sender.Client.Name, hashPuid, sender.Client.Id, lang, platformStr, ipStr, location, remotePort, version, authority, deltaPort, reactorStr);
+            _logger.LogInformation("▶ {Name} ({Id}) joined | {Lang} | {Platform} | v{Version} | Authority:{Authority} | port {DeltaPort}{Reactor}",
+                sender.Client.Name, sender.Client.Id, lang, platformStr, version, authority, deltaPort, reactorStr);
 
             if (isNew)
             {
@@ -229,8 +224,8 @@ namespace Empostor.Server.Net.State
         private async ValueTask HandleJoinGameNext(ClientPlayer sender, bool isNew)
         {
             var authority = sender.Client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
-            _logger.LogInformation("{Code} - Player {Name} ({Id}) is rejoining. Player Authority : {Authority}, port: {DeltaPort}",
-                Code, sender.Client.Name, sender.Client.Id, authority, sender.Client.DeltaPort);
+            _logger.LogInformation("↻ {Name} ({Id}) rejoined | Authority:{Authority} | port {DeltaPort}",
+                sender.Client.Name, sender.Client.Id, authority, sender.Client.DeltaPort);
 
             if (isNew)
             {
@@ -239,7 +234,7 @@ namespace Empostor.Server.Net.State
 
             if (sender.Client.Id == HostId)
             {
-                _logger.LogInformation("{Code} - Host {Name} ({Id}) is rejoining.", Code, sender.Client.Name, sender.Client.Id);
+                _logger.LogInformation("↻ {Name} ({Id}) host rejoined", sender.Client.Name, sender.Client.Id);
                 GameState = GameStates.NotStarted;
                 await HandleJoinGameNew(sender, false);
                 await CheckLimboPlayers();

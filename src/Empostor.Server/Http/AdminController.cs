@@ -827,7 +827,7 @@ namespace Empostor.Server.Http
                 friendCode = c.FriendCode ?? "—",
                 gameVersion = c.GameVersion.ToString(),
                 platform = c.PlatformSpecificData?.Platform.ToString() ?? "Unknown",
-                platformName = c.PlatformSpecificData?.PlatformName ?? "",
+                platformName = c.PlatformSpecificData?.PlatformName ?? string.Empty,
                 language = LanguageHelper.GetDisplayName(c.Language),
                 level = level is null or 0 or uint.MaxValue ? (int?)null : (int)level.Value,
                 inGame = c.Player != null,

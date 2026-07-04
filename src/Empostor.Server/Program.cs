@@ -54,13 +54,15 @@ namespace Empostor.Server
         private static int Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Console(formatter: new EmpostorConsoleFormatter())
                 .Enrich.With<ShortSourceEnricher>()
                 .CreateBootstrapLogger();
             try
             {
                 Log.Information("Empostor v{Version} starting", DotnetUtils.Version);
-                CreateHostBuilder(args).Build().Run();
+                var host = CreateHostBuilder(args).Build();
+                StartupBanner.Print(host.Services.GetRequiredService<IConfiguration>());
+                host.Run();
                 return 0;
             }
             catch (Exception ex)
@@ -163,6 +165,7 @@ namespace Empostor.Server
                     });
 
                     services.AddSingleton<IpGeolocationService>();
+                    services.AddSingleton<IModuleTagRegistry>(ModuleTagRegistry.Instance);
                     services.AddSingleton<ICompatibilityManager, CompatibilityManager>();
                     services.AddSingleton<ClientManager>();
                     services.AddSingleton<IClientManager>(p => p.GetRequiredService<ClientManager>());
@@ -255,12 +258,12 @@ namespace Empostor.Server
                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                         .Enrich.FromLogContext()
                         .Enrich.With<ShortSourceEnricher>()
-                        .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
+                        .WriteTo.Console(formatter: new EmpostorConsoleFormatter())
                         .WriteTo.File(
                             "Log/empostor-.log",
                             rollingInterval: RollingInterval.Day,
                             retainedFileCountLimit: 31,
-                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Source} - {Message:lj}{NewLine}{Exception}")
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{Module}] {Message}{NewLine}{Exception}")
                         .ReadFrom.Configuration(context.Configuration,
                             new ConfigurationReaderOptions(ConfigurationAssemblySource.AlwaysScanDllFiles));
                     AssemblyLoadContext.Default.Resolving -= TryLoad;

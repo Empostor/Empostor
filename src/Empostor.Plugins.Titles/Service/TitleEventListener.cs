@@ -14,7 +14,7 @@ public sealed class TitleEventListener : IEventListener
     public TitleEventListener(ILogger<TitleEventListener> logger, TitleStore store)
     {
         _logger = logger;
-        _store  = store;
+        _store = store;
     }
 
     [EventListener]

@@ -15,7 +15,7 @@ namespace Empostor.Plugins.FriendCodeValidator
         private static readonly Regex Pattern =
             new(@"^([a-zA-Z]+)#(\d{4})$", RegexOptions.Compiled);
 
-    private static readonly HashSet<string> WordsA = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> WordsA = new(StringComparer.OrdinalIgnoreCase)
     {
         "abiding",
         "abiotic",
@@ -2420,7 +2420,7 @@ namespace Empostor.Plugins.FriendCodeValidator
         "zonal",
     };
 
-    private static readonly HashSet<string> WordsB = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> WordsB = new(StringComparer.OrdinalIgnoreCase)
     {
         "ability",
         "absence",
@@ -5402,7 +5402,7 @@ namespace Empostor.Plugins.FriendCodeValidator
             // Try every split point: left+right must be (A,B) or (B,A)
             for (var i = 1; i < name.Length; i++)
             {
-                var left  = name[..i];
+                var left = name[..i];
                 var right = name[i..];
                 if ((WordsA.Contains(left) && WordsB.Contains(right)) ||
                     (WordsB.Contains(left) && WordsA.Contains(right)))

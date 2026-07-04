@@ -33,8 +33,8 @@ namespace Empostor.Server.Net.State
                 return false;
             }
 
-            _logger.LogInformation("{Code} - Player {Name} ({Id}) has left for \"{Reason}\" hashpuid : {HashPuid}",
-                Code, player.Client.Name, playerId, reason,
+            _logger.LogInformation("◀ {Name} ({Id}) left | {Reason} | {HashPuid}",
+                player.Client.Name, playerId, reason,
                 player.Client.ProductUserId?.Length >= 9 ? player.Client.ProductUserId[..9] : player.Client.ProductUserId ?? "0");
             if (GameState == GameStates.Starting || GameState == GameStates.Started || GameState == GameStates.NotStarted)
             {
@@ -71,7 +71,7 @@ namespace Empostor.Server.Net.State
                 await Task.Delay(_timeoutConfig.ConnectionTimeout);
                 if (player.Client.Connection.IsConnected && player.Client.Connection is HazelConnection hazel)
                 {
-                    _logger.LogInformation("{Code} - Player {Name} ({Id}) kept connection open after leaving, disposing.", Code, player.Client.Name, playerId);
+                    _logger.LogInformation("◀ {Name} ({Id}) left | kept connection, disposing", player.Client.Name, playerId);
                     await player.Client.DisconnectAsync(isBan ? DisconnectReason.Banned : DisconnectReason.Kicked);
                 }
             });
@@ -103,7 +103,7 @@ namespace Empostor.Server.Net.State
             }
 
             HostId = host.Client.Id;
-            _logger.LogInformation("{Code} - Assigned {Name} ({Id}) as new host.", Code, host.Client.Name, host.Client.Id);
+            _logger.LogInformation("★ {Name} ({Id}) became host", host.Client.Name, host.Client.Id);
             if (GameState == GameStates.Ended && host.Limbo == LimboStates.WaitingForHost)
             {
                 GameState = GameStates.NotStarted;

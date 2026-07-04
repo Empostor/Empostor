@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -165,7 +165,7 @@ public class UPnPHelper : IDisposable
             var typeNode = desc.SelectSingleNode("//tns:device/tns:deviceType/text()", nsMgr);
             if (typeNode?.Value == null)
                 return false;
-            
+
             if (!typeNode.Value.Contains("InternetGatewayDevice"))
                 return false;
 

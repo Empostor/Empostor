@@ -109,7 +109,7 @@ namespace Empostor.Server.Net.Manager
             if (versionCompare == ICompatibilityManager.VersionCompareResult.ServerTooOld
                 && _compatibilityConfig.AllowFutureGameVersions && platformSpecificData != null)
             {
-                _logger.LogWarning("Client [{Id}]{Name} connected using future version {Version}", id, name, clientVersion);
+                _logger.LogWarning("#{Id} {Name} | using future version {Version}", id, name, clientVersion);
             }
             else if (versionCompare != ICompatibilityManager.VersionCompareResult.Compatible
                      || platformSpecificData == null)
@@ -134,7 +134,7 @@ namespace Empostor.Server.Net.Manager
                     return;
                 }
 
-                _logger.LogInformation("Client [{Id}]{Name} connected with host authority", id, name);
+                _logger.LogInformation("#{Id} {Name} | host authority enabled", id, name);
             }
 
             if (name.Length > 10) { await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameLength); return; }
@@ -148,7 +148,7 @@ namespace Empostor.Server.Net.Manager
             var platformStr = platformSpecificData?.Platform.ToString() ?? "Unknown";
             var reactorMods = connection.GetReactorMods();
             var reactorStr = reactorMods?.Mods is { Count: > 0 } mods
-                ? $" [Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}]"
+                ? $" | Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
             // Primary: match by delta port (nonce)
@@ -184,13 +184,13 @@ namespace Empostor.Server.Net.Manager
                     }
 
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from port {Port} {Location}[{Lang}] [{Platform}] is authorized as {FriendCode} {HashPuid}{Reactor}",
+                        "#{Id} {Name} | port {Port} | {Location} | {Lang} | {Platform} | FC {FriendCode} | {HashPuid}{Reactor}",
                         id, name, deltaPort, location, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "Client [{Id}]{Name} port {Port} has no auth info, falling back to IP",
+                        "#{Id} {Name} | port {Port} has no auth info, falling back to IP",
                         id, name, deltaPort);
                 }
             }
@@ -203,13 +203,13 @@ namespace Empostor.Server.Net.Manager
                 {
                     friendCode = authInfo.FriendCode;
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from {Ip} {Location}[{Lang}] [{Platform}] is authorized as {FriendCode} {HashPuid}{Reactor}",
+                        "#{Id} {Name} | {Ip} | {Location} | {Lang} | {Platform} | FC {FriendCode} | {HashPuid}{Reactor}",
                         id, name, NormalizeIp(clientIp), location, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip} {Location}) [{Lang}] [{Platform}]{Reactor}",
+                        "#{Id} {Name} | no auth | port {Port} | {Ip} | {Location} | {Lang} | {Platform}{Reactor}",
                         id, name, deltaPort, NormalizeIp(clientIp), location, lang, platformStr, reactorStr);
                 }
             }
@@ -220,7 +220,7 @@ namespace Empostor.Server.Net.Manager
             client.DeltaPort = deltaPort;
 
             client.Id = id;
-            _logger.LogDebug("Client [{Id}]{Name} connected with FriendCode={FC} DeltaPort={DP}", id, name, client.FriendCode ?? "(none)", deltaPort);
+            _logger.LogDebug("#{Id} {Name} | connected | FC={FC} | port {DP}", id, name, client.FriendCode ?? "(none)", deltaPort);
             _clients.TryAdd(id, client);
             await _eventManager.CallAsync(new ClientConnectedEvent(connection, client));
         }

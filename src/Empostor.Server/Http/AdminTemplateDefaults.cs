@@ -18,9 +18,14 @@ internal static class AdminTemplateDefaults
             var loginPath = Path.Combine(PagesDir, "login.html");
             var adminPath = Path.Combine(PagesDir, "admin.html");
             if (!File.Exists(loginPath))
+            {
                 File.WriteAllText(loginPath, LoginHtml);
+            }
+
             if (!File.Exists(adminPath))
+            {
                 File.WriteAllText(adminPath, AdminHtml);
+            }
         }
         catch
         {

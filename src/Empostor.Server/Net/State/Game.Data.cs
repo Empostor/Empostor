@@ -206,7 +206,7 @@ namespace Empostor.Server.Net.State
                             continue;
                         }
 
-                        _logger.LogWarning("Couldn't find spawnable object {0}.", objectId);
+                        _logger.LogWarning("Couldn't find spawnable object {ObjectId}", objectId);
                         break;
                     }
 

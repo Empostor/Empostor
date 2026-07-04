@@ -12,7 +12,7 @@ public sealed class FixedCodePlugin : PluginBase
 
     public FixedCodePlugin(ILogger<FixedCodePlugin> logger, FixedCodeListener listener)
     {
-        _logger   = logger;
+        _logger = logger;
         _listener = listener;
     }
 

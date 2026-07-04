@@ -85,25 +85,25 @@ public sealed class MonitorController : ControllerBase
 public sealed class MonitorStatus
 {
     [JsonPropertyName("status")]
-    public string Status { get; set; } = "";
+    public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("timestamp")]
-    public string Timestamp { get; set; } = "";
+    public string Timestamp { get; set; } = string.Empty;
 
     [JsonPropertyName("uptime_seconds")]
     public long UptimeSeconds { get; set; }
 
     [JsonPropertyName("uptime_display")]
-    public string UptimeDisplay { get; set; } = "";
+    public string UptimeDisplay { get; set; } = string.Empty;
 
     [JsonPropertyName("version")]
-    public string Version { get; set; } = "";
+    public string Version { get; set; } = string.Empty;
 
     [JsonPropertyName("runtime")]
-    public string Runtime { get; set; } = "";
+    public string Runtime { get; set; } = string.Empty;
 
     [JsonPropertyName("platform")]
-    public string Platform { get; set; } = "";
+    public string Platform { get; set; } = string.Empty;
 
     [JsonPropertyName("processors")]
     public int Processors { get; set; }
@@ -127,17 +127,17 @@ public sealed class MonitorStatus
 public sealed class MonitorGame
 {
     [JsonPropertyName("code")]
-    public string Code { get; set; } = "";
+    public string Code { get; set; } = string.Empty;
 
     [JsonPropertyName("state")]
-    public string State { get; set; } = "";
+    public string State { get; set; } = string.Empty;
 
     [JsonPropertyName("map")]
-    public string Map { get; set; } = "";
+    public string Map { get; set; } = string.Empty;
 
     [JsonPropertyName("player_count")]
     public int PlayerCount { get; set; }
 
     [JsonPropertyName("host")]
-    public string Host { get; set; } = "";
+    public string Host { get; set; } = string.Empty;
 }

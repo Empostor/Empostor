@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using Empostor.Api;
 using Empostor.Api.Events.Player;
 using Microsoft.Extensions.Logging;
 
@@ -22,33 +21,26 @@ public sealed class ChatService
 
     public void HandleChatMessage(IPlayerChatEvent e)
     {
-        var client = e.ClientPlayer.Client;
-        var clientId = client.Id;
-        var playerName = client.Name;
+        var playerName = e.ClientPlayer.Client.Name;
         var slot = e.ClientPlayer.Character?.PlayerId ?? 0;
-        var gameCode = Api.Innersloth.GameCodeParser.IntToGameName(e.Game.Code);
 
-        int channel;
         string channelName;
         if (e.IsCancelled)
         {
-            channel = 0;
             channelName = "Canceled";
         }
         else if (!e.SendToAllPlayers)
         {
-            channel = 255;
             channelName = "Command";
         }
         else
         {
-            channel = -1;
             channelName = "Public";
         }
 
         _logger.LogInformation(
-            "{Code} - [{ClientId}][{Name}][{Slot}] => [{Channel}]{ChannelName}: [{Message}]",
-            gameCode, clientId, playerName, slot, channel, channelName, e.Message);
+            "✉ {Name} [{Slot}] → {ChannelName}: {Message}",
+            playerName, slot, channelName, e.Message);
 
         var isHost = e.ClientPlayer.IsHost;
         var maxLength = isHost ? _config.HostMaxMessageLength : _config.PlayerMaxMessageLength;
@@ -56,7 +48,7 @@ public sealed class ChatService
         if (e.Message.Length > maxLength)
         {
             _logger.LogWarning(
-                "Cancelling chat message from {PlayerName} ({PlayerType}) of {Length} chars (max: {MaxLength}): too long",
+                "✉ {PlayerName} | {PlayerType} | blocked: {Length}/{MaxLength} chars",
                 playerName, isHost ? "host" : "player", e.Message.Length, maxLength);
 
             e.PlayerControl.SendChatToPlayerAsync(_config.TooLongMessage, e.PlayerControl);
