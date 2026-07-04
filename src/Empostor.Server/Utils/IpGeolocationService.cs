@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Utils
 {
-    internal class IpGeolocationService
+    public class IpGeolocationService
     {
         private const string ApiUrl = "http://ip-api.com/json/{0}?lang=zh-CN&fields=status,country,regionName,city";
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);

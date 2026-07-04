@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using Empostor.Api;
 using Empostor.Api.Events.Player;
 using Microsoft.Extensions.Logging;
 
@@ -21,24 +22,33 @@ public sealed class ChatService
 
     public void HandleChatMessage(IPlayerChatEvent e)
     {
-        var playerInfo = e.PlayerControl.PlayerInfo;
-        var playerName = playerInfo?.PlayerName ?? "?";
-        var ownerId = e.PlayerControl.OwnerId;
+        var client = e.ClientPlayer.Client;
+        var clientId = client.Id;
+        var playerName = client.Name;
+        var slot = e.ClientPlayer.Character?.PlayerId ?? 0;
+        var gameCode = Api.Innersloth.GameCodeParser.IntToGameName(e.Game.Code);
 
-        if (e.ClientPlayer.Character == e.PlayerControl)
+        int channel;
+        string channelName;
+        if (e.IsCancelled)
         {
-            _logger.LogInformation(
-                "[{GameCode}] {PlayerName} ({PlayerId}): {Message}",
-                e.Game.Code, playerName, ownerId, e.Message);
+            channel = 0;
+            channelName = "Canceled";
+        }
+        else if (!e.SendToAllPlayers)
+        {
+            channel = 255;
+            channelName = "Command";
         }
         else
         {
-            var senderName = e.ClientPlayer.Character?.PlayerInfo?.PlayerName ?? "?";
-            var senderId = e.ClientPlayer.Client.Id;
-            _logger.LogInformation(
-                "[{GameCode}] {SenderName} ({SenderId}) on behalf of {PlayerName} ({PlayerId}): {Message}",
-                e.Game.Code, senderName, senderId, playerName, ownerId, e.Message);
+            channel = -1;
+            channelName = "Public";
         }
+
+        _logger.LogInformation(
+            "{Code} - [{ClientId}][{Name}][{Slot}] => [{Channel}]{ChannelName}: [{Message}]",
+            gameCode, clientId, playerName, slot, channel, channelName, e.Message);
 
         var isHost = e.ClientPlayer.IsHost;
         var maxLength = isHost ? _config.HostMaxMessageLength : _config.PlayerMaxMessageLength;

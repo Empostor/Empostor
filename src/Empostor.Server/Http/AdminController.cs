@@ -20,6 +20,7 @@ using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
 using Empostor.Server.Service.Stat;
+using Empostor.Server.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -48,6 +49,7 @@ namespace Empostor.Server.Http
         private readonly PlayerStatsConfig _statsConfig;
         private readonly ChatFilterStore _chatFilter;
         private readonly DiscordWebhookStore _discordWebhook;
+        private readonly IpGeolocationService _ipGeo;
         private readonly string _passwordHash;
         private static readonly ConcurrentDictionary<string, (int Count, DateTime FirstAttempt)> _loginFailures = new();
 
@@ -62,7 +64,8 @@ namespace Empostor.Server.Http
             PlayerStatsStore playerStats,
             IOptions<PlayerStatsConfig> statsConfig,
             ChatFilterStore chatFilter,
-            DiscordWebhookStore discordWebhook)
+            DiscordWebhookStore discordWebhook,
+            IpGeolocationService ipGeo)
         {
             _logger = logger;
             _gameManager = gameManager;
@@ -75,6 +78,7 @@ namespace Empostor.Server.Http
             _statsConfig = statsConfig.Value;
             _chatFilter = chatFilter;
             _discordWebhook = discordWebhook;
+            _ipGeo = ipGeo;
             _passwordHash = ComputeHash(_config.Password);
 
             if (string.IsNullOrEmpty(_config.Password)
@@ -229,14 +233,23 @@ namespace Empostor.Server.Http
         }
 
         [HttpGet("/api/admin/clients")]
-        public IActionResult GetClients()
+        public async Task<IActionResult> GetClients()
         {
             if (!IsAuthenticated())
             {
                 return Unauthorized();
             }
 
-            return Ok(_clientManager.Clients.Select(CSnap));
+            var clients = _clientManager.Clients.ToList();
+            var snaps = new List<object>(clients.Count);
+            foreach (var c in clients)
+            {
+                var ip = c.Connection?.EndPoint?.Address;
+                var location = await _ipGeo.GetLocationAsync(ip);
+                snaps.Add(CSnap(c, location));
+            }
+
+            return Ok(snaps);
         }
 
         [HttpGet("/api/admin/bans")]
@@ -803,9 +816,10 @@ namespace Empostor.Server.Http
             }).ToList(),
         };
 
-        private static object CSnap(IClient c)
+        private static object CSnap(IClient c, string location = "")
         {
             var reactor = c.GetReactorMods();
+            var level = c.Player?.Character?.PlayerInfo?.PlayerLevel;
             return new
             {
                 id = c.Id,
@@ -813,9 +827,13 @@ namespace Empostor.Server.Http
                 friendCode = c.FriendCode ?? "—",
                 gameVersion = c.GameVersion.ToString(),
                 platform = c.PlatformSpecificData?.Platform.ToString() ?? "Unknown",
+                platformName = c.PlatformSpecificData?.PlatformName ?? "",
+                language = LanguageHelper.GetDisplayName(c.Language),
+                level = level is null or 0 or uint.MaxValue ? (int?)null : (int)level.Value,
                 inGame = c.Player != null,
                 gameCode = c.Player != null ? GameCodeParser.IntToGameName(c.Player.Game.Code) : "—",
                 ip = c.Connection?.EndPoint?.Address?.ToString() ?? "—",
+                location = location,
                 reactor = reactor == null ? null : new
                 {
                     protocolVersion = reactor.ProtocolVersion,

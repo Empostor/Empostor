@@ -13,6 +13,7 @@ using Empostor.Api.Net.Manager;
 using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Factories;
 using Empostor.Api.Service;
+using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Utils;
 using Microsoft.Extensions.Logging;
@@ -143,6 +144,12 @@ namespace Empostor.Server.Net.Manager
             UserAuthInfo? authInfo = null;
             var clientIp = connection.EndPoint?.Address;
             var location = await _ipGeo.GetLocationAsync(clientIp);
+            var lang = LanguageHelper.GetDisplayName(language);
+            var platformStr = platformSpecificData?.Platform.ToString() ?? "Unknown";
+            var reactorMods = connection.GetReactorMods();
+            var reactorStr = reactorMods?.Mods is { Count: > 0 } mods
+                ? $" [Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}]"
+                : string.Empty;
 
             // Primary: match by delta port (nonce)
             if (deltaPort > 0)
@@ -177,8 +184,8 @@ namespace Empostor.Server.Net.Manager
                     }
 
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from port {Port} {Location}is authorized as {FriendCode} {HashPuid}",
-                        id, name, deltaPort, location, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
+                        "Client [{Id}]{Name} from port {Port} {Location}[{Lang}] [{Platform}] is authorized as {FriendCode} {HashPuid}{Reactor}",
+                        id, name, deltaPort, location, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
                 }
                 else
                 {
@@ -196,14 +203,14 @@ namespace Empostor.Server.Net.Manager
                 {
                     friendCode = authInfo.FriendCode;
                     _logger.LogInformation(
-                        "Client [{Id}]{Name} from {Ip} {Location}is authorized as {FriendCode} {HashPuid}",
-                        id, name, NormalizeIp(clientIp), location, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
+                        "Client [{Id}]{Name} from {Ip} {Location}[{Lang}] [{Platform}] is authorized as {FriendCode} {HashPuid}{Reactor}",
+                        id, name, NormalizeIp(clientIp), location, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip} {Location})",
-                        id, name, deltaPort, NormalizeIp(clientIp), location);
+                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip} {Location}) [{Lang}] [{Platform}]{Reactor}",
+                        id, name, deltaPort, NormalizeIp(clientIp), location, lang, platformStr, reactorStr);
                 }
             }
 

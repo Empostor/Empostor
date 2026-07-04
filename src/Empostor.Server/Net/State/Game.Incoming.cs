@@ -6,6 +6,8 @@ using Empostor.Api.Games;
 using Empostor.Api.Net;
 using Next.Hazel;
 using Empostor.Server.Events;
+using Empostor.Server.Service.Admin.Reactor;
+using Empostor.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -127,9 +129,17 @@ namespace Empostor.Server.Net.State
             var hashPuid = client.ProductUserId?.Length >= 9 ? client.ProductUserId[..9] : client.ProductUserId ?? "0";
             var deltaPort = client.DeltaPort;
             var location = await _ipGeo.GetLocationAsync(clientIp);
+            var lang = LanguageHelper.GetDisplayName(client.Language);
+            var platform = client.PlatformSpecificData?.Platform.ToString() ?? "Unknown";
+            var platformName = client.PlatformSpecificData?.PlatformName;
+            var platformStr = string.IsNullOrEmpty(platformName) ? platform : $"{platform}/{platformName}";
+            var reactorMods = client.GetReactorMods();
+            var reactorStr = reactorMods?.Mods is { Count: > 0 } mods
+                ? $" [Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}]"
+                : string.Empty;
 
-            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) is joining from ({Ip} {Location}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}",
-                Code, sender.Client.Name, hashPuid, sender.Client.Id, ipStr, location, remotePort, version, authority, deltaPort);
+            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) [{Lang}] [{Platform}] is joining from ({Ip} {Location}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}{Reactor}",
+                Code, sender.Client.Name, hashPuid, sender.Client.Id, lang, platformStr, ipStr, location, remotePort, version, authority, deltaPort, reactorStr);
 
             if (isNew)
             {

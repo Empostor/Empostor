@@ -1006,6 +1006,12 @@ namespace Empostor.Server.Net.Inner.Objects
             }
             else
             {
+                if (PlayerInfo.PlayerLevel != level)
+                {
+                    _logger.LogInformation("{Code} - Player {Name} ({Id}) level changed {Old} -> {New}",
+                        _game.Code, sender.Client.Name, sender.Client.Id, PlayerInfo.PlayerLevel, level);
+                }
+
                 PlayerInfo.PlayerLevel = level;
             }
 
@@ -1146,10 +1152,6 @@ namespace Empostor.Server.Net.Inner.Objects
 
         private async ValueTask<bool> HandleSendChat(ClientPlayer sender, string message)
         {
-            var clientId = sender.Client.Id;
-            var playerName = sender.Client.Name;
-            var slot = sender.Character?.PlayerId ?? 0;
-
             if (message.StartsWith("#"))
             {
                 var ctx = new CommandContext
@@ -1166,10 +1168,7 @@ namespace Empostor.Server.Net.Inner.Objects
                 };
                 var handled = await _commandService.TryHandleAsync(ctx);
                 if (handled)
-                {
-                    _logger.LogInformation("[{ClientId}][{Name}][{Slot}][{Name}] => [255]Command:\n [{Message}]", clientId, playerName, slot, message);
                     return false;
-                }
             }
 
             var @event = new PlayerChatEvent(Game, sender, this, message);
@@ -1181,12 +1180,10 @@ namespace Empostor.Server.Net.Inner.Objects
             await _eventManager.CallAsync(@event);
             if (@event.IsCancelled)
             {
-                _logger.LogInformation("[{ClientId}][{Name}][{Slot}][{Name}] => [0]Canceled:\n [{Message}]", clientId, playerName, slot, message);
                 return false;
             }
             else if (@event.SendToAllPlayers == false)
             {
-                _logger.LogInformation("[{ClientId}][{Name}][{Slot}][{Name}] => [255]Command:\n [{Message}]", clientId, playerName, slot, message);
                 if (Game.Host != null)
                 {
                     await SendChatToPlayerAsync(message, Game.Host.Character);
@@ -1196,7 +1193,6 @@ namespace Empostor.Server.Net.Inner.Objects
             }
             else
             {
-                _logger.LogInformation("[{ClientId}][{Name}][{Slot}][{Name}] => [-1]Public:\n [{Message}]", clientId, playerName, slot, message);
                 return true;
             }
         }

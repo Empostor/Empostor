@@ -152,6 +152,7 @@
   "clients.version_label": "Version",
   "clients.platform_label": "Platform",
   "clients.language_label": "Language",
+  "clients.level_label": "Level",
   "clients.ingame_label": "In Game",
 
   "reactor.required_yes": "Yes",

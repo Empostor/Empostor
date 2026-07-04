@@ -15,7 +15,7 @@ namespace Empostor.Server.Service.Admin.Reactor
     internal sealed class ReactorHandshakeListener : IEventListener
     {
         // "reactor" in ASCII (7 bytes), packed as upper 56 bits of a uint64 in little-endian
-        private const ulong ReactorMagic = 0x726f7463656172;
+        private const ulong ReactorMagic = 0x72656163746f72;
 
         private readonly ILogger<ReactorHandshakeListener> _logger;
 
@@ -30,7 +30,9 @@ namespace Empostor.Server.Service.Admin.Reactor
 
             try
             {
-                // Skip known Among Us handshake fields to reach the Reactor suffix
+                // HandshakeC2S.Deserialize already consumed the AU handshake,
+                // so we must seek back to the beginning before skipping.
+                reader.Seek(0);
                 if (!SkipAuHandshake(reader))
                 {
                     return;
@@ -49,7 +51,7 @@ namespace Empostor.Server.Service.Admin.Reactor
 
                 // Read mod list for protocol V3+
                 var mods = Array.Empty<ClientMod>();
-                if (protocolVersion >= 3)
+                if (protocolVersion >= 2) // ReactorProtocolVersion.V3 = 2
                 {
                     mods = ReadModList(reader);
                 }
@@ -121,6 +123,18 @@ namespace Empostor.Server.Service.Admin.Reactor
             if (!TrySkipMessage(reader))
             {
                 return false;
+            }
+
+            // ProductUserId (Hazel string) — may be absent for older clients
+            if (CanRead(reader, 1))
+            {
+                TrySkipString(reader);
+            }
+
+            // CrossplayFlags (uint32, 4 bytes) — may be absent for older clients
+            if (CanRead(reader, 4))
+            {
+                reader.ReadUInt32();
             }
 
             return true;
