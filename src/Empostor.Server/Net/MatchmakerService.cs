@@ -15,17 +15,20 @@ namespace Empostor.Server.Net
         private readonly ServerConfig _serverConfig;
         private readonly HttpServerConfig _httpServerConfig;
         private readonly Matchmaker _matchmaker;
+        private readonly PortPoolService _portPool;
 
         public MatchmakerService(
             ILogger<MatchmakerService> logger,
             IOptions<ServerConfig> serverConfig,
             IOptions<HttpServerConfig> httpServerConfig,
-            Matchmaker matchmaker)
+            Matchmaker matchmaker,
+            PortPoolService portPool)
         {
             _logger = logger;
             _serverConfig = serverConfig.Value;
             _httpServerConfig = httpServerConfig.Value;
             _matchmaker = matchmaker;
+            _portPool = portPool;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -35,11 +38,24 @@ namespace Empostor.Server.Net
             await _matchmaker.StartAsync(endpoint);
 
             _logger.LogInformation(
-                "Matchmaker is listening on {0}:{1}, the public server ip is {2}:{3}.",
+                "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",
                 endpoint.Address,
                 endpoint.Port,
                 _serverConfig.ResolvePublicIp(),
                 _serverConfig.PublicPort);
+
+            if (_portPool.IsEnabled)
+            {
+                _logger.LogInformation(
+                    "Delta Matchmaker is enabled.");
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Delta Matchmaker is disabled (DeltaPortStart={Start}, DeltaPortEnd={End}). Using IP-based matching.",
+                    _serverConfig.DeltaPortStart,
+                    _serverConfig.DeltaPortEnd);
+            }
 
             var runningOutsideContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == null;
             if (_serverConfig.PublicIp == "127.0.0.1")

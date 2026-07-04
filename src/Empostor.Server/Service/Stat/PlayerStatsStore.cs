@@ -152,7 +152,7 @@ public sealed class PlayerStatsStore : IDisposable
                 var list = _stats.Values.ToList();
                 await File.WriteAllTextAsync(StatsFile, JsonSerializer.Serialize(list, JsonOpts));
             }
-            catch (Exception ex) { _logger.LogWarning(ex, "[PlayerStats] Failed to save stats"); }
+            catch (Exception ex) { _logger.LogWarning(ex, "PlayerStatsFailed to save stats"); }
             finally { _saveLock.Release(); }
         });
     }
@@ -161,7 +161,7 @@ public sealed class PlayerStatsStore : IDisposable
     {
         if (!File.Exists(StatsFile))
         {
-            _logger.LogDebug("[PlayerStats] No stats file found, starting fresh");
+            _logger.LogDebug("PlayerStatsNo stats file found, starting fresh");
             return;
         }
 
@@ -172,10 +172,10 @@ public sealed class PlayerStatsStore : IDisposable
             {
                 _stats = new ConcurrentDictionary<string, PlayerStatsEntry>(
                     list.ToDictionary(e => e.FriendCode, StringComparer.OrdinalIgnoreCase));
-                _logger.LogInformation("[PlayerStats] Loaded {Count} player stats", _stats.Count);
+                _logger.LogInformation("PlayerStatsLoaded {Count} player stats", _stats.Count);
             }
         }
-        catch (Exception ex) { _logger.LogWarning(ex, "[PlayerStats] Failed to load stats file"); }
+        catch (Exception ex) { _logger.LogWarning(ex, "PlayerStatsFailed to load stats file"); }
     }
 
     private static string Normalize(string friendCode)

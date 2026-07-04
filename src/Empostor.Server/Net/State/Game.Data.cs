@@ -87,7 +87,7 @@ namespace Empostor.Server.Net.State
                 var targetId = parent.ReadPackedInt32();
                 if (!TryGetPlayer(targetId, out target))
                 {
-                    _logger.LogWarning("Player {0} tried to send GameData to unknown player {1}.", sender.Client.Id, targetId);
+                    _logger.LogWarning("{Code} - Player {Id} sent GameData to unknown player {Target}", Code, sender.Client.Id, targetId);
                     return false;
                 }
 
@@ -110,7 +110,7 @@ namespace Empostor.Server.Net.State
                         }
                         else
                         {
-                            _logger.LogWarning("Received DataFlag for unregistered NetId {0}.", netId);
+                            _logger.LogWarning("{Code} - Received DataFlag for unregistered NetId {NetId}", Code, netId);
                         }
 
                         break;
@@ -129,7 +129,7 @@ namespace Empostor.Server.Net.State
                         }
                         else
                         {
-                            _logger.LogWarning("Received RpcFlag for unregistered NetId {0}.", netId);
+                            _logger.LogWarning("{Code} - Received RpcFlag for unregistered NetId {NetId}", Code, netId);
                         }
 
                         break;
@@ -315,7 +315,7 @@ namespace Empostor.Server.Net.State
 
                     default:
                     {
-                        _logger.LogWarning("Bad GameData tag {0}", reader.Tag);
+                        _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
                         break;
                     }
                 }
@@ -513,7 +513,7 @@ namespace Empostor.Server.Net.State
 
             if (!AddNetObject(playerInfo))
             {
-                _logger.LogError("Couldn't spawn PlayerInfo for {Name} ({ClientId})", sender.Client.Name, sender.Client.Id);
+                _logger.LogError("{Code} - Could not spawn PlayerInfo for {Name} ({ClientId})", Code, sender.Client.Name, sender.Client.Id);
                 playerInfo.NetId = uint.MaxValue;
                 return;
             }

@@ -23,6 +23,12 @@ namespace Empostor.Server.Net
 
         public int Id { get; set; }
 
+        /// <summary>
+        ///     Gets the delta port this client connected on.
+        ///     0 means the main listener port (IP fallback matching).
+        /// </summary>
+        public int DeltaPort { get; set; }
+
         public string Name { get; }
 
         public Language Language { get; }

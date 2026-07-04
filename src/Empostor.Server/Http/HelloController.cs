@@ -25,7 +25,7 @@ public sealed class HelloController : ControllerBase
     {
         if (!System.IO.File.Exists(IndexFile))
         {
-            _logger.LogWarning("[HelloController] Pages/index.html not found, serving fallback.");
+            _logger.LogWarning("HelloControllerPages/index.html not found, serving fallback.");
             return Content(FallbackHtml(), "text/html; charset=utf-8");
         }
 
@@ -52,13 +52,13 @@ public sealed class HelloController : ControllerBase
             if (!Directory.Exists(PagesDir))
             {
                 Directory.CreateDirectory(PagesDir);
-                _logger.LogInformation("[HelloController] Created Pages/ directory at {Path}", PagesDir);
+                _logger.LogInformation("HelloControllerCreated Pages/ directory at {Path}", PagesDir);
             }
 
             if (!System.IO.File.Exists(IndexFile))
             {
                 System.IO.File.WriteAllText(IndexFile, DefaultIndexHtml());
-                _logger.LogInformation("[HelloController] Written default Pages/index.html");
+                _logger.LogInformation("HelloControllerWritten default Pages/index.html");
             }
         }
     }

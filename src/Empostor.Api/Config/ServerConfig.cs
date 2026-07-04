@@ -17,6 +17,14 @@ namespace Empostor.Api.Config
 
         public ushort ListenPort { get; set; } = 22023;
 
+        public bool UseUfw { get; set; } = false;
+
+        public bool UseFirewalld { get; set; } = false;
+
+        public ushort DeltaPortStart { get; set; } = 0;
+
+        public ushort DeltaPortEnd { get; set; } = 0;
+
         public string ResolvePublicIp()
         {
             return _resolvedPublicIp ??= IpUtils.ResolveIp(PublicIp);

@@ -75,13 +75,13 @@ namespace Empostor.Server.Net.State
             {
                 if (Character == null)
                 {
-                    _logger.LogInformation("{0} - Player {1} spawn timed out, kicking.", Game.Code, Client.Id);
+                    _logger.LogInformation("{Code} - Player {Id} spawn timed out, kicking.", Game.Code, Client.Id);
                     await KickAsync();
                 }
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Exception caught while kicking player for spawn timeout.");
+                _logger.LogError(e, "{Code} - Exception while kicking player {Id} for spawn timeout", Game.Code, Client.Id);
             }
             finally
             {

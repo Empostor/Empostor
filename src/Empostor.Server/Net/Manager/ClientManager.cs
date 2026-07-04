@@ -32,6 +32,7 @@ namespace Empostor.Server.Net.Manager
         private readonly PlayerConnectStore _playerConnectStore;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly AuthApiConfig _authApiConfig;
+        private readonly PortPoolService _portPool;
         private int _idLast;
 
         public ClientManager(
@@ -43,7 +44,8 @@ namespace Empostor.Server.Net.Manager
             AuthCacheService authCache,
             PlayerConnectStore playerConnectStore,
             IHttpClientFactory httpClientFactory,
-            IOptions<AuthApiConfig> authApiConfig)
+            IOptions<AuthApiConfig> authApiConfig,
+            PortPoolService portPool)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -55,24 +57,26 @@ namespace Empostor.Server.Net.Manager
             _playerConnectStore = playerConnectStore;
             _httpClientFactory = httpClientFactory;
             _authApiConfig = authApiConfig.Value;
+            _portPool = portPool;
+
+            if (_compatibilityConfig.AllowFutureGameVersions)
+            {
+                _logger.LogWarning("AllowFutureGameVersions, which allows future Among Us versions to connect that were unknown at the time this Impostor was built");
+            }
+
+            if (_compatibilityConfig.AllowHostAuthority)
+            {
+                _logger.LogWarning("AllowHostAuthority, which allows game hosts to control more game features, but it uses less well tested code on the client, which causes some bugs");
+            }
+
+            if (_compatibilityConfig.AllowVersionMixing)
+            {
+                _logger.LogWarning("AllowVersionMixing, which allows players to join games created on different game versions that they may not be 100% compatible with");
+            }
 
             if (_compatibilityConfig.AllowFutureGameVersions || _compatibilityConfig.AllowHostAuthority || _compatibilityConfig.AllowVersionMixing)
             {
-                _logger.LogWarning("One or more compatibility options were enabled, please mention these when seeking support:");
-                if (_compatibilityConfig.AllowFutureGameVersions)
-                {
-                    _logger.LogWarning("AllowFutureGameVersions");
-                }
-
-                if (_compatibilityConfig.AllowHostAuthority)
-                {
-                    _logger.LogWarning("AllowHostAuthority");
-                }
-
-                if (_compatibilityConfig.AllowVersionMixing)
-                {
-                    _logger.LogWarning("AllowVersionMixing");
-                }
+                _logger.LogWarning("One or more compatibility options were enabled, please mention these when seeking support");
             }
         }
 
@@ -92,13 +96,15 @@ namespace Empostor.Server.Net.Manager
             Language language,
             QuickChatModes chatMode,
             PlatformSpecificData? platformSpecificData,
-            string? matchmakerToken = null)
+            int deltaPort = 0)
         {
+            var id = NextId();
+
             var versionCompare = _compatibilityManager.CanConnectToServer(clientVersion);
             if (versionCompare == ICompatibilityManager.VersionCompareResult.ServerTooOld
                 && _compatibilityConfig.AllowFutureGameVersions && platformSpecificData != null)
             {
-                _logger.LogWarning("Client connected using future version: {v}", clientVersion);
+                _logger.LogWarning("Client [{Id}]{Name} connected using future version {Version}", id, name, clientVersion);
             }
             else if (versionCompare != ICompatibilityManager.VersionCompareResult.Compatible
                      || platformSpecificData == null)
@@ -123,84 +129,99 @@ namespace Empostor.Server.Net.Manager
                     return;
                 }
 
-                _logger.LogInformation("Player {Name} connected with host authority.", name);
+                _logger.LogInformation("Client [{Id}]{Name} connected with host authority", id, name);
             }
 
             if (name.Length > 10) { await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameLength); return; }
             if (string.IsNullOrWhiteSpace(name)) { await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameIllegalCharacters); return; }
 
             string? friendCode = null;
+            UserAuthInfo? authInfo = null;
             var clientIp = connection.EndPoint?.Address;
 
-            var authInfo = _authCache.FindByToken(matchmakerToken);
-
-            if (authInfo != null)
+            // Primary: match by delta port (nonce)
+            if (deltaPort > 0)
             {
-                friendCode = authInfo.FriendCode;
-
-                if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
+                authInfo = _authCache.FindByPort(deltaPort);
+                if (authInfo != null)
                 {
-                    var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
-                    if (nikoResult != null)
+                    // Port matched — cancel the allocation timeout
+                    _portPool.ConfirmPort(deltaPort);
+
+                    friendCode = authInfo.FriendCode;
+
+                    if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
                     {
-                        if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
-                            && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                        var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
+                        if (nikoResult != null)
                         {
-                            friendCode = nikoResult.Value.FriendCode;
-                            _authCache.UpdateFriendCode(matchmakerToken!, friendCode);
-                            _logger.LogInformation(
-                                "[Auth] {Name}: Niko PUID matched → FriendCode={FC} PUID={Puid}",
-                                name, friendCode, authInfo.ProductUserId);
-                        }
-                        else
-                        {
-                            _logger.LogWarning(
-                                "[Auth] {Name}: Niko PUID mismatch (expected={Expected}, got={Got}) — keeping existing FC",
-                                name, authInfo.ProductUserId, nikoResult.Value.Puid);
+                            if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
+                                && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                            {
+                                friendCode = nikoResult.Value.FriendCode;
+                                authInfo.FriendCode = friendCode;
+                                authInfo.FriendCodeConfirmed = true;
+                            }
+                            else
+                            {
+                                _logger.LogWarning(
+                                    "Niko PUID mismatch for {Name}: expected {Expected} got {Got}",
+                                    name, authInfo.ProductUserId, nikoResult.Value.Puid);
+                            }
                         }
                     }
-                }
 
-                _logger.LogInformation(
-                    "[Auth] {Name}: matched via matchmakerToken → FriendCode={FC} PUID={Puid}",
-                    name, friendCode, authInfo.ProductUserId);
-            }
-            else if (clientIp != null)
-            {
-                var ipAuth = _authCache.FindByIp(clientIp);
-                if (ipAuth != null)
-                {
-                    friendCode = ipAuth.FriendCode;
-                    authInfo = ipAuth;
                     _logger.LogInformation(
-                        "[Auth] {Name}: matched via IP={Ip} → FriendCode={FC}",
-                        name, NormalizeIp(clientIp), friendCode);
+                        "Client [{Id}]{Name} from port {Port} is authorized as {FriendCode} {HashPuid}",
+                        id, name, deltaPort, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "[Auth] {Name}: no auth info found (token={Token}, IP={Ip}) — FriendCode will be null",
-                        name,
-                        string.IsNullOrEmpty(matchmakerToken) ? "(none)" : matchmakerToken[..Math.Min(8, matchmakerToken.Length)] + "...",
-                        NormalizeIp(clientIp));
+                        "Client [{Id}]{Name} port {Port} has no auth info, falling back to IP",
+                        id, name, deltaPort);
+                }
+            }
+
+            // Fallback: match by IP
+            if (authInfo == null && clientIp != null)
+            {
+                authInfo = _authCache.FindByIp(clientIp);
+                if (authInfo != null)
+                {
+                    friendCode = authInfo.FriendCode;
+                    _logger.LogInformation(
+                        "Client [{Id}]{Name} from {Ip} is authorized as {FriendCode} {HashPuid}",
+                        id, name, NormalizeIp(clientIp), friendCode ?? "unknown", HashPuid(authInfo.ProductUserId));
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Client [{Id}]{Name}: no auth info found (port={Port}, ip={Ip})",
+                        id, name, deltaPort, NormalizeIp(clientIp));
                 }
             }
 
             var client = _clientFactory.Create(connection, name, clientVersion, language, chatMode, platformSpecificData);
             client.FriendCode = string.IsNullOrEmpty(friendCode) ? null : friendCode;
             client.ProductUserId = authInfo?.ProductUserId;
+            client.DeltaPort = deltaPort;
 
-            var id = NextId();
             client.Id = id;
-            _logger.LogTrace("Client connected: Id={Id} Name={Name} FriendCode={FC}", id, name, client.FriendCode ?? "(none)");
+            _logger.LogDebug("Client [{Id}]{Name} connected with FriendCode={FC} DeltaPort={DP}", id, name, client.FriendCode ?? "(none)", deltaPort);
             _clients.TryAdd(id, client);
             await _eventManager.CallAsync(new ClientConnectedEvent(connection, client));
         }
 
         public void Remove(IClient client)
         {
-            _logger.LogTrace("Client {Id} disconnected.", client.Id);
+            _logger.LogDebug("Client [{Id}] removed from client manager", client.Id);
             _clients.TryRemove(client.Id, out _);
+
+            if (client is ClientBase cb && cb.DeltaPort > 0)
+            {
+                _portPool.ReturnPort(cb.DeltaPort);
+            }
 
             if (!string.IsNullOrEmpty(client.ProductUserId))
             {
@@ -239,12 +260,12 @@ namespace Empostor.Server.Net.Manager
                 if (string.IsNullOrEmpty(friendCode)
                     || (status != "HttpPending" && status != "Verified"))
                 {
-                    _logger.LogDebug("[Auth] Niko GET status={Status} for VerifyCode={Code}", status, verifyCode);
+                    _logger.LogDebug("Niko GET status={Status} for VerifyCode={Code}", status, verifyCode);
                     return null;
                 }
 
                 _logger.LogInformation(
-                    "[Auth] Niko GET success: FC={FC} PUID={Puid} Status={Status}",
+                    "Niko GET success: FC={FC} PUID={Puid} Status={Status}",
                     friendCode, puid, status);
 
                 _ = DeleteNikoVerifyAsync(apiUrl, verifyCode);
@@ -253,7 +274,7 @@ namespace Empostor.Server.Net.Manager
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[Auth] Niko GET failed for VerifyCode={Code}", verifyCode);
+                _logger.LogWarning(ex, "Niko GET failed for VerifyCode={Code}", verifyCode);
                 return null;
             }
         }
@@ -285,6 +306,17 @@ namespace Empostor.Server.Net.Manager
             }
 
             return addr.IsIPv4MappedToIPv6 ? addr.MapToIPv4().ToString() : addr.ToString();
+        }
+
+        private static string HashPuid(string puid)
+        {
+            if (string.IsNullOrEmpty(puid) || puid.Length < 9)
+            {
+                return puid ?? "0";
+            }
+
+            // Use first 9 characters of the PUID as the short hash
+            return puid[..9];
         }
     }
 }

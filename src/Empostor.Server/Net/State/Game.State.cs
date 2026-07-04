@@ -26,14 +26,16 @@ namespace Empostor.Server.Net.State
             await _eventManager.CallAsync(new GamePlayerJoinedEvent(this, player));
         }
 
-        private async ValueTask<bool> PlayerRemove(int playerId, bool isBan = false)
+        private async ValueTask<bool> PlayerRemove(int playerId, string reason = "", bool isBan = false)
         {
             if (!_players.TryRemove(playerId, out var player))
             {
                 return false;
             }
 
-            _logger.LogInformation("{0} - Player {1} ({2}) has left.", Code, player.Client.Name, playerId);
+            _logger.LogInformation("{Code} - Player {Name} ({Id}) has left for \"{Reason}\" hashpuid : {HashPuid}",
+                Code, player.Client.Name, playerId, reason,
+                player.Client.ProductUserId?.Length >= 9 ? player.Client.ProductUserId[..9] : player.Client.ProductUserId ?? "0");
             if (GameState == GameStates.Starting || GameState == GameStates.Started || GameState == GameStates.NotStarted)
             {
                 if (player.Character?.PlayerInfo != null)
@@ -69,7 +71,7 @@ namespace Empostor.Server.Net.State
                 await Task.Delay(_timeoutConfig.ConnectionTimeout);
                 if (player.Client.Connection.IsConnected && player.Client.Connection is HazelConnection hazel)
                 {
-                    _logger.LogInformation("{0} - Player {1} ({2}) kept connection open after leaving, disposing.", Code, player.Client.Name, playerId);
+                    _logger.LogInformation("{Code} - Player {Name} ({Id}) kept connection open after leaving, disposing.", Code, player.Client.Name, playerId);
                     await player.Client.DisconnectAsync(isBan ? DisconnectReason.Banned : DisconnectReason.Kicked);
                 }
             });
@@ -101,7 +103,7 @@ namespace Empostor.Server.Net.State
             }
 
             HostId = host.Client.Id;
-            _logger.LogInformation("{0} - Assigned {1} ({2}) as new host.", Code, host.Client.Name, host.Client.Id);
+            _logger.LogInformation("{Code} - Assigned {Name} ({Id}) as new host.", Code, host.Client.Name, host.Client.Id);
             if (GameState == GameStates.Ended && host.Limbo == LimboStates.WaitingForHost)
             {
                 GameState = GameStates.NotStarted;

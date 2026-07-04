@@ -57,7 +57,7 @@ namespace Empostor.Server.Net.State
 
         public async ValueTask HandleRemovePlayer(int playerId, DisconnectReason reason)
         {
-            await PlayerRemove(playerId);
+            await PlayerRemove(playerId, reason: reason.ToString());
             if (GameState == GameStates.Destroyed)
             {
                 return;
@@ -70,14 +70,14 @@ namespace Empostor.Server.Net.State
 
         public async ValueTask HandleKickPlayer(int playerId, bool isBan)
         {
-            _logger.LogInformation("{0} - Player {1} has left.", Code, playerId);
+            _logger.LogInformation("{Code} - Kicking player {PlayerId} (Ban={IsBan})", Code, playerId, isBan);
             using (var kickMsg = MessageWriter.Get(MessageType.Reliable))
             {
                 WriteKickPlayerMessage(kickMsg, false, playerId, isBan);
                 await SendToAllAsync(kickMsg);
             }
 
-            await PlayerRemove(playerId, isBan);
+            await PlayerRemove(playerId, reason: isBan ? "Ban" : "Kicked", isBan: isBan);
             if (GameState == GameStates.Destroyed)
             {
                 return;
@@ -118,7 +118,18 @@ namespace Empostor.Server.Net.State
 
         private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew)
         {
-            _logger.LogInformation("{0} - Player {1} ({2}) is joining.", Code, sender.Client.Name, sender.Client.Id);
+            var client = sender.Client;
+            var clientIp = client.Connection.EndPoint?.Address;
+            var ipStr = clientIp?.IsIPv4MappedToIPv6 == true ? clientIp.MapToIPv4().ToString() : clientIp?.ToString() ?? "?";
+            var remotePort = (client.Connection.EndPoint as System.Net.IPEndPoint)?.Port ?? 0;
+            var authority = client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
+            var version = client.GameVersion.ToString();
+            var hashPuid = client.ProductUserId?.Length >= 9 ? client.ProductUserId[..9] : client.ProductUserId ?? "0";
+            var deltaPort = client.DeltaPort;
+
+            _logger.LogInformation("{Code} - Player {Name} ({HashPuid}) ({Id}) is joining from ({Ip}:{RemotePort}) with v{Version}, Authority:{Authority}, port: {DeltaPort}",
+                Code, sender.Client.Name, hashPuid, sender.Client.Id, ipStr, remotePort, version, authority, deltaPort);
+
             if (isNew)
             {
                 await PlayerAdd(sender);
@@ -206,7 +217,10 @@ namespace Empostor.Server.Net.State
 
         private async ValueTask HandleJoinGameNext(ClientPlayer sender, bool isNew)
         {
-            _logger.LogInformation("{0} - Player {1} ({2}) is rejoining.", Code, sender.Client.Name, sender.Client.Id);
+            var authority = sender.Client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
+            _logger.LogInformation("{Code} - Player {Name} ({Id}) is rejoining. Player Authority : {Authority}, port: {DeltaPort}",
+                Code, sender.Client.Name, sender.Client.Id, authority, sender.Client.DeltaPort);
+
             if (isNew)
             {
                 await PlayerAdd(sender);
@@ -214,6 +228,7 @@ namespace Empostor.Server.Net.State
 
             if (sender.Client.Id == HostId)
             {
+                _logger.LogInformation("{Code} - Host {Name} ({Id}) is rejoining.", Code, sender.Client.Name, sender.Client.Id);
                 GameState = GameStates.NotStarted;
                 await HandleJoinGameNew(sender, false);
                 await CheckLimboPlayers();

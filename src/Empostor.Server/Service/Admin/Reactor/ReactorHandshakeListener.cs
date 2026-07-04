@@ -41,7 +41,7 @@ namespace Empostor.Server.Service.Admin.Reactor
                 {
                     if (reader.Position < reader.Length)
                     {
-                        _logger.LogTrace("[ReactorMods] No Reactor header found for {Name}", e.Connection.Client?.Name ?? "unknown");
+                        _logger.LogTrace("ReactorModsNo Reactor header found for {Name}", e.Connection.Client?.Name ?? "unknown");
                     }
 
                     return;
@@ -60,7 +60,7 @@ namespace Empostor.Server.Service.Admin.Reactor
                 if (mods.Length > 0)
                 {
                     _logger.LogInformation(
-                        "[ReactorMods] {Name} has {Count} mod(s) (protocol v{Proto}): {Mods}",
+                        "ReactorMods{Name} has {Count} mod(s) (protocol v{Proto}): {Mods}",
                         e.Connection.Client?.Name ?? "unknown",
                         mods.Length,
                         protocolVersion,
