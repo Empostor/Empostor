@@ -15,10 +15,6 @@ public sealed class VerifyController : ControllerBase
         _store = store;
     }
 
-    /// <summary>
-    ///     Called by the QQ bot when a user sends /验证 &lt;好友代码&gt; in a group.
-    ///     Validates the FriendCode ↔ QQ pairing and removes the pending entry on success.
-    /// </summary>
     [HttpPost("confirm")]
     public IActionResult Confirm([FromBody] VerifyConfirmRequest req)
     {
@@ -42,7 +38,7 @@ public sealed class VerifyController : ControllerBase
         {
             ok = false,
             error = "no_pending_or_expired",
-            message = "未找到待验证记录或已过期。请先在游戏内输入 /verify <你的QQ号>。",
+            message = "No record found or the record has expired.",
         });
     }
 

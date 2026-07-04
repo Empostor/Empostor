@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
@@ -16,8 +18,8 @@ using Empostor.Server.Service.Admin.Ban;
 using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
-using Empostor.Server.Service.Stat;
 using Empostor.Server.Service.Api;
+using Empostor.Server.Service.Stat;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -73,7 +75,7 @@ namespace Empostor.Server.Http
             _statsConfig = statsConfig.Value;
             _chatFilter = chatFilter;
             _discordWebhook = discordWebhook;
-            _passwordHash = AdminAuthHelper.ComputeHash(_config.Password);
+            _passwordHash = ComputeHash(_config.Password);
 
             if (string.IsNullOrEmpty(_config.Password)
                 || _config.Password == "CHANGE-ME"
@@ -99,7 +101,7 @@ namespace Empostor.Server.Http
 
         private bool IsAuthenticated()
             => Request.Cookies.TryGetValue("empostor_admin", out var v)
-               && AdminAuthHelper.ConstantTimeEquals(v, _passwordHash);
+               && ConstantTimeEquals(v, _passwordHash);
 
         [HttpGet("/admin")]
         public IActionResult Panel()
@@ -130,9 +132,9 @@ namespace Empostor.Server.Http
                 }
             }
 
-            var submittedHash = AdminAuthHelper.ComputeHash(password);
+            var submittedHash = ComputeHash(password);
 
-            if (!AdminAuthHelper.ConstantTimeEquals(submittedHash, _passwordHash))
+            if (!ConstantTimeEquals(submittedHash, _passwordHash))
             {
                 _loginFailures.AddOrUpdate(ip,
                     _ => (1, DateTime.UtcNow),
@@ -925,6 +927,22 @@ namespace Empostor.Server.Http
             }
         }
 
+        internal static string ComputeHash(string input)
+        {
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+            return Convert.ToHexString(bytes);
+        }
 
+        internal static bool ConstantTimeEquals(string a, string b)
+        {
+            if (a.Length != b.Length)
+            {
+                return false;
+            }
+
+            return CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(a),
+                Encoding.UTF8.GetBytes(b));
+        }
     }
 }

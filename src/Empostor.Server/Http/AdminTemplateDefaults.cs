@@ -24,7 +24,7 @@ internal static class AdminTemplateDefaults
         }
         catch
         {
-            // Best-effort; controller falls back to in-memory defaults
+
         }
     }
 
