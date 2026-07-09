@@ -4,18 +4,15 @@ namespace Empostor.Api.Config
     {
         public const string Section = "DiscordWebhook";
 
-        public bool Enabled { get; set; } = false;
+        public string MatchmakerUrl { get; set; } = string.Empty;
 
-        public string WebhookUrl { get; set; } = string.Empty;
-
-        public bool NotifyOnGameCreated { get; set; } = true;
-
-        public bool NotifyOnBan { get; set; } = true;
-
-        public bool NotifyOnReport { get; set; } = true;
-
-        public bool NotifyOnPlayerJoin { get; set; } = false;
-
-        public bool NotifyOnGameEnded { get; set; } = false;
+        public string AdminUrl { get; set; } = string.Empty;
+        public bool? Enabled { get; set; }
+        public string? WebhookUrl { get; set; }
+        public bool? NotifyOnGameCreated { get; set; }
+        public bool? NotifyOnBan { get; set; }
+        public bool? NotifyOnReport { get; set; }
+        public bool? NotifyOnPlayerJoin { get; set; }
+        public bool? NotifyOnGameEnded { get; set; }
     }
 }

@@ -1044,37 +1044,17 @@ internal static class AdminTemplateDefaults
                     <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="discord.title">Discord Webhook</span></h2>
                     <button class="bp bsm" onclick="saveDwSettings()"><span data-i18n="discord.save">Save Settings</span></button>
                     <div style="margin-top:12px">
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-enabled" onchange="saveDwSettings()">
-                            <span data-i18n="discord.enabled">Enable Discord Webhook</span>
-                        </label>
-                    </div>
-                    <div class="field" style="margin-top:10px">
-                        <label data-i18n="discord.webhook_url">Webhook URL</label>
-                        <input type="text" id="dw-url" data-i18n-placeholder="discord.webhook_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
-                    </div>
-                    <h4 data-i18n="discord.notifications" style="margin:12px 0 8px">Notifications</h4>
-                    <div style="display:flex;flex-direction:column;gap:6px">
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-game-created" onchange="saveDwSettings()">
-                            <span data-i18n="discord.notify_game_created">Game Created</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-ban" onchange="saveDwSettings()">
-                            <span data-i18n="discord.notify_ban">Player Banned</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-report" onchange="saveDwSettings()">
-                            <span data-i18n="discord.notify_report">Player Reported</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-player-join" onchange="saveDwSettings()">
-                            <span data-i18n="discord.notify_player_join">Player Joined</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                            <input type="checkbox" id="dw-game-ended" onchange="saveDwSettings()">
-                            <span data-i18n="discord.notify_game_ended">Game Ended</span>
-                        </label>
+                        <div class="field">
+                            <label data-i18n="discord.matchmaker_url">Matchmaker Webhook URL</label>
+                            <input type="text" id="dw-matchmaker-url" data-i18n-placeholder="discord.matchmaker_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
+                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.matchmaker_desc">Game Created, Game Started, Game Ended, Player Joined</span></div>
+                        </div>
+                        <div class="field" style="margin-top:10px">
+                            <label data-i18n="discord.admin_url">Admin Webhook URL</label>
+                            <input type="text" id="dw-admin-url" data-i18n-placeholder="discord.admin_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
+                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.admin_desc">Player Banned, Player Reported</span></div>
+                        </div>
+                        <div style="font-size:12px;color:var(--m);margin-top:10px"><span data-i18n="discord.hint">Leave a URL empty to disable its notifications. Leave both empty to disable all webhooks.</span></div>
                     </div>
                 </div>
                 <div id="dw-r" class="msg"></div>
@@ -1418,27 +1398,20 @@ internal static class AdminTemplateDefaults
 
         async function fDiscordWebhook() {
             const { data } = await api('GET', '/api/admin/discord');
-            document.getElementById('dw-enabled').checked = data.enabled;
-            const urlEl = document.getElementById('dw-url');
-            if (document.activeElement !== urlEl) {
-                urlEl.value = data.webhookUrl || '';
+            const mmUrlEl = document.getElementById('dw-matchmaker-url');
+            const adminUrlEl = document.getElementById('dw-admin-url');
+            if (document.activeElement !== mmUrlEl) {
+                mmUrlEl.value = data.matchmakerUrl || '';
             }
-            document.getElementById('dw-game-created').checked = data.notifyOnGameCreated;
-            document.getElementById('dw-ban').checked = data.notifyOnBan;
-            document.getElementById('dw-report').checked = data.notifyOnReport;
-            document.getElementById('dw-player-join').checked = data.notifyOnPlayerJoin;
-            document.getElementById('dw-game-ended').checked = data.notifyOnGameEnded;
+            if (document.activeElement !== adminUrlEl) {
+                adminUrlEl.value = data.adminUrl || '';
+            }
         }
 
         async function saveDwSettings() {
             const { ok, data } = await api('POST', '/api/admin/discord', {
-                enabled: document.getElementById('dw-enabled').checked,
-                webhookUrl: document.getElementById('dw-url').value.trim(),
-                notifyOnGameCreated: document.getElementById('dw-game-created').checked,
-                notifyOnBan: document.getElementById('dw-ban').checked,
-                notifyOnReport: document.getElementById('dw-report').checked,
-                notifyOnPlayerJoin: document.getElementById('dw-player-join').checked,
-                notifyOnGameEnded: document.getElementById('dw-game-ended').checked
+                matchmakerUrl: document.getElementById('dw-matchmaker-url').value.trim(),
+                adminUrl: document.getElementById('dw-admin-url').value.trim()
             });
             if (ok) {
                 msg('dw-r', true, _('discord.saved', 'Discord webhook settings saved.'));

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
@@ -12,7 +13,11 @@ namespace Empostor.Server.Service.Api;
 public sealed class DiscordWebhookStore
 {
     private static readonly string ConfigFile = Path.Combine(Directory.GetCurrentDirectory(), "discord_webhook.json");
-    private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     private readonly ILogger<DiscordWebhookStore> _logger;
     private readonly SemaphoreSlim _saveLock = new(1, 1);
@@ -21,23 +26,17 @@ public sealed class DiscordWebhookStore
     {
         _logger = logger;
 
+        DiscordWebhookConfig? cfg = null;
+
         if (File.Exists(ConfigFile))
         {
             try
             {
                 var json = File.ReadAllText(ConfigFile);
-                var saved = JsonSerializer.Deserialize<DiscordWebhookConfig>(json);
-                if (saved != null)
+                cfg = JsonSerializer.Deserialize<DiscordWebhookConfig>(json);
+                if (cfg != null)
                 {
-                    Enabled = saved.Enabled;
-                    WebhookUrl = saved.WebhookUrl;
-                    NotifyOnGameCreated = saved.NotifyOnGameCreated;
-                    NotifyOnBan = saved.NotifyOnBan;
-                    NotifyOnReport = saved.NotifyOnReport;
-                    NotifyOnPlayerJoin = saved.NotifyOnPlayerJoin;
-                    NotifyOnGameEnded = saved.NotifyOnGameEnded;
                     _logger.LogInformation("DiscordWebhookLoaded from {File}", ConfigFile);
-                    return;
                 }
             }
             catch (Exception ex)
@@ -47,39 +46,23 @@ public sealed class DiscordWebhookStore
         }
 
         // Fall back to config.json values
-        var cfg = config.Value;
-        Enabled = cfg.Enabled;
-        WebhookUrl = cfg.WebhookUrl;
-        NotifyOnGameCreated = cfg.NotifyOnGameCreated;
-        NotifyOnBan = cfg.NotifyOnBan;
-        NotifyOnReport = cfg.NotifyOnReport;
-        NotifyOnPlayerJoin = cfg.NotifyOnPlayerJoin;
-        NotifyOnGameEnded = cfg.NotifyOnGameEnded;
+        cfg ??= config.Value;
+
+        // Migrate legacy WebhookUrl to new fields if present and new fields are empty
+        MigrateLegacy(cfg);
+
+        MatchmakerUrl = cfg.MatchmakerUrl;
+        AdminUrl = cfg.AdminUrl;
     }
 
-    public bool Enabled { get; set; }
+    public string MatchmakerUrl { get; set; } = string.Empty;
 
-    public string WebhookUrl { get; set; } = string.Empty;
-
-    public bool NotifyOnGameCreated { get; set; } = true;
-
-    public bool NotifyOnBan { get; set; } = true;
-
-    public bool NotifyOnReport { get; set; } = true;
-
-    public bool NotifyOnPlayerJoin { get; set; }
-
-    public bool NotifyOnGameEnded { get; set; }
+    public string AdminUrl { get; set; } = string.Empty;
 
     public DiscordWebhookConfig Snapshot => new()
     {
-        Enabled = Enabled,
-        WebhookUrl = WebhookUrl,
-        NotifyOnGameCreated = NotifyOnGameCreated,
-        NotifyOnBan = NotifyOnBan,
-        NotifyOnReport = NotifyOnReport,
-        NotifyOnPlayerJoin = NotifyOnPlayerJoin,
-        NotifyOnGameEnded = NotifyOnGameEnded,
+        MatchmakerUrl = MatchmakerUrl,
+        AdminUrl = AdminUrl,
     };
 
     public async ValueTask SaveAsync()
@@ -102,6 +85,22 @@ public sealed class DiscordWebhookStore
         finally
         {
             _saveLock.Release();
+        }
+    }
+
+    private static void MigrateLegacy(DiscordWebhookConfig cfg)
+    {
+        if (!string.IsNullOrWhiteSpace(cfg.WebhookUrl))
+        {
+            if (string.IsNullOrWhiteSpace(cfg.MatchmakerUrl))
+            {
+                cfg.MatchmakerUrl = cfg.WebhookUrl;
+            }
+
+            if (string.IsNullOrWhiteSpace(cfg.AdminUrl))
+            {
+                cfg.AdminUrl = cfg.WebhookUrl;
+            }
         }
     }
 }

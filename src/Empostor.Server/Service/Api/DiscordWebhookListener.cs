@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -19,7 +18,6 @@ internal sealed class DiscordWebhookListener : IEventListener
     private readonly ILogger<DiscordWebhookListener> _logger;
     private readonly IHttpClientFactory _http;
     private readonly DiscordWebhookStore _config;
-    private readonly ConcurrentDictionary<string, DateTime> _throttle = new();
 
     public DiscordWebhookListener(
         ILogger<DiscordWebhookListener> logger,
@@ -34,12 +32,13 @@ internal sealed class DiscordWebhookListener : IEventListener
     [EventListener]
     public ValueTask OnGameCreated(IGameCreatedEvent e)
     {
-        if (!_config.Enabled || !_config.NotifyOnGameCreated)
+        var url = _config.MatchmakerUrl;
+        if (string.IsNullOrWhiteSpace(url))
         {
             return default;
         }
 
-        return SendAsync("Game Created", 3066993, new()
+        return SendAsync(url, "Game Created", 3066993, new()
         {
             ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
             ["Host"] = e.Host?.Name ?? "—",
@@ -48,49 +47,33 @@ internal sealed class DiscordWebhookListener : IEventListener
     }
 
     [EventListener]
-    public ValueTask OnPlayerLeft(IGamePlayerLeftEvent e)
+    public ValueTask OnGameStarted(IGameStartedEvent e)
     {
-        if (!_config.Enabled || !_config.NotifyOnBan || !e.IsBan)
+        var url = _config.MatchmakerUrl;
+        if (string.IsNullOrWhiteSpace(url))
         {
             return default;
         }
 
-        return SendAsync("Player Banned", 15158332, new()
+        return SendAsync(url, "Game Started", 3447003, new()
         {
-            ["Player"] = e.Player.Client.Name,
-            ["Friend Code"] = e.Player.Client.FriendCode ?? "—",
             ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
-        });
-    }
-
-    [EventListener]
-    public ValueTask OnPlayerReport(IPlayerReportEvent e)
-    {
-        if (!_config.Enabled || !_config.NotifyOnReport)
-        {
-            return default;
-        }
-
-        return SendAsync("Player Reported", 16776960, new()
-        {
-            ["Reporter"] = e.ClientPlayer.Client.Name,
-            ["Reporter FC"] = e.ClientPlayer.Client.FriendCode ?? "—",
-            ["Reported"] = e.ReportedClient?.Name ?? "body",
-            ["Reported FC"] = e.ReportedClient?.FriendCode ?? "—",
-            ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
-            ["Reason"] = e.Reason.ToString(),
+            ["Map"] = e.Game.Options.Map.ToString(),
+            ["Players"] = e.Game.PlayerCount.ToString(),
+            ["Impostors"] = e.Game.Options.NumImpostors.ToString(),
         });
     }
 
     [EventListener]
     public ValueTask OnPlayerJoin(IGamePlayerJoinedEvent e)
     {
-        if (!_config.Enabled || !_config.NotifyOnPlayerJoin)
+        var url = _config.MatchmakerUrl;
+        if (string.IsNullOrWhiteSpace(url))
         {
             return default;
         }
 
-        return SendAsync("Player Joined", 3066993, new()
+        return SendAsync(url, "Player Joined", 3066993, new()
         {
             ["Player"] = e.Player.Client.Name,
             ["Friend Code"] = e.Player.Client.FriendCode ?? "—",
@@ -102,12 +85,13 @@ internal sealed class DiscordWebhookListener : IEventListener
     [EventListener]
     public ValueTask OnGameEnded(IGameEndedEvent e)
     {
-        if (!_config.Enabled || !_config.NotifyOnGameEnded)
+        var url = _config.MatchmakerUrl;
+        if (string.IsNullOrWhiteSpace(url))
         {
             return default;
         }
 
-        return SendAsync("Game Ended", 10181046, new()
+        return SendAsync(url, "Game Ended", 10181046, new()
         {
             ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
             ["Result"] = e.GameOverReason.ToString(),
@@ -115,22 +99,51 @@ internal sealed class DiscordWebhookListener : IEventListener
         });
     }
 
-    private async ValueTask SendAsync(string title, int color, Dictionary<string, string> fields)
+    // ── Admin events ───────────────────────────────────────────────
+    [EventListener]
+    public ValueTask OnPlayerLeft(IGamePlayerLeftEvent e)
     {
-        var url = _config.WebhookUrl;
+        if (!e.IsBan)
+        {
+            return default;
+        }
+
+        var url = _config.AdminUrl;
         if (string.IsNullOrWhiteSpace(url))
         {
-            return;
+            return default;
         }
 
-        var key = title + (fields.TryGetValue("Game", out var gc) ? gc : string.Empty);
-        if (_throttle.TryGetValue(key, out var last) && (DateTime.UtcNow - last).TotalSeconds < 2)
+        return SendAsync(url, "Player Banned", 15158332, new()
         {
-            return;
+            ["Player"] = e.Player.Client.Name,
+            ["Friend Code"] = e.Player.Client.FriendCode ?? "—",
+            ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
+        });
+    }
+
+    [EventListener]
+    public ValueTask OnPlayerReport(IPlayerReportEvent e)
+    {
+        var url = _config.AdminUrl;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return default;
         }
 
-        _throttle[key] = DateTime.UtcNow;
+        return SendAsync(url, "Player Reported", 16776960, new()
+        {
+            ["Reporter"] = e.ClientPlayer.Client.Name,
+            ["Reporter FC"] = e.ClientPlayer.Client.FriendCode ?? "—",
+            ["Reported"] = e.ReportedClient?.Name ?? "body",
+            ["Reported FC"] = e.ReportedClient?.FriendCode ?? "—",
+            ["Game"] = GameCodeParser.IntToGameName(e.Game.Code),
+            ["Reason"] = e.Reason.ToString(),
+        });
+    }
 
+    private async ValueTask SendAsync(string url, string title, int color, Dictionary<string, string> fields)
+    {
         try
         {
             var embed = new

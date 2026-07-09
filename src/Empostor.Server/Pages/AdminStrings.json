@@ -217,14 +217,12 @@
 
   "discord.title": "Discord Webhook",
   "discord.save": "Save Settings",
-  "discord.enabled": "Enable Discord Webhook",
-  "discord.webhook_url": "Webhook URL",
-  "discord.webhook_url_placeholder": "https://discord.com/api/webhooks/...",
-  "discord.notifications": "Notifications",
-  "discord.notify_game_created": "Game Created",
-  "discord.notify_ban": "Player Banned",
-  "discord.notify_report": "Player Reported",
-  "discord.notify_player_join": "Player Joined",
-  "discord.notify_game_ended": "Game Ended",
+  "discord.matchmaker_url": "Matchmaker Webhook URL",
+  "discord.matchmaker_url_placeholder": "https://discord.com/api/webhooks/...",
+  "discord.matchmaker_desc": "Game Created, Game Started, Game Ended, Player Joined",
+  "discord.admin_url": "Admin Webhook URL",
+  "discord.admin_url_placeholder": "https://discord.com/api/webhooks/...",
+  "discord.admin_desc": "Player Banned, Player Reported",
+  "discord.hint": "Leave a URL empty to disable its notifications. Leave both empty to disable all webhooks.",
   "discord.saved": "Discord webhook settings saved."
 }

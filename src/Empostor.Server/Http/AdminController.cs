@@ -719,13 +719,8 @@ namespace Empostor.Server.Http
 
             return Ok(new
             {
-                enabled = _discordWebhook.Enabled,
-                webhookUrl = _discordWebhook.WebhookUrl,
-                notifyOnGameCreated = _discordWebhook.NotifyOnGameCreated,
-                notifyOnBan = _discordWebhook.NotifyOnBan,
-                notifyOnReport = _discordWebhook.NotifyOnReport,
-                notifyOnPlayerJoin = _discordWebhook.NotifyOnPlayerJoin,
-                notifyOnGameEnded = _discordWebhook.NotifyOnGameEnded,
+                matchmakerUrl = _discordWebhook.MatchmakerUrl,
+                adminUrl = _discordWebhook.AdminUrl,
             });
         }
 
@@ -737,52 +732,22 @@ namespace Empostor.Server.Http
                 return Unauthorized();
             }
 
-            if (req.Enabled.HasValue)
+            if (req.MatchmakerUrl != null)
             {
-                _discordWebhook.Enabled = req.Enabled.Value;
+                _discordWebhook.MatchmakerUrl = req.MatchmakerUrl;
             }
 
-            if (req.WebhookUrl != null)
+            if (req.AdminUrl != null)
             {
-                _discordWebhook.WebhookUrl = req.WebhookUrl;
-            }
-
-            if (req.NotifyOnGameCreated.HasValue)
-            {
-                _discordWebhook.NotifyOnGameCreated = req.NotifyOnGameCreated.Value;
-            }
-
-            if (req.NotifyOnBan.HasValue)
-            {
-                _discordWebhook.NotifyOnBan = req.NotifyOnBan.Value;
-            }
-
-            if (req.NotifyOnReport.HasValue)
-            {
-                _discordWebhook.NotifyOnReport = req.NotifyOnReport.Value;
-            }
-
-            if (req.NotifyOnPlayerJoin.HasValue)
-            {
-                _discordWebhook.NotifyOnPlayerJoin = req.NotifyOnPlayerJoin.Value;
-            }
-
-            if (req.NotifyOnGameEnded.HasValue)
-            {
-                _discordWebhook.NotifyOnGameEnded = req.NotifyOnGameEnded.Value;
+                _discordWebhook.AdminUrl = req.AdminUrl;
             }
 
             await _discordWebhook.SaveAsync();
 
             return Ok(new
             {
-                enabled = _discordWebhook.Enabled,
-                webhookUrl = _discordWebhook.WebhookUrl,
-                notifyOnGameCreated = _discordWebhook.NotifyOnGameCreated,
-                notifyOnBan = _discordWebhook.NotifyOnBan,
-                notifyOnReport = _discordWebhook.NotifyOnReport,
-                notifyOnPlayerJoin = _discordWebhook.NotifyOnPlayerJoin,
-                notifyOnGameEnded = _discordWebhook.NotifyOnGameEnded,
+                matchmakerUrl = _discordWebhook.MatchmakerUrl,
+                adminUrl = _discordWebhook.AdminUrl,
             });
         }
 
@@ -914,7 +879,7 @@ namespace Empostor.Server.Http
 
         public sealed record ChatFilterSettingsReq(bool? Enabled, bool? BlockMessage, int? SpamThreshold, int? SpamWindowSeconds);
 
-        public sealed record DiscordWebhookSettingsReq(bool? Enabled, string? WebhookUrl, bool? NotifyOnGameCreated, bool? NotifyOnBan, bool? NotifyOnReport, bool? NotifyOnPlayerJoin, bool? NotifyOnGameEnded);
+        public sealed record DiscordWebhookSettingsReq(string? MatchmakerUrl, string? AdminUrl);
 
         // HTML pages are auto-generated to BaseDirectory/Pages/ on first access.
         // Server operators can customize them by editing the files on disk.

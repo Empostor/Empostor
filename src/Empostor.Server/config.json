@@ -54,13 +54,8 @@
     "MarketplaceUrl": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/plugins.json"
   },
   "DiscordWebhook": {
-    "Enabled": false,
-    "WebhookUrl": "",
-    "NotifyOnGameCreated": true,
-    "NotifyOnBan": true,
-    "NotifyOnReport": true,
-    "NotifyOnPlayerJoin": false,
-    "NotifyOnGameEnded": false
+    "MatchmakerUrl": "",
+    "AdminUrl": ""
   },
   "PlayerStats": {
     "Enabled": false,
