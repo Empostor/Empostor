@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Service.Stat;
@@ -37,24 +34,13 @@ public sealed class PlayerStatsEntry
     public DateTime LastSeen { get; set; } = DateTime.UtcNow;
 }
 
-public sealed class PlayerStatsStore : IDisposable
+public sealed class PlayerStatsStore : JsonDataStore<List<PlayerStatsEntry>>
 {
-    private static readonly string DataDir =
-        Path.Combine(Directory.GetCurrentDirectory(), "Data");
-
-    private static readonly string StatsFile =
-        Path.Combine(DataDir, "player_stats.json");
-
-    private static readonly JsonSerializerOptions JsonOpts =
-        new() { WriteIndented = true };
-
-    private readonly ILogger<PlayerStatsStore> _logger;
-    private readonly SemaphoreSlim _saveLock = new(1, 1);
     private ConcurrentDictionary<string, PlayerStatsEntry> _stats = new(StringComparer.OrdinalIgnoreCase);
 
     public PlayerStatsStore(ILogger<PlayerStatsStore> logger)
+        : base(logger, legacyPath: "Data/player_stats.json")
     {
-        _logger = logger;
         Load();
     }
 
@@ -78,28 +64,28 @@ public sealed class PlayerStatsStore : IDisposable
     {
         var e = GetOrCreate(friendCode);
         e.Kills++;
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public void RecordDeath(string friendCode)
     {
         var e = GetOrCreate(friendCode);
         e.Deaths++;
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public void RecordTaskCompleted(string friendCode)
     {
         var e = GetOrCreate(friendCode);
         e.TasksCompleted++;
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public void RecordExile(string friendCode)
     {
         var e = GetOrCreate(friendCode);
         e.TimesExiled++;
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public void RecordGameEnd(string friendCode, string? name, bool isCrewmateWin, bool wasImpostor)
@@ -125,7 +111,7 @@ public sealed class PlayerStatsStore : IDisposable
             }
         }
 
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public List<PlayerStatsEntry> GetAll()
@@ -134,52 +120,17 @@ public sealed class PlayerStatsStore : IDisposable
     public void ClearAll()
     {
         _stats.Clear();
-        SaveAsync();
+        SaveFireAndForget();
     }
 
-    private void SaveAsync()
+    protected override List<PlayerStatsEntry> GetSnapshot() => _stats.Values.ToList();
+
+    protected override void ApplySnapshot(List<PlayerStatsEntry> data)
     {
-        _ = Task.Run(async () =>
-        {
-            if (!await _saveLock.WaitAsync(0))
-            {
-                return;
-            }
-
-            try
-            {
-                Directory.CreateDirectory(DataDir);
-                var list = _stats.Values.ToList();
-                await File.WriteAllTextAsync(StatsFile, JsonSerializer.Serialize(list, JsonOpts));
-            }
-            catch (Exception ex) { _logger.LogWarning(ex, "PlayerStatsFailed to save stats"); }
-            finally { _saveLock.Release(); }
-        });
-    }
-
-    private void Load()
-    {
-        if (!File.Exists(StatsFile))
-        {
-            _logger.LogDebug("PlayerStatsNo stats file found, starting fresh");
-            return;
-        }
-
-        try
-        {
-            var list = JsonSerializer.Deserialize<List<PlayerStatsEntry>>(File.ReadAllText(StatsFile));
-            if (list != null)
-            {
-                _stats = new ConcurrentDictionary<string, PlayerStatsEntry>(
-                    list.ToDictionary(e => e.FriendCode, StringComparer.OrdinalIgnoreCase));
-                _logger.LogInformation("PlayerStatsLoaded {Count} player stats", _stats.Count);
-            }
-        }
-        catch (Exception ex) { _logger.LogWarning(ex, "PlayerStatsFailed to load stats file"); }
+        _stats = new ConcurrentDictionary<string, PlayerStatsEntry>(
+            data.ToDictionary(e => e.FriendCode, StringComparer.OrdinalIgnoreCase));
     }
 
     private static string Normalize(string friendCode)
         => (friendCode ?? string.Empty).Trim();
-
-    public void Dispose() => _saveLock.Dispose();
 }

@@ -1,58 +1,32 @@
-using System;
-using System.IO;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
+using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Service.Api;
 
-public sealed class DiscordWebhookStore
+public sealed class DiscordWebhookStore : JsonDataStore<DiscordWebhookConfig>
 {
-    private static readonly string ConfigFile = Path.Combine(Directory.GetCurrentDirectory(), "discord_webhook.json");
-    private static readonly JsonSerializerOptions JsonOpts = new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    private readonly ILogger<DiscordWebhookStore> _logger;
-    private readonly SemaphoreSlim _saveLock = new(1, 1);
-
     public DiscordWebhookStore(ILogger<DiscordWebhookStore> logger, IOptions<DiscordWebhookConfig> config)
+        : base(logger, legacyPath: "discord_webhook.json")
     {
-        _logger = logger;
+        JsonOpts.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
-        DiscordWebhookConfig? cfg = null;
+        // Try loading from persisted file (handled by base.Load if file exists)
+        Load();
 
-        if (File.Exists(ConfigFile))
+        // If no persisted data was loaded, fall back to config.json defaults
+        if (string.IsNullOrEmpty(MatchmakerUrl) && string.IsNullOrEmpty(AdminUrl))
         {
-            try
-            {
-                var json = File.ReadAllText(ConfigFile);
-                cfg = JsonSerializer.Deserialize<DiscordWebhookConfig>(json);
-                if (cfg != null)
-                {
-                    _logger.LogInformation("DiscordWebhookLoaded from {File}", ConfigFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "DiscordWebhookFailed to load {File}, using defaults", ConfigFile);
-            }
+            var cfg = config.Value;
+            MatchmakerUrl = cfg.MatchmakerUrl;
+            AdminUrl = cfg.AdminUrl;
+
+            // Migrate legacy WebhookUrl if present
+            MigrateLegacy(cfg);
         }
-
-        // Fall back to config.json values
-        cfg ??= config.Value;
-
-        // Migrate legacy WebhookUrl to new fields if present and new fields are empty
-        MigrateLegacy(cfg);
-
-        MatchmakerUrl = cfg.MatchmakerUrl;
-        AdminUrl = cfg.AdminUrl;
     }
 
     public string MatchmakerUrl { get; set; } = string.Empty;
@@ -65,28 +39,15 @@ public sealed class DiscordWebhookStore
         AdminUrl = AdminUrl,
     };
 
-    public async ValueTask SaveAsync()
-    {
-        if (!await _saveLock.WaitAsync(0))
-        {
-            return;
-        }
+    protected override DiscordWebhookConfig GetSnapshot() => Snapshot;
 
-        try
-        {
-            var json = JsonSerializer.Serialize(Snapshot, JsonOpts);
-            await File.WriteAllTextAsync(ConfigFile, json);
-            _logger.LogInformation("DiscordWebhookSaved to {File}", ConfigFile);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "DiscordWebhookFailed to save {File}", ConfigFile);
-        }
-        finally
-        {
-            _saveLock.Release();
-        }
+    protected override void ApplySnapshot(DiscordWebhookConfig data)
+    {
+        MatchmakerUrl = data.MatchmakerUrl;
+        AdminUrl = data.AdminUrl;
     }
+
+    public new async ValueTask SaveAsync() => await base.SaveAsync();
 
     private static void MigrateLegacy(DiscordWebhookConfig cfg)
     {

@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
+using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Service.Stat;
@@ -28,22 +27,15 @@ public sealed class PlayerLogEntry
     public string? Detail { get; init; }
 }
 
-public sealed class PlayerLogStore : IDisposable
+public sealed class PlayerLogStore : JsonDataStore<List<PlayerLogEntry>>
 {
-    private static readonly string DataDir = Path.Combine(Directory.GetCurrentDirectory(), "Data");
-    private static readonly string LogsFile = Path.Combine(DataDir, "player_logs.json");
-
-    private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-
     private const int MaxEntries = 10000;
-    private readonly ILogger<PlayerLogStore> _logger;
     private readonly ConcurrentQueue<PlayerLogEntry> _entries = new();
-    private readonly SemaphoreSlim _saveLock = new(1, 1);
     private int _count;
 
     public PlayerLogStore(ILogger<PlayerLogStore> logger)
+        : base(logger, legacyPath: "Data/player_logs.json")
     {
-        _logger = logger;
         Load();
     }
 
@@ -68,7 +60,7 @@ public sealed class PlayerLogStore : IDisposable
             Interlocked.Decrement(ref _count);
         }
 
-        SaveAsync();
+        SaveFireAndForget();
     }
 
     public List<PlayerLogEntry> GetAll() => _entries.ToList();
@@ -92,64 +84,22 @@ public sealed class PlayerLogStore : IDisposable
         return Encoding.UTF8.GetBytes(json);
     }
 
-    private void SaveAsync()
-    {
-        _ = Task.Run(async () =>
-        {
-            if (!await _saveLock.WaitAsync(0))
-            {
-                return;
-            }
+    protected override List<PlayerLogEntry> GetSnapshot() => _entries.ToList();
 
-            try
-            {
-                Directory.CreateDirectory(DataDir);
-                var list = _entries.ToList();
-                await File.WriteAllTextAsync(LogsFile, JsonSerializer.Serialize(list, JsonOpts));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "PlayerLogFailed to save logs");
-            }
-            finally
-            {
-                _saveLock.Release();
-            }
-        });
-    }
-
-    private void Load()
+    protected override void ApplySnapshot(List<PlayerLogEntry> data)
     {
-        if (!File.Exists(LogsFile))
+        _entries.Clear();
+        _count = 0;
+        foreach (var entry in data)
         {
-            return;
+            _entries.Enqueue(entry);
+            Interlocked.Increment(ref _count);
         }
 
-        try
+        while (_count > MaxEntries)
         {
-            var list = JsonSerializer.Deserialize<List<PlayerLogEntry>>(File.ReadAllText(LogsFile));
-            if (list != null)
-            {
-                foreach (var entry in list)
-                {
-                    _entries.Enqueue(entry);
-                    Interlocked.Increment(ref _count);
-                }
-
-                while (_count > MaxEntries)
-                {
-                    _entries.TryDequeue(out _);
-                    Interlocked.Decrement(ref _count);
-                }
-
-                _logger.LogInformation("PlayerLogLoaded {Count} log(s)", _count);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "PlayerLogFailed to load logs file");
+            _entries.TryDequeue(out _);
+            Interlocked.Decrement(ref _count);
         }
     }
-
-    public void Dispose() => _saveLock.Dispose();
 }

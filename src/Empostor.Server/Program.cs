@@ -115,6 +115,7 @@ namespace Empostor.Server
                     services.Configure<HttpServerConfig>(host.Configuration.GetSection(HttpServerConfig.Section));
                     services.Configure<AdminConfig>(host.Configuration.GetSection(AdminConfig.Section));
                     services.Configure<DiscordWebhookConfig>(host.Configuration.GetSection(DiscordWebhookConfig.Section));
+                    services.Configure<HplpConfig>(host.Configuration.GetSection(HplpConfig.Section));
                     services.Configure<PlayerStatsConfig>(host.Configuration.GetSection(PlayerStatsConfig.Section));
                     services.Configure<ChatFilterConfig>(host.Configuration.GetSection(ChatFilterConfig.Section));
                     services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
@@ -205,6 +206,7 @@ namespace Empostor.Server
                     services.AddSingleton<PlayerStatsStore>();
                     services.AddSingleton<StatCommand>();
                     services.AddSingleton<DiscordWebhookStore>();
+                    services.AddSingleton<HplpStore>();
                     services.AddSingleton<IEventListener, DiscordWebhookListener>();
                     services.AddSingleton<IEventListener, PlayerStatsListener>();
                     services.AddSingleton<ChatFilterStore>();

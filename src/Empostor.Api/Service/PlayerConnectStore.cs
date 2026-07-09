@@ -14,14 +14,37 @@ public sealed class PlayerConnectStore : IDisposable
     private readonly ConcurrentDictionary<string, DateTime> _lastConnect;
     private readonly Timer _saveTimer;
     private readonly ILogger<PlayerConnectStore> _logger;
+    private readonly string _filePath;
     private bool _dirty;
 
     public PlayerConnectStore(ILogger<PlayerConnectStore> logger)
     {
         _logger = logger;
+        _filePath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "PlayerConnectData.json");
         _lastConnect = Load();
         _saveTimer = new Timer(_ => SaveIfDirty(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
         _instance = this;
+
+        // One-time migration from old path
+        var legacyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "PlayerConnect.json");
+        if (File.Exists(legacyPath) && !File.Exists(_filePath))
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.Copy(legacyPath, _filePath);
+                logger.LogInformation("PlayerConnectStore migrated from {Legacy} to {New}", legacyPath, _filePath);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "PlayerConnectStore failed to migrate {Legacy}", legacyPath);
+            }
+        }
     }
 
     public void RecordDisconnect(string productUserId)
@@ -57,18 +80,16 @@ public sealed class PlayerConnectStore : IDisposable
         return local.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
-    private static ConcurrentDictionary<string, DateTime> Load()
+    private ConcurrentDictionary<string, DateTime> Load()
     {
         try
         {
-            var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            var path = Path.Combine(dir, "PlayerConnect.json");
-            if (!File.Exists(path))
+            if (!File.Exists(_filePath))
             {
                 return new ConcurrentDictionary<string, DateTime>();
             }
 
-            var json = File.ReadAllText(path);
+            var json = File.ReadAllText(_filePath);
             return JsonSerializer.Deserialize<ConcurrentDictionary<string, DateTime>>(json)
                    ?? new ConcurrentDictionary<string, DateTime>();
         }
@@ -87,11 +108,14 @@ public sealed class PlayerConnectStore : IDisposable
 
         try
         {
-            var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            Directory.CreateDirectory(dir);
-            var path = Path.Combine(dir, "PlayerConnect.json");
+            var dir = Path.GetDirectoryName(_filePath);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             var json = JsonSerializer.Serialize(_lastConnect);
-            File.WriteAllText(path, json);
+            File.WriteAllText(_filePath, json);
             _dirty = false;
         }
         catch (Exception ex)
@@ -105,5 +129,6 @@ public sealed class PlayerConnectStore : IDisposable
         _saveTimer.Dispose();
         SaveIfDirty();
         _instance = null;
+        GC.SuppressFinalize(this);
     }
 }

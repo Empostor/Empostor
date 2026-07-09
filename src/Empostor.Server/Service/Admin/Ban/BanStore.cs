@@ -1,33 +1,22 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
+using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Service.Admin.Ban
 {
-    public sealed class BanStore : IDisposable
+    public sealed class BanStore : JsonDataStore<BanStore.BanData>
     {
-        private static readonly string BanFile =
-            Path.Combine(Directory.GetCurrentDirectory(), "bans.json");
-
-        private static readonly JsonSerializerOptions JsonOpts =
-            new() { WriteIndented = true };
-
-        private readonly ILogger<BanStore> _logger;
-        private readonly SemaphoreSlim _saveLock = new(1, 1);
-
         private ConcurrentDictionary<string, BanEntry> _ips = new();
         private ConcurrentDictionary<string, BanEntry> _friendCodes = new();
 
         public BanStore(ILogger<BanStore> logger)
+            : base(logger, legacyPath: "bans.json")
         {
-            _logger = logger;
             Load();
         }
 
@@ -40,7 +29,7 @@ namespace Empostor.Server.Service.Admin.Ban
             var key = Normalize(ip);
             var entry = new BanEntry { Value = key, Reason = reason, BannedAt = DateTime.UtcNow };
             _ips[key] = entry;
-            SaveAsync();
+            SaveFireAndForget();
             return entry;
         }
 
@@ -49,7 +38,7 @@ namespace Empostor.Server.Service.Admin.Ban
             var r = _ips.TryRemove(key, out _);
             if (r)
             {
-                SaveAsync();
+                SaveFireAndForget();
             }
 
             return r;
@@ -59,7 +48,7 @@ namespace Empostor.Server.Service.Admin.Ban
         {
             var entry = new BanEntry { Value = fc, Reason = reason, BannedAt = DateTime.UtcNow };
             _friendCodes[fc] = entry;
-            SaveAsync();
+            SaveFireAndForget();
             return entry;
         }
 
@@ -68,7 +57,7 @@ namespace Empostor.Server.Service.Admin.Ban
             var r = _friendCodes.TryRemove(key, out _);
             if (r)
             {
-                SaveAsync();
+                SaveFireAndForget();
             }
 
             return r;
@@ -82,51 +71,22 @@ namespace Empostor.Server.Service.Admin.Ban
 
         public (int IpCount, int FcCount) Stats() => (_ips.Count, _friendCodes.Count);
 
-        private void SaveAsync()
+        protected override BanData GetSnapshot() => new()
         {
-            _ = System.Threading.Tasks.Task.Run(async () =>
-            {
-                if (!await _saveLock.WaitAsync(0))
-                {
-                    return;
-                }
+            Ips = new(_ips),
+            FriendCodes = new(_friendCodes),
+        };
 
-                try
-                {
-                    var data = new BanData { Ips = new(_ips), FriendCodes = new(_friendCodes) };
-                    await File.WriteAllTextAsync(BanFile, JsonSerializer.Serialize(data, JsonOpts));
-                }
-                catch (Exception ex) { _logger.LogWarning(ex, "BanStoreFailed to save bans.json"); }
-                finally { _saveLock.Release(); }
-            });
-        }
-
-        private void Load()
+        protected override void ApplySnapshot(BanData data)
         {
-            if (!File.Exists(BanFile))
-            {
-                return;
-            }
-
-            try
-            {
-                var data = JsonSerializer.Deserialize<BanData>(File.ReadAllText(BanFile));
-                if (data != null)
-                {
-                    _ips = new(data.Ips ?? new());
-                    _friendCodes = new(data.FriendCodes ?? new());
-                    _logger.LogInformation("BanStoreLoaded {I} IP bans + {F} FC bans", _ips.Count, _friendCodes.Count);
-                }
-            }
-            catch (Exception ex) { _logger.LogWarning(ex, "BanStoreFailed to load bans.json"); }
+            _ips = new(data.Ips ?? new());
+            _friendCodes = new(data.FriendCodes ?? new());
         }
 
         private static string Normalize(IPAddress ip)
             => ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
 
-        public void Dispose() => _saveLock.Dispose();
-
-        private sealed class BanData
+        public sealed class BanData
         {
             [JsonPropertyName("ips")]
             public Dictionary<string, BanEntry>? Ips { get; set; }

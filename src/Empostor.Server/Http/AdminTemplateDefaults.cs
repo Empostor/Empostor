@@ -694,6 +694,7 @@ internal static class AdminTemplateDefaults
             <div class="ni" onclick="nav('st')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="nav.statistics">Statistics</span></div>
             <div class="ni" onclick="nav('cf')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span data-i18n="nav.chat_filter">Chat Filter</span></div>
             <div class="ni" onclick="nav('dw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="nav.discord">Discord</span></div>
+            <div class="ni" onclick="nav('hp')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span data-i18n="nav.hplp">HPLP</span></div>
             <div class="nsep"></div>
             <div class="nlbl" data-i18n="nav.actions">Actions</div>
             <div class="ni" onclick="nav('bc')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2H7a2 2 0 00-2 2v16l5-3 5 3V4a2 2 0 00-2-2z"/><path d="M10 9h4M10 13h4"/></svg><span data-i18n="nav.broadcast">Broadcast</span></div>
@@ -1059,6 +1060,32 @@ internal static class AdminTemplateDefaults
                 </div>
                 <div id="dw-r" class="msg"></div>
             </div>
+            <div id="p-hp" class="pnl">
+                <div class="form">
+                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span data-i18n="hplp.title">HPLP (Public Lobby List)</span></h2>
+                    <button class="bp bsm" onclick="saveHplpSettings()"><span data-i18n="hplp.save">Save Settings</span></button>
+                    <div style="margin-top:12px">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="hp-enabled" onchange="saveHplpSettings()">
+                            <span data-i18n="hplp.enabled">Enable HPLP endpoint (GET /x-api/games)</span>
+                        </label>
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label data-i18n="hplp.region_id">Region ID</label>
+                        <input type="text" id="hp-region-id" data-i18n-placeholder="hplp.region_id_placeholder" placeholder="e.g. meu, default" onchange="saveHplpSettings()">
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label data-i18n="hplp.region_name">Region Name</label>
+                        <input type="text" id="hp-region-name" data-i18n-placeholder="hplp.region_name_placeholder" placeholder="e.g. Modded EU" onchange="saveHplpSettings()">
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label data-i18n="hplp.public_url">Public URL (optional)</label>
+                        <input type="text" id="hp-public-url" data-i18n-placeholder="hplp.public_url_placeholder" placeholder="Leave empty to auto-generate from server config" onchange="saveHplpSettings()">
+                        <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="hplp.public_url_desc">Used by Starlight clients to connect. Auto-generated as http://ip:port if empty.</span></div>
+                    </div>
+                </div>
+                <div id="hp-r" class="msg"></div>
+            </div>
         </ct>
     </main>
     <!-- Client Detail Modal -->
@@ -1420,6 +1447,37 @@ internal static class AdminTemplateDefaults
             }
         }
 
+        async function fHplp() {
+            const { data } = await api('GET', '/api/admin/hplp');
+            document.getElementById('hp-enabled').checked = data.enabled;
+            const regionIdEl = document.getElementById('hp-region-id');
+            const regionNameEl = document.getElementById('hp-region-name');
+            const publicUrlEl = document.getElementById('hp-public-url');
+            if (document.activeElement !== regionIdEl) {
+                regionIdEl.value = data.regionId || '';
+            }
+            if (document.activeElement !== regionNameEl) {
+                regionNameEl.value = data.regionName || '';
+            }
+            if (document.activeElement !== publicUrlEl) {
+                publicUrlEl.value = data.publicUrl || '';
+            }
+        }
+
+        async function saveHplpSettings() {
+            const { ok, data } = await api('POST', '/api/admin/hplp', {
+                enabled: document.getElementById('hp-enabled').checked,
+                regionId: document.getElementById('hp-region-id').value.trim(),
+                regionName: document.getElementById('hp-region-name').value.trim(),
+                publicUrl: document.getElementById('hp-public-url').value.trim()
+            });
+            if (ok) {
+                msg('hp-r', true, _('hplp.saved', 'HPLP settings saved.'));
+            } else {
+                msg('hp-r', false, data.error ?? 'Error');
+            }
+        }
+
         function refreshTab() {
             if (cur === 'ov') fGames('ov-t', true);
             if (cur === 'gm') fGames('gm-t', false);
@@ -1431,6 +1489,7 @@ internal static class AdminTemplateDefaults
             if (cur === 'st') fStats();
             if (cur === 'cf') fChatFilter();
             if (cur === 'dw') fDiscordWebhook();
+            if (cur === 'hp') fHplp();
         }
 
         async function doBc() {

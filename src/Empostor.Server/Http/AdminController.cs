@@ -49,6 +49,9 @@ namespace Empostor.Server.Http
         private readonly PlayerStatsConfig _statsConfig;
         private readonly ChatFilterStore _chatFilter;
         private readonly DiscordWebhookStore _discordWebhook;
+        private readonly HplpStore _hplpStore;
+        private readonly IOptions<ServerConfig> _serverConfig;
+        private readonly IOptions<HttpServerConfig> _httpServerConfig;
         private readonly IpGeolocationService _ipGeo;
         private readonly string _passwordHash;
         private static readonly ConcurrentDictionary<string, (int Count, DateTime FirstAttempt)> _loginFailures = new();
@@ -65,6 +68,9 @@ namespace Empostor.Server.Http
             IOptions<PlayerStatsConfig> statsConfig,
             ChatFilterStore chatFilter,
             DiscordWebhookStore discordWebhook,
+            HplpStore hplpStore,
+            IOptions<ServerConfig> serverConfig,
+            IOptions<HttpServerConfig> httpServerConfig,
             IpGeolocationService ipGeo)
         {
             _logger = logger;
@@ -78,6 +84,9 @@ namespace Empostor.Server.Http
             _statsConfig = statsConfig.Value;
             _chatFilter = chatFilter;
             _discordWebhook = discordWebhook;
+            _hplpStore = hplpStore;
+            _serverConfig = serverConfig;
+            _httpServerConfig = httpServerConfig;
             _ipGeo = ipGeo;
             _passwordHash = ComputeHash(_config.Password);
 
@@ -672,7 +681,7 @@ namespace Empostor.Server.Http
         }
 
         [HttpPost("/api/admin/chatfilter/settings")]
-        public IActionResult UpdateChatFilterSettings([FromBody] ChatFilterSettingsReq req)
+        public async Task<IActionResult> UpdateChatFilterSettings([FromBody] ChatFilterSettingsReq req)
         {
             if (!IsAuthenticated())
             {
@@ -698,6 +707,8 @@ namespace Empostor.Server.Http
             {
                 _chatFilter.SpamWindowSeconds = req.SpamWindowSeconds.Value;
             }
+
+            await _chatFilter.SaveAsync();
 
             return Ok(new
             {
@@ -748,6 +759,62 @@ namespace Empostor.Server.Http
             {
                 matchmakerUrl = _discordWebhook.MatchmakerUrl,
                 adminUrl = _discordWebhook.AdminUrl,
+            });
+        }
+
+        [HttpGet("/api/admin/hplp")]
+        public IActionResult GetHplp()
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new
+            {
+                enabled = _hplpStore.Enabled,
+                regionId = _hplpStore.RegionId,
+                regionName = _hplpStore.RegionName,
+                publicUrl = _hplpStore.PublicUrl,
+            });
+        }
+
+        [HttpPost("/api/admin/hplp")]
+        public async Task<IActionResult> UpdateHplp([FromBody] HplpSettingsReq req)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            if (req.Enabled.HasValue)
+            {
+                _hplpStore.Enabled = req.Enabled.Value;
+            }
+
+            if (req.RegionId != null)
+            {
+                _hplpStore.RegionId = req.RegionId;
+            }
+
+            if (req.RegionName != null)
+            {
+                _hplpStore.RegionName = req.RegionName;
+            }
+
+            if (req.PublicUrl != null)
+            {
+                _hplpStore.PublicUrl = req.PublicUrl;
+            }
+
+            await _hplpStore.SaveAsync();
+
+            return Ok(new
+            {
+                enabled = _hplpStore.Enabled,
+                regionId = _hplpStore.RegionId,
+                regionName = _hplpStore.RegionName,
+                publicUrl = _hplpStore.PublicUrl,
             });
         }
 
@@ -880,6 +947,8 @@ namespace Empostor.Server.Http
         public sealed record ChatFilterSettingsReq(bool? Enabled, bool? BlockMessage, int? SpamThreshold, int? SpamWindowSeconds);
 
         public sealed record DiscordWebhookSettingsReq(string? MatchmakerUrl, string? AdminUrl);
+
+        public sealed record HplpSettingsReq(bool? Enabled, string? RegionId, string? RegionName, string? PublicUrl);
 
         // HTML pages are auto-generated to BaseDirectory/Pages/ on first access.
         // Server operators can customize them by editing the files on disk.

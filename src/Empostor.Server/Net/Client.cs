@@ -514,7 +514,7 @@ namespace Empostor.Server.Net
                 outcome = reportEvent.Outcome;
             }
 
-            _reportStore.Add(new ReportEntry
+            _reportStore.Add(new ReportStore.ReportEntry
             {
                 GameCode = gameCode.ToString(),
                 ReporterName = Name,

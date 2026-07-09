@@ -30,6 +30,7 @@
   "nav.statistics": "Statistics",
   "nav.chat_filter": "Chat Filter",
   "nav.discord": "Discord",
+  "nav.hplp": "HPLP",
   "nav.reload_lang": "Reload Lang",
 
   "status.games": "Games",
@@ -224,5 +225,17 @@
   "discord.admin_url_placeholder": "https://discord.com/api/webhooks/...",
   "discord.admin_desc": "Player Banned, Player Reported",
   "discord.hint": "Leave a URL empty to disable its notifications. Leave both empty to disable all webhooks.",
-  "discord.saved": "Discord webhook settings saved."
+  "discord.saved": "Discord webhook settings saved.",
+
+  "hplp.title": "HPLP (Public Lobby List)",
+  "hplp.save": "Save Settings",
+  "hplp.enabled": "Enable HPLP endpoint (GET /x-api/games)",
+  "hplp.region_id": "Region ID",
+  "hplp.region_id_placeholder": "e.g. meu, default",
+  "hplp.region_name": "Region Name",
+  "hplp.region_name_placeholder": "e.g. Modded EU",
+  "hplp.public_url": "Public URL (optional)",
+  "hplp.public_url_placeholder": "Leave empty to auto-generate from server config",
+  "hplp.public_url_desc": "Used by Starlight clients to connect. Auto-generated as http://ip:port if empty.",
+  "hplp.saved": "HPLP settings saved."
 }
