@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.Welcome;
 
-[EmpostorPlugin("cn.hayashiume.welcome", "Welcome Messages", "HayashiUme", "1.1.0")]
+[EmpostorPlugin("cn.hayashiume.welcome", "Welcome Messages", "HayashiUme", "1.2.0")]
 public sealed class WelcomePlugin : PluginBase
 {
     private const string TextDir = "Message";

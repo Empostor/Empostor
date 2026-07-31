@@ -20,19 +20,21 @@ public sealed class TitleEventListener : IEventListener
     [EventListener]
     public void OnPlayerSpawned(IPlayerSpawnedEvent e)
     {
+        // Titles are now applied natively via IClientConnectedEvent in FriendCodeTitleListener.
+        // TitleStore-based titles (set via API) are still available via the store.
         var clientId = e.ClientPlayer.Client.Id;
         var title = _store.Get(clientId);
         if (title == null) return;
 
+        // For API-applied titles on already-connected players, we still use SetNameAsync
+        // since the client.Name was already set before the API title was added.
         var player = e.ClientPlayer;
         var playerCtrl = e.PlayerControl;
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(600));
-
                 if (player.Client.Connection == null || !player.Client.Connection.IsConnected)
                     return;
 

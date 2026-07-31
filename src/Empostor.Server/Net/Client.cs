@@ -75,6 +75,7 @@ namespace Empostor.Server.Net
                 CheatCategory.ProtocolExtension => _antiCheatConfig.ForbidProtocolExtensions,
                 CheatCategory.GameFlow => _antiCheatConfig.EnableGameFlowChecks,
                 CheatCategory.InvalidObject => _antiCheatConfig.EnableInvalidObjectChecks,
+                CheatCategory.PacketSize => _antiCheatConfig.EnablePacketSizeChecks,
                 CheatCategory.MustBeHost => _antiCheatConfig.EnableMustBeHostChecks,
                 CheatCategory.ColorLimits => _antiCheatConfig.EnableColorLimitChecks,
                 CheatCategory.NameLimits => _antiCheatConfig.EnableNameLimitChecks,

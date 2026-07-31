@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.Titles;
 
-[EmpostorPlugin("cn.Empostor.titles", "Title System", "Empostor", "1.0.0")]
+[EmpostorPlugin("cn.Empostor.titles", "Title System", "Empostor", "1.1.0")]
 public sealed class TitlesPlugin : PluginBase, IPluginLanguageProvider
 {
     private readonly ILogger<TitlesPlugin> _logger;

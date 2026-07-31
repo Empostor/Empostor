@@ -29,7 +29,7 @@ namespace Empostor.Server.Net
         /// </summary>
         public int DeltaPort { get; set; }
 
-        public string Name { get; }
+        public string Name { get; set; }
 
         public Language Language { get; }
 

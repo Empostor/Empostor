@@ -20,12 +20,12 @@ namespace Empostor.Api.Net
         int Id { get; set; }
 
         /// <summary>
-        ///     Gets the name that was provided by the player in the client.
+        ///     Gets or sets the name that was provided by the player in the client.
         /// </summary>
         /// <remarks>
         ///     The name is provided by the player and should not be used to store persisted data.
         /// </remarks>
-        string Name { get; }
+        string Name { get; set; }
 
         /// <summary>
         ///     Gets the language.

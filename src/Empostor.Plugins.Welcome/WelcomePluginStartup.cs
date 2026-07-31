@@ -12,6 +12,7 @@ public sealed class WelcomePluginStartup : IPluginStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient();
         services.AddSingleton<IEventListener, WelcomeEventListener>();
     }
 }

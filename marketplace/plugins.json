@@ -45,6 +45,11 @@
         "version": "1.1.0",
         "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome1.1.0.dll"
+      },
+      {
+        "version": "1.2.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Welcome1.2.0.dll"
       }
     ]
   },
@@ -84,6 +89,11 @@
         "version": "1.0.0",
         "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Titles.dll"
+      },
+      {
+        "version": "1.1.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Titles1.1.0.dll"
       }
     ]
   },

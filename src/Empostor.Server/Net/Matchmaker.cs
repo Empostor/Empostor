@@ -29,6 +29,7 @@ namespace Empostor.Server.Net
         private readonly IFirewallService _firewall;
         private readonly ServerConfig _serverConfig;
         private readonly AuthCacheService _authCache;
+        private readonly IOptions<AntiCheatConfig> _antiCheatOptions;
 
         private UdpConnectionListener? _mainListener;
         private readonly ConcurrentDictionary<int, UdpConnectionListener> _deltaListeners = new();
@@ -44,7 +45,8 @@ namespace Empostor.Server.Net
             PortPoolService portPool,
             IFirewallService firewall,
             IOptions<ServerConfig> serverConfig,
-            AuthCacheService authCache)
+            AuthCacheService authCache,
+            IOptions<AntiCheatConfig> antiCheatOptions)
         {
             _eventManager = eventManager;
             _clientManager = clientManager;
@@ -55,6 +57,7 @@ namespace Empostor.Server.Net
             _firewall = firewall;
             _serverConfig = serverConfig.Value;
             _authCache = authCache;
+            _antiCheatOptions = antiCheatOptions;
 
             // Subscribe to port return events from the pool
             _portPool.OnPortReturned += OnPortReturned;
@@ -182,7 +185,7 @@ namespace Empostor.Server.Net
                 out var chatMode,
                 out var platformSpecificData);
 
-            var connection = new HazelConnection(e.Connection, _connectionLogger);
+            var connection = new HazelConnection(e.Connection, _connectionLogger, _antiCheatOptions);
             await _eventManager.CallAsync(new ClientConnectionEvent(connection, e.HandshakeData));
             await _clientManager.RegisterConnectionAsync(
                 connection, name, clientVersion, language, chatMode, platformSpecificData,

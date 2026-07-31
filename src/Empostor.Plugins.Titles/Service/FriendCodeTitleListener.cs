@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Empostor.Api.Events;
-using Empostor.Api.Events.Game.Player;
+using Empostor.Api.Events.Client;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.Titles.Service;
@@ -11,49 +10,66 @@ namespace Empostor.Plugins.Titles.Service;
 public sealed class FriendCodeTitleListener : IEventListener
 {
     private readonly ILogger<FriendCodeTitleListener> _logger;
-    private readonly Dictionary<string, string> _map;
+    private readonly TitlesConfig _config;
+    private Dictionary<string, string> _map;
 
     public FriendCodeTitleListener(
         ILogger<FriendCodeTitleListener> logger,
         TitlesConfig config)
     {
         _logger = logger;
-        _map = config.Titles
-            .Where(t => !string.IsNullOrWhiteSpace(t.FriendCode) && !string.IsNullOrWhiteSpace(t.Title))
-            .ToDictionary(t => t.FriendCode, t => t.Title, StringComparer.OrdinalIgnoreCase);
+        _config = config;
+        _map = BuildMap();
 
         _logger.LogInformation("[FriendCodeTitles] Loaded {Count} title mapping(s).", _map.Count);
     }
 
-    [EventListener]
-    public void OnPlayerReady(IPlayerReadyEvent e)
+    /// <summary>
+    ///     Reloads the title mappings from config. Called by the API middleware
+    ///     after a new title is added.
+    /// </summary>
+    public void Reload()
     {
-        var fc = e.ClientPlayer.Client.FriendCode;
+        _map = BuildMap();
+        _logger.LogInformation("[FriendCodeTitles] Reloaded {Count} title mapping(s).", _map.Count);
+    }
+
+    [EventListener]
+    public void OnClientConnected(IClientConnectedEvent e)
+    {
+        var fc = e.Client.FriendCode;
         if (string.IsNullOrEmpty(fc)) return;
         if (!_map.TryGetValue(fc, out var title)) return;
 
-        var player = e.ClientPlayer;
-        var ctrl = e.PlayerControl;
-
-        Task.Run(async () =>
+        try
         {
-            try
+            var displayName = TitleStore.BuildDisplayName(title, e.Client.Name);
+            e.Client.Name = displayName;
+
+            _logger.LogInformation("[FriendCodeTitles] Applied [{Title}] to {Name} ({FC})",
+                title, e.Client.Name, fc);
+
+            // Remove applied title so it is only used once
+            _map.Remove(fc);
+
+            // Also remove from config so it persists across reloads
+            var entry = _config.Titles.FirstOrDefault(t =>
+                string.Equals(t.FriendCode, fc, StringComparison.OrdinalIgnoreCase));
+            if (entry != null)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(600));
-
-                if (player.Client.Connection == null || !player.Client.Connection.IsConnected)
-                    return;
-
-                var displayName = TitleStore.BuildDisplayName(title, player.Client.Name);
-                await ctrl.SetNameAsync(displayName);
-
-                _logger.LogInformation("[FriendCodeTitles] Applied [{Title}] to {Name} ({FC})",
-                    title, player.Client.Name, fc);
+                _config.Titles.Remove(entry);
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[FriendCodeTitles] Failed to apply title for {FC}", fc);
-            }
-        });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[FriendCodeTitles] Failed to apply title for {FC}", fc);
+        }
+    }
+
+    private Dictionary<string, string> BuildMap()
+    {
+        return _config.Titles
+            .Where(t => !string.IsNullOrWhiteSpace(t.FriendCode) && !string.IsNullOrWhiteSpace(t.Title))
+            .ToDictionary(t => t.FriendCode, t => t.Title, StringComparer.OrdinalIgnoreCase);
     }
 }
