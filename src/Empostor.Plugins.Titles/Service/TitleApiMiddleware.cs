@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.Titles.Service;
@@ -13,21 +14,19 @@ public sealed class TitleApiMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<TitleApiMiddleware> _logger;
     private readonly TitlesConfig _config;
-    private readonly string _configPath;
-    private readonly FriendCodeTitleListener? _friendCodeListener;
+
+    private static readonly string ConfigPath = Path.Combine(
+        Path.GetDirectoryName(typeof(TitleApiMiddleware).Assembly.Location) ?? ".",
+        "[Title System]Config.json");
 
     public TitleApiMiddleware(
         RequestDelegate next,
         ILogger<TitleApiMiddleware> logger,
-        TitlesConfig config,
-        string configPath,
-        FriendCodeTitleListener? friendCodeListener = null)
+        TitlesConfig config)
     {
         _next = next;
         _logger = logger;
         _config = config;
-        _configPath = configPath;
-        _friendCodeListener = friendCodeListener;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -74,10 +73,11 @@ public sealed class TitleApiMiddleware
                 WriteIndented = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             });
-            await File.WriteAllTextAsync(_configPath, json);
+            await File.WriteAllTextAsync(ConfigPath, json);
 
             // Reload mappings in the listener
-            _friendCodeListener?.Reload();
+            var listener = context.RequestServices.GetService<FriendCodeTitleListener>();
+            listener?.Reload();
 
             var addedBy = request.AddedBy ?? "unknown";
             _logger.LogInformation(
