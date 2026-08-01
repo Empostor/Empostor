@@ -22,6 +22,13 @@ public sealed class WelcomeEventListener : IEventListener
         RegexOptions.Compiled | RegexOptions.IgnoreCase,
         TimeSpan.FromMilliseconds(100));
 
+    private static readonly Regex RandomRegex = new(
+        @"\<random\s*=\s*(\[[^\]]*\])\s*>(.*?)</random\s*>",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline,
+        TimeSpan.FromMilliseconds(100));
+
+    private static readonly Random Rng = new();
+
     private readonly ILogger<WelcomeEventListener> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
 
@@ -66,6 +73,9 @@ public sealed class WelcomeEventListener : IEventListener
                 // Process <cave>URL</cave> tags before final formatting
                 template = await ProcessCaveTagsAsync(template);
 
+                // Process <random = [...]>default</random> tags
+                template = ProcessRandomTags(template);
+
                 var message = FormatMessage(template, player);
 
                 await playerCtrl.SendChatToPlayerAsync(message, playerCtrl);
@@ -94,6 +104,63 @@ public sealed class WelcomeEventListener : IEventListener
         }
 
         return template;
+    }
+
+    /// <summary>
+    ///     Finds all <random = ["a","b","c"]>default</random> tags in the template,
+    ///     randomly picks one option from the JSON array, and replaces the tag.
+    ///     Falls back to the default text between the tags on any error.
+    /// </summary>
+    private static string ProcessRandomTags(string template)
+    {
+        var matches = RandomRegex.Matches(template);
+        if (matches.Count == 0) return template;
+
+        foreach (Match match in matches)
+        {
+            var jsonArray = match.Groups[1].Value.Trim();
+            var defaultValue = match.Groups[2].Value;
+            var replacement = PickRandomOption(jsonArray, defaultValue);
+            template = template.Replace(match.Value, replacement);
+        }
+
+        return template;
+    }
+
+    /// <summary>
+    ///     Parses a JSON string array like ["a","b","c"] and picks one element at random.
+    ///     Returns <paramref name="defaultValue"/> on any parse error or empty array.
+    /// </summary>
+    private static string PickRandomOption(string jsonArray, string defaultValue)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonArray);
+            var root = doc.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Array) return defaultValue;
+
+            var items = new System.Collections.Generic.List<string>();
+            foreach (var item in root.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.String)
+                {
+                    items.Add(item.GetString()!);
+                }
+                else
+                {
+                    items.Add(item.ToString());
+                }
+            }
+
+            if (items.Count == 0) return defaultValue;
+
+            return items[Rng.Next(items.Count)];
+        }
+        catch
+        {
+            return defaultValue;
+        }
     }
 
     /// <summary>
