@@ -220,6 +220,11 @@ namespace Empostor.Server.Net.Manager
             client.ProductUserId = authInfo?.ProductUserId;
             client.DeltaPort = deltaPort;
 
+            if (!string.IsNullOrEmpty(client.ProductUserId))
+            {
+                _playerConnectStore.RecordConnect(client.ProductUserId);
+            }
+
             client.Id = id;
             _logger.LogDebug("#{Id} {Name} │ connected │ FC={FC} │ port {DP}", id, name, client.FriendCode ?? "(none)", deltaPort);
             _clients.TryAdd(id, client);

@@ -47,6 +47,17 @@ public sealed class PlayerConnectStore : IDisposable
         }
     }
 
+    public void RecordConnect(string productUserId)
+    {
+        if (string.IsNullOrEmpty(productUserId))
+        {
+            return;
+        }
+
+        _lastConnect[productUserId] = DateTime.UtcNow;
+        _dirty = true;
+    }
+
     public void RecordDisconnect(string productUserId)
     {
         if (string.IsNullOrEmpty(productUserId))

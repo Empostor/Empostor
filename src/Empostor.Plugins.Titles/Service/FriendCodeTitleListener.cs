@@ -11,14 +11,17 @@ public sealed class FriendCodeTitleListener : IEventListener
 {
     private readonly ILogger<FriendCodeTitleListener> _logger;
     private readonly TitlesConfig _config;
+    private readonly TitleStore _store;
     private Dictionary<string, string> _map;
 
     public FriendCodeTitleListener(
         ILogger<FriendCodeTitleListener> logger,
-        TitlesConfig config)
+        TitlesConfig config,
+        TitleStore store)
     {
         _logger = logger;
         _config = config;
+        _store = store;
         _map = BuildMap();
 
         _logger.LogInformation("[FriendCodeTitles] Loaded {Count} title mapping(s).", _map.Count);
@@ -43,11 +46,16 @@ public sealed class FriendCodeTitleListener : IEventListener
 
         try
         {
-            var displayName = TitleStore.BuildDisplayName(title, e.Client.Name);
+            // Update server-side name for logging/admin panel
+            var originalName = e.Client.Name;
+            var displayName = TitleStore.BuildDisplayName(title, originalName);
             e.Client.Name = displayName;
 
+            // Store title so TitleEventListener can apply it in-game via SetNameAsync
+            _store.Set(e.Client.Id, title);
+
             _logger.LogInformation("[FriendCodeTitles] Applied [{Title}] to {Name} ({FC})",
-                title, e.Client.Name, fc);
+                title, displayName, fc);
 
             // Remove applied title so it is only used once
             _map.Remove(fc);

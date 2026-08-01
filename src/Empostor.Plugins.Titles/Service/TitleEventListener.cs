@@ -20,28 +20,30 @@ public sealed class TitleEventListener : IEventListener
     [EventListener]
     public void OnPlayerSpawned(IPlayerSpawnedEvent e)
     {
-        // Titles are now applied natively via IClientConnectedEvent in FriendCodeTitleListener.
-        // TitleStore-based titles (set via API) are still available via the store.
         var clientId = e.ClientPlayer.Client.Id;
         var title = _store.Get(clientId);
         if (title == null) return;
 
-        // For API-applied titles on already-connected players, we still use SetNameAsync
-        // since the client.Name was already set before the API title was added.
-        var player = e.ClientPlayer;
+        // Client.Name was already updated at connection time by FriendCodeTitleListener
+        // or at API call time. Now broadcast the title name to all in-game players.
         var playerCtrl = e.PlayerControl;
 
         _ = Task.Run(async () =>
         {
             try
             {
-                if (player.Client.Connection == null || !player.Client.Connection.IsConnected)
+                if (e.ClientPlayer.Client.Connection == null
+                    || !e.ClientPlayer.Client.Connection.IsConnected)
                     return;
 
-                var displayName = TitleStore.BuildDisplayName(title, player.Client.Name);
+                var displayName = TitleStore.BuildDisplayName(title, e.ClientPlayer.Client.Name);
                 await playerCtrl.SetNameAsync(displayName);
 
-                _logger.LogDebug("[Titles] Applied title [{Title}] to {Name}", title, player.Client.Name);
+                // Title applied in-game, clear from store
+                _store.Clear(clientId);
+
+                _logger.LogDebug("[Titles] In-game name set [{Title}] for client {Id}",
+                    title, clientId);
             }
             catch (Exception ex)
             {
@@ -53,6 +55,7 @@ public sealed class TitleEventListener : IEventListener
     [EventListener]
     public void OnPlayerDestroyed(IPlayerDestroyedEvent e)
     {
+        // Clean up any lingering title
         //_store.Clear(e.ClientPlayer.Client.Id);
     }
 }
