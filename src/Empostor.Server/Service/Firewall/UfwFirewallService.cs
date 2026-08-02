@@ -19,9 +19,9 @@ public sealed class UfwFirewallService : IFirewallService
         _logger = logger;
     }
 
-    public async ValueTask OpenPortAsync(ushort port, CancellationToken ct = default)
+    public async ValueTask OpenPortAsync(ushort port, CancellationToken ct = default, string protocol = "udp")
     {
-        await RunUfwAsync($"allow {port}/udp", ct);
+        await RunUfwAsync($"allow {port}/{protocol}", ct);
     }
 
     public async ValueTask ClosePortAsync(ushort port, CancellationToken ct = default)

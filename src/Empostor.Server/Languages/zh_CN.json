@@ -48,5 +48,22 @@
   "command.note.description": "设置或清除房间备注（仅房主）。",
   "command.note.usage": "note <文字> | note clear",
   "command.max.description": "设置房间最大人数（仅房主）。",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "command.end.not_host": "只有房主可以解散游戏。",
+  "command.end.description": "解散当前游戏（仅房主）。",
+  "command.end.usage": "end [原因]",
+  "command.kick.not_host": "只有房主可以踢出玩家。",
+  "command.kick.usage": "用法：#kick <玩家> [原因]",
+  "command.kick.not_found": "未找到玩家：{0}",
+  "command.kick.cannot_kick_self": "你不能踢出自己。",
+  "command.kick.kicked": "{0} 已被踢出。原因：{1}",
+  "command.kick.description": "通过好友代码或名称踢出玩家（仅房主）。",
+  "command.kick.usage_cmd": "kick <玩家> [原因]",
+  "command.ban.not_host": "只有房主可以封禁玩家。",
+  "command.ban.usage": "用法：#ban <玩家> [原因]",
+  "command.ban.not_found": "未找到玩家：{0}",
+  "command.ban.cannot_ban_self": "你不能封禁自己。",
+  "command.ban.banned": "{0} 已被封禁。原因：{1}",
+  "command.ban.description": "通过好友代码或名称封禁玩家（仅房主）。",
+  "command.ban.usage_cmd": "ban <玩家> [原因]"
 }

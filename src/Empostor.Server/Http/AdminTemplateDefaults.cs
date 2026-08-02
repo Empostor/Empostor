@@ -1148,8 +1148,9 @@ internal static class AdminTemplateDefaults
             } catch { document.getElementById('dot').style.background = 'var(--r)'; }
         }
 
-        async function fGames(tid, short) {
-            const { data: gs } = await api('GET', '/api/admin/games');
+        async function fGames(tid, short, state) {
+            const url = '/api/admin/games' + (state ? '?state=' + state : '');
+            const { data: gs } = await api('GET', url);
             const tb = document.getElementById(tid);
             if (!gs.length) {
                 tb.innerHTML = `<tr><td colspan="${short ? 6 : 7}" class="empty">${_('games.none', 'No games')}</td></tr>`;
@@ -1479,7 +1480,7 @@ internal static class AdminTemplateDefaults
         }
 
         function refreshTab() {
-            if (cur === 'ov') fGames('ov-t', true);
+            if (cur === 'ov') fGames('ov-t', true, 'Started');
             if (cur === 'gm') fGames('gm-t', false);
             if (cur === 'cl') fClients();
             if (cur === 'ki') fKickList();

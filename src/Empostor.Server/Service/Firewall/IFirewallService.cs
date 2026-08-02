@@ -5,7 +5,7 @@ namespace Empostor.Server.Service.Firewall;
 
 public interface IFirewallService
 {
-    ValueTask OpenPortAsync(ushort port, CancellationToken ct = default);
+    ValueTask OpenPortAsync(ushort port, CancellationToken ct = default, string protocol = "udp");
 
     ValueTask ClosePortAsync(ushort port, CancellationToken ct = default);
 }

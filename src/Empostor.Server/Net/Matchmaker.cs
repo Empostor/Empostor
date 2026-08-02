@@ -82,6 +82,10 @@ namespace Empostor.Server.Net
             };
 
             await _mainListener.StartAsync();
+
+            // Open firewall for the main port (delta ports are handled in StartDeltaListenerAsync)
+            await _firewall.OpenPortAsync((ushort)ipEndPoint.Port);
+
             _logger.LogInformation("Matchmaker UDP listener started on {EP}", ipEndPoint);
         }
 

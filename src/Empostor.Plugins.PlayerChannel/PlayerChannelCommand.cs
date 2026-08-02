@@ -57,10 +57,6 @@ public sealed class PlayerChannelCommand : ICommand
 
         foreach (var player in ctx.Game.Players)
         {
-            var fc = player.Client.FriendCode;
-            if (string.IsNullOrEmpty(fc)) continue;
-            if (!channel.FriendCodes.Contains(fc)) continue;
-
             var targetCtrl = player.Character;
             if (targetCtrl == null) continue;
 

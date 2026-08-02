@@ -46,16 +46,11 @@ public sealed class FriendCodeTitleListener : IEventListener
 
         try
         {
-            // Update server-side name for logging/admin panel
-            var originalName = e.Client.Name;
-            var displayName = TitleStore.BuildDisplayName(title, originalName);
-            e.Client.Name = displayName;
-
             // Store title so TitleEventListener can apply it in-game via SetNameAsync
             _store.Set(e.Client.Id, title);
 
-            _logger.LogInformation("[FriendCodeTitles] Applied [{Title}] to {Name} ({FC})",
-                title, displayName, fc);
+            _logger.LogInformation("[FriendCodeTitles] Stored [{Title}] for {Name} ({FC})",
+                title, e.Client.Name, fc);
 
             // Remove applied title so it is only used once
             _map.Remove(fc);

@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
+using Empostor.Server.Service.Firewall;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,19 +17,22 @@ namespace Empostor.Server.Net
         private readonly HttpServerConfig _httpServerConfig;
         private readonly Matchmaker _matchmaker;
         private readonly PortPoolService _portPool;
+        private readonly IFirewallService _firewall;
 
         public MatchmakerService(
             ILogger<MatchmakerService> logger,
             IOptions<ServerConfig> serverConfig,
             IOptions<HttpServerConfig> httpServerConfig,
             Matchmaker matchmaker,
-            PortPoolService portPool)
+            PortPoolService portPool,
+            IFirewallService firewall)
         {
             _logger = logger;
             _serverConfig = serverConfig.Value;
             _httpServerConfig = httpServerConfig.Value;
             _matchmaker = matchmaker;
             _portPool = portPool;
+            _firewall = firewall;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -36,6 +40,12 @@ namespace Empostor.Server.Net
             var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), _serverConfig.ListenPort);
 
             await _matchmaker.StartAsync(endpoint);
+
+            // Open firewall for HTTP server TCP port
+            if (_httpServerConfig.Enabled)
+            {
+                await _firewall.OpenPortAsync(_httpServerConfig.ListenPort, cancellationToken, "tcp");
+            }
 
             _logger.LogInformation(
                 "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",

@@ -49,5 +49,22 @@
   "command.note.description": "Set or clear a lobby note (host only).",
   "command.note.usage": "note <text> | note clear",
   "command.max.description": "Set max players for the lobby (host only).",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "command.end.not_host": "Only the host can end the game.",
+  "command.end.description": "End the current game. Host only.",
+  "command.end.usage": "end [reason]",
+  "command.kick.not_host": "Only the host can kick players.",
+  "command.kick.usage": "Usage: #kick <player> [reason]",
+  "command.kick.not_found": "Player not found: {0}",
+  "command.kick.cannot_kick_self": "You cannot kick yourself.",
+  "command.kick.kicked": "{0} has been kicked. Reason: {1}",
+  "command.kick.description": "Kick a player by friend code or name. Host only.",
+  "command.kick.usage_cmd": "kick <player> [reason]",
+  "command.ban.not_host": "Only the host can ban players.",
+  "command.ban.usage": "Usage: #ban <player> [reason]",
+  "command.ban.not_found": "Player not found: {0}",
+  "command.ban.cannot_ban_self": "You cannot ban yourself.",
+  "command.ban.banned": "{0} has been banned. Reason: {1}",
+  "command.ban.description": "Ban a player by friend code or name. Host only.",
+  "command.ban.usage_cmd": "ban <player> [reason]"
 }

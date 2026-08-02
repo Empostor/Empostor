@@ -166,7 +166,7 @@ namespace Empostor.Server.Http
             Response.Cookies.Append("empostor_admin", _passwordHash, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromHours(8),
             });
@@ -231,14 +231,21 @@ namespace Empostor.Server.Http
         }
 
         [HttpGet("/api/admin/games")]
-        public IActionResult GetGames()
+        public IActionResult GetGames([FromQuery] string? state = null)
         {
             if (!IsAuthenticated())
             {
                 return Unauthorized();
             }
 
-            return Ok(_gameManager.Games.Select(Snap));
+            var games = _gameManager.Games.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(state)
+                && Enum.TryParse<GameStates>(state, ignoreCase: true, out var filterState))
+            {
+                games = games.Where(g => g.GameState == filterState);
+            }
+
+            return Ok(games.Select(Snap));
         }
 
         [HttpGet("/api/admin/clients")]

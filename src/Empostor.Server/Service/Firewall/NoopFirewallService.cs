@@ -16,9 +16,9 @@ public sealed class NoopFirewallService : IFirewallService
         _logger = logger;
     }
 
-    public ValueTask OpenPortAsync(ushort port, CancellationToken ct = default)
+    public ValueTask OpenPortAsync(ushort port, CancellationToken ct = default, string protocol = "udp")
     {
-        _logger.LogDebug("FirewallNoop: would open port {Port}/udp", port);
+        _logger.LogDebug("FirewallNoop: would open port {Port}/{Protocol}", port, protocol);
         return ValueTask.CompletedTask;
     }
 

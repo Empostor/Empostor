@@ -141,6 +141,23 @@ namespace Empostor.Server.Net.Manager
                 _logger.LogWarning("Client {Name}({ClientId}) left empty game open when disconnecting", client.Name, client.Id);
                 await RemoveAsync(game.Code);
             }
+
+            // Also clean up games where this client is the current host but not the original creator
+            foreach (var g in _games.Values)
+            {
+                if (g.GameState == GameStates.Destroyed)
+                {
+                    continue;
+                }
+
+                if (g.Host?.Client == client)
+                {
+                    _logger.LogWarning(
+                        "Game {Code} host {Name}({ClientId}) disconnected, cleaning up",
+                        GameCodeParser.IntToGameName(g.Code), client.Name, client.Id);
+                    await RemoveAsync(g.Code);
+                }
+            }
         }
     }
 }

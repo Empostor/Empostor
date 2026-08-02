@@ -19,9 +19,9 @@ public sealed class FirewalldFirewallService : IFirewallService
         _logger = logger;
     }
 
-    public async ValueTask OpenPortAsync(ushort port, CancellationToken ct = default)
+    public async ValueTask OpenPortAsync(ushort port, CancellationToken ct = default, string protocol = "udp")
     {
-        await RunFirewallCmdAsync($"--add-port={port}/udp --permanent", ct);
+        await RunFirewallCmdAsync($"--add-port={port}/{protocol} --permanent", ct);
         await RunFirewallCmdAsync("--reload", ct);
     }
 
