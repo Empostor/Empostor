@@ -36,13 +36,28 @@ namespace Empostor.Server.Net.State
             _logger.LogInformation("◀ {Name} ({Id}) left │ {Reason} │ {HashPuid}",
                 player.Client.Name, playerId, reason,
                 player.Client.ProductUserId?.Length >= 9 ? player.Client.ProductUserId[..9] : player.Client.ProductUserId ?? "0");
-            if (GameState == GameStates.Starting || GameState == GameStates.Started || GameState == GameStates.NotStarted)
+            if (GameState == GameStates.Starting || GameState == GameStates.Started)
+            {
+                if (player.Character?.PlayerInfo != null)
+                {
+                    player.Character.PlayerInfo.Disconnected = true;
+                    player.Character.PlayerInfo.LastDeathReason = DeathReason.Disconnect;
+                    await DespawnPlayerInfoAsync(player.Character.PlayerInfo);
+                }
+            }
+            else if (GameState == GameStates.NotStarted)
             {
                 if (player.Character?.PlayerInfo != null)
                 {
                     player.Character.PlayerInfo.Disconnected = true;
                     player.Character.PlayerInfo.LastDeathReason = DeathReason.Disconnect;
                 }
+            }
+
+            // Always clean up from GameData to prevent duplicates on rejoin
+            if (GameNet.GameData.PlayersByClientId.TryGetValue(playerId, out var gameDataInfo))
+            {
+                await DespawnPlayerInfoAsync(gameDataInfo);
             }
 
             player.Client.Player = null;
@@ -75,13 +90,6 @@ namespace Empostor.Server.Net.State
                     await player.Client.DisconnectAsync(isBan ? DisconnectReason.Banned : DisconnectReason.Kicked);
                 }
             });
-            if (GameState == GameStates.NotStarted)
-            {
-                if (GameNet.GameData.PlayersByClientId.TryGetValue(playerId, out var playerInfo))
-                {
-                    await DespawnPlayerInfoAsync(playerInfo);
-                }
-            }
 
             return true;
         }

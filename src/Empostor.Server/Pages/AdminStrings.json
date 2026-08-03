@@ -220,7 +220,7 @@
   "discord.save": "Save Settings",
   "discord.matchmaker_url": "Matchmaker Webhook URL",
   "discord.matchmaker_url_placeholder": "https://discord.com/api/webhooks/...",
-  "discord.matchmaker_desc": "Game Created, Game Started, Game Ended, Player Joined",
+  "discord.matchmaker_desc": "Game Created, Game Started, Game Ended, Game Destroyed",
   "discord.admin_url": "Admin Webhook URL",
   "discord.admin_url_placeholder": "https://discord.com/api/webhooks/...",
   "discord.admin_desc": "Player Banned, Player Reported",

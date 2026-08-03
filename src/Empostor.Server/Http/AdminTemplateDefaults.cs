@@ -1048,7 +1048,7 @@ internal static class AdminTemplateDefaults
                         <div class="field">
                             <label data-i18n="discord.matchmaker_url">Matchmaker Webhook URL</label>
                             <input type="text" id="dw-matchmaker-url" data-i18n-placeholder="discord.matchmaker_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
-                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.matchmaker_desc">Game Created, Game Started, Game Ended, Player Joined</span></div>
+                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.matchmaker_desc">Game Created, Game Started, Game Ended, Game Destroyed</span></div>
                         </div>
                         <div class="field" style="margin-top:10px">
                             <label data-i18n="discord.admin_url">Admin Webhook URL</label>
