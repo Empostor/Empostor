@@ -160,6 +160,9 @@ namespace Empostor.Server.Net.Manager
                 {
                     // Port matched — cancel the allocation timeout
                     _portPool.ConfirmPort(deltaPort);
+                    // Mark the auth-cache entry as active so the inactivity
+                    // timer never clears the port while the player is connected.
+                    _authCache.ConfirmPort(deltaPort);
 
                     friendCode = authInfo.FriendCode;
 

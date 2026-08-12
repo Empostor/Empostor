@@ -79,7 +79,9 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 EXPOSE 80/tcp
 EXPOSE 22023/tcp
-EXPOSE 22023/udp
+# Main UDP listener moved to the last delta port (DeltaPortEnd).
+# Expose the whole delta range so players can connect.
+EXPOSE 22024-22099/udp
 
 VOLUME ["/app/config", "/app/plugins", "/app/libraries", "/app/Languages", "/app/Log", "/app/Data", "/app/marketplace"]
 

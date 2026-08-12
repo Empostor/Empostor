@@ -18,6 +18,12 @@ public sealed class AuthCacheService : IDisposable
     private readonly ConcurrentDictionary<string, int> _ipToPort = new();
 
     /// <summary>
+    ///     Ports that have an active connection. While a player is connected,
+    ///     the port lease must not be cleared by the inactivity timer.
+    /// </summary>
+    private readonly ConcurrentDictionary<int, byte> _confirmedPorts = new();
+
+    /// <summary>
     ///     Invoked when a port lease should be returned to the pool (e.g., on expiry during cleanup).
     /// </summary>
     public event Action<int>? OnPortExpired;
@@ -118,8 +124,31 @@ public sealed class AuthCacheService : IDisposable
         return _byPort.TryGetValue(port, out var info) && !Expired(info) ? info : null;
     }
 
+    /// <summary>
+    ///     Marks a delta port as having an active connection.
+    ///     The inactivity timer will skip confirmed ports so that connected
+    ///     players are never kicked because of the auth-cache TTL.
+    /// </summary>
+    public void ConfirmPort(int port)
+    {
+        if (port <= 0)
+        {
+            return;
+        }
+
+        _confirmedPorts[port] = 0;
+
+        // Refresh the expiry so the entry is also valid for other lookups.
+        if (_byPort.TryGetValue(port, out var info))
+        {
+            info.CreatedAt = DateTime.UtcNow;
+        }
+    }
+
     public void RemoveByPort(int port)
     {
+        _confirmedPorts.TryRemove(port, out _);
+
         if (_byPort.TryRemove(port, out var info) && info.ClientIp != null)
         {
             _byIpDirect.TryRemove(info.ClientIp, out _);
@@ -174,7 +203,12 @@ public sealed class AuthCacheService : IDisposable
         }
 
         // Clean port-based entries
-        var expiredPorts = _byPort.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
+        // Confirmed (actively connected) ports are skipped: the lease is only
+        // released when the player disconnects.
+        var expiredPorts = _byPort
+            .Where(kv => !_confirmedPorts.ContainsKey(kv.Key) && Expired(kv.Value))
+            .Select(kv => kv.Key)
+            .ToList();
         foreach (var port in expiredPorts)
         {
             if (_byPort.TryRemove(port, out var info))

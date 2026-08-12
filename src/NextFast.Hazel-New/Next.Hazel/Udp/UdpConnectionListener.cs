@@ -20,6 +20,7 @@ public class UdpConnectionListener : NetworkConnectionListener
     private static readonly ILogger Logger = Log.ForContext<UdpConnectionListener>();
     private readonly ConcurrentDictionary<EndPoint, UdpServerConnection> _allConnections;
     private readonly UdpConnectionRateLimit _connectionRateLimit;
+    private readonly UdpPacketFilter _packetFilter;
     protected readonly ObjectPool<MessageReader> _readerPool;
     private readonly Timer _reliablePacketTimer;
 
@@ -33,6 +34,12 @@ public class UdpConnectionListener : NetworkConnectionListener
     ///     * A null response is ok, we just won't send anything.
     /// </summary>
     public AcceptConnectionCheck AcceptConnection;
+
+    /// <summary>
+    ///     The layer-7 packet filter used to drop junk UDP at line speed.
+    ///     Tune its thresholds before <see cref="StartAsync" /> if needed.
+    /// </summary>
+    public UdpPacketFilter PacketFilter => _packetFilter;
 
 #nullable enable
     /// <summary>
@@ -66,6 +73,7 @@ public class UdpConnectionListener : NetworkConnectionListener
         _stoppingCts.Token.Register(() => { _socket.Dispose(); });
 
         _connectionRateLimit = new UdpConnectionRateLimit();
+        _packetFilter = new UdpPacketFilter();
         Setup?.Invoke(_socket, _connectionRateLimit);
     }
 
@@ -162,6 +170,14 @@ public class UdpConnectionListener : NetworkConnectionListener
         // Get client from active clients
         if (!_allConnections.TryGetValue(data.RemoteEndPoint, out var client))
         {
+            // Filtaur-style layer-7 firewall: drop junk packets at line speed
+            // before they can reach the game server. Only applies to unknown
+            // endpoints; established connections are never filtered here.
+            if (_packetFilter.ShouldDrop(data.RemoteEndPoint.Address, data.Buffer, data.Buffer.Length))
+            {
+                return;
+            }
+
             // Check for malformed connection attempts
             if (data.Buffer[0] != (byte)UdpSendOption.Hello) return;
 
@@ -230,6 +246,7 @@ public class UdpConnectionListener : NetworkConnectionListener
         await _reliablePacketTimer.DisposeAsync();
 
         _connectionRateLimit.Dispose();
+        _packetFilter.Dispose();
 
         await base.DisposeAsync();
     }

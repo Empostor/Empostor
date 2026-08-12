@@ -9,6 +9,7 @@ using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Server.Extensions;
+using Empostor.Server.Net;
 using Empostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -23,17 +24,20 @@ public sealed class GamesController : ControllerBase
     private readonly ListingManager _listingManager;
     private readonly ServerConfig _serverConfig;
     private readonly AuthCacheService _authCache;
+    private readonly PortPoolService _portPool;
 
     public GamesController(
         IGameManager gameManager,
         ListingManager listingManager,
         IOptions<ServerConfig> serverConfig,
-        AuthCacheService authCache)
+        AuthCacheService authCache,
+        PortPoolService portPool)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
         _serverConfig = serverConfig.Value;
         _authCache = authCache;
+        _portPool = portPool;
     }
 
     /// <summary>
@@ -182,7 +186,7 @@ public sealed class GamesController : ControllerBase
         var clientIp = GetClientIp();
         if (clientIp == null)
         {
-            return _serverConfig.PublicPort;
+            return (ushort)(_portPool.DefaultPort > 0 ? _portPool.DefaultPort : _serverConfig.PublicPort);
         }
 
         var deltaPort = _authCache.FindPortByIp(clientIp);
@@ -191,7 +195,9 @@ public sealed class GamesController : ControllerBase
             return (ushort)deltaPort;
         }
 
-        return _serverConfig.PublicPort;
+        // Fall back to the main listener port (reserved default port when the
+        // delta pool is enabled, otherwise the configured public port).
+        return (ushort)(_portPool.DefaultPort > 0 ? _portPool.DefaultPort : _serverConfig.PublicPort);
     }
 
     private IPAddress? GetClientIp()

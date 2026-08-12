@@ -7,8 +7,13 @@ services:
     restart: unless-stopped
 
     ports:
+      # HTTP API / admin panel (TCP)
       - "22023:22023/tcp"
-      - "22023:22023/udp"
+      # Main UDP listener now uses the last port of the delta range
+      # (DeltaPortEnd), so 22023/udp is no longer the game socket.
+      # Expose the whole delta range so players can connect.
+      # Adjust the range to match DeltaPortStart-DeltaPortEnd in config.json.
+      - "22024-22099:22024-22099/udp"
       # Uncomment to expose admin HTTP panel:
       # - "80:80/tcp"
 

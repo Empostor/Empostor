@@ -6,8 +6,9 @@
     "ListenPort": 22023,
     "UseUfw": false,
     "UseFirewalld": false,
-    "DeltaPortStart": 0,
-    "DeltaPortEnd": 0
+    "DeltaPortStart": 22024,
+    "DeltaPortEnd": 22099,
+    "ReserveLastDeltaPortAsDefault": true
   },
   "HttpServer": {
     "Enabled": true,

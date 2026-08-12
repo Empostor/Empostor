@@ -37,7 +37,12 @@ namespace Empostor.Server.Net
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), _serverConfig.ListenPort);
+            // Use the reserved default port (last delta port when enabled) so the
+            // well-known ListenPort is not exposed to garbage UDP floods.
+            var listenPort = _portPool.IsEnabled && _portPool.DefaultPort > 0
+                ? _portPool.DefaultPort
+                : _serverConfig.ListenPort;
+            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), listenPort);
 
             await _matchmaker.StartAsync(endpoint);
 

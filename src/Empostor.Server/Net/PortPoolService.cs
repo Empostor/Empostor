@@ -27,6 +27,14 @@ public sealed class PortPoolService : IDisposable
                              && _deltaPortEnd >= _deltaPortStart;
 
     /// <summary>
+    ///     The main UDP listener port. When delta ports are enabled and
+    ///     <see cref="ServerConfig.ReserveLastDeltaPortAsDefault" /> is set, the
+    ///     last port of the range is reserved for the main listener so the
+    ///     well-known default port is never used for the game socket.
+    /// </summary>
+    public int DefaultPort { get; }
+
+    /// <summary>
     ///     Invoked when a port is returned to the pool (via disconnect or timeout expiry).
     ///     Subscribers should stop the delta listener and close firewall rules.
     /// </summary>
@@ -45,10 +53,25 @@ public sealed class PortPoolService : IDisposable
 
         if (IsEnabled)
         {
-            var skipped = 0;
-            for (var port = _deltaPortStart; port <= _deltaPortEnd; port++)
+            // Reserve the last port of the delta range as the main listener
+            // (anti garbage-UDP-flood on the well-known default port).
+            if (cfg.ReserveLastDeltaPortAsDefault)
             {
-                if (port == _listenPort)
+                DefaultPort = _deltaPortEnd;
+                _logger.LogInformation(
+                    "PortPool reserved last port {Port} as the main UDP listener (anti-flood).",
+                    DefaultPort);
+            }
+            else
+            {
+                DefaultPort = _listenPort;
+            }
+
+            var skipped = 0;
+            var poolEnd = cfg.ReserveLastDeltaPortAsDefault ? _deltaPortEnd - 1 : _deltaPortEnd;
+            for (var port = _deltaPortStart; port <= poolEnd; port++)
+            {
+                if (port == _listenPort || port == DefaultPort)
                 {
                     skipped++;
                     continue;
@@ -60,16 +83,17 @@ public sealed class PortPoolService : IDisposable
             if (skipped > 0)
             {
                 _logger.LogWarning(
-                    "PortPool skipped {Count} port(s) overlapping with main listen port {ListenPort}",
+                    "PortPool skipped {Count} port(s) overlapping with the main listen port {ListenPort}",
                     skipped, _listenPort);
             }
 
             _logger.LogInformation(
                 "PortPool initialized with {Count} ports ({Start}-{End})",
-                _availablePorts.Count, _deltaPortStart, _deltaPortEnd);
+                _availablePorts.Count, _deltaPortStart, poolEnd);
         }
         else
         {
+            DefaultPort = _listenPort;
             _logger.LogInformation("PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
                 _deltaPortStart, _deltaPortEnd);
         }
