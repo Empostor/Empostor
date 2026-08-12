@@ -25,14 +25,6 @@ namespace Empostor.Api.Config
 
         public ushort DeltaPortEnd { get; set; } = 0;
 
-        /// <summary>
-        ///     When the delta port pool is enabled, reserve the last port of the
-        ///     range as the main UDP listener instead of the well-known
-        ///     <see cref="ListenPort" />. This hides the default port from garbage
-        ///     UDP floods targeting the commonly known port (e.g. 22023).
-        /// </summary>
-        public bool ReserveLastDeltaPortAsDefault { get; set; } = true;
-
         public string ResolvePublicIp()
         {
             return _resolvedPublicIp ??= IpUtils.ResolveIp(PublicIp);

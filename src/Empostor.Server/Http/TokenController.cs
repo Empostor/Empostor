@@ -87,8 +87,10 @@ public sealed class TokenController : ControllerBase
             _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp,
                 verifyCode: _nikoVerifyCode, friendCodeConfirmed: _nikoFriendCodeConfirmed);
 
-            // Allocate a delta UDP port to match the TCP auth session to the subsequent UDP connection
-            var deltaPort = _portPool.AllocatePort(productUserId);
+            // Allocate a delta UDP port to match the TCP auth session to the
+            // subsequent UDP connection. When the pool only has one port left,
+            // it is shared by all new players (IP-based matching).
+            var deltaPort = _portPool.AllocatePort(productUserId, out var isSharedPort);
 
             var authInfo = new UserAuthInfo
             {
@@ -107,13 +109,31 @@ public sealed class TokenController : ControllerBase
 
             if (deltaPort > 0)
             {
-                // Port allocated — store by port and start delta listener for UDP matching
-                _authCache.StoreByPort(deltaPort, authInfo);
-                _ = _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
+                // The shared default port is matched by client IP because many
+                // players enter through the same port; unique ports are matched
+                // by port (nonce).
+                if (isSharedPort)
+                {
+                    if (clientIp != null)
+                    {
+                        _authCache.StoreByIp(NormalizeIpString(clientIp), authInfo);
+                    }
 
-                _logger.LogInformation(
-                    "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
-                    playerName, productUserId, friendCode, clientIp, deltaPort);
+                    _logger.LogInformation(
+                        "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added (shared default port).",
+                        playerName, productUserId, friendCode, clientIp, deltaPort);
+                }
+                else
+                {
+                    _authCache.StoreByPort(deltaPort, authInfo);
+
+                    _logger.LogInformation(
+                        "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
+                        playerName, productUserId, friendCode, clientIp, deltaPort);
+                }
+
+                // Start (or reuse) the delta listener for this port.
+                _ = _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
             }
             else
             {

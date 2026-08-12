@@ -73,20 +73,14 @@ internal static class StartupBanner
 
         Row(sw, width, maxLabel, "Public IP", server.PublicIp);
         var deltaEnabled = server.DeltaPortStart > 0 && server.DeltaPortEnd >= server.DeltaPortStart;
-        var actualListenPort = deltaEnabled && server.ReserveLastDeltaPortAsDefault
-            ? server.DeltaPortEnd
-            : server.ListenPort;
-        Row(sw, width, maxLabel, "Listen Port", $"{actualListenPort} (UDP)");
+        var actualListenPort = deltaEnabled ? "dynamic" : $"{server.ListenPort} (UDP)";
+        Row(sw, width, maxLabel, "Listen Port", actualListenPort);
         Row(sw, width, maxLabel, "HTTP API", $"http://{http.ListenIp}:{http.ListenPort}");
         Row(sw, width, maxLabel, "Admin Panel", $"http://{server.PublicIp}:{http.ListenPort}/admin");
         var poolInfo = deltaEnabled
-            ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports)"
+            ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports, last port shared when low)"
             : C("disabled", Yellow);
         Row(sw, width, maxLabel, "Port Pool", poolInfo);
-        if (deltaEnabled && server.ReserveLastDeltaPortAsDefault)
-        {
-            Row(sw, width, maxLabel, "Reserved", $"{server.DeltaPortEnd} (main listener)");
-        }
 
         Row(sw, width, maxLabel, "Packet Filter", C("✔ Enabled", Green));
         Row(sw, width, maxLabel, "AntiCheat", anticheat.Enabled ? C("✔ Enabled", Green) : C("✗ Disabled", Red));

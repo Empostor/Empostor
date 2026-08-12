@@ -37,39 +37,36 @@ namespace Empostor.Server.Net
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            // Use the reserved default port (last delta port when enabled) so the
-            // well-known ListenPort is not exposed to garbage UDP floods.
-            var listenPort = _portPool.IsEnabled && _portPool.DefaultPort > 0
-                ? _portPool.DefaultPort
-                : _serverConfig.ListenPort;
-            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), listenPort);
+            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), _serverConfig.ListenPort);
 
-            await _matchmaker.StartAsync(endpoint);
+            if (_portPool.IsEnabled)
+            {
+                // Dynamic delta mode: no static UDP port is bound at startup.
+                // Ports are allocated per player on demand, and the last free
+                // port is shared as the default entry once the pool runs low.
+                _matchmaker.Initialize(endpoint);
+                _logger.LogInformation(
+                    "Delta Matchmaker enabled: no static UDP port at startup (pool {Start}-{End}), ports created per player.",
+                    _serverConfig.DeltaPortStart,
+                    _serverConfig.DeltaPortEnd);
+            }
+            else
+            {
+                // Static mode: bind the main UDP listener on the configured port.
+                await _matchmaker.StartAsync(endpoint);
+
+                _logger.LogInformation(
+                    "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",
+                    endpoint.Address,
+                    endpoint.Port,
+                    _serverConfig.ResolvePublicIp(),
+                    _serverConfig.PublicPort);
+            }
 
             // Open firewall for HTTP server TCP port
             if (_httpServerConfig.Enabled)
             {
                 await _firewall.OpenPortAsync(_httpServerConfig.ListenPort, cancellationToken, "tcp");
-            }
-
-            _logger.LogInformation(
-                "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",
-                endpoint.Address,
-                endpoint.Port,
-                _serverConfig.ResolvePublicIp(),
-                _serverConfig.PublicPort);
-
-            if (_portPool.IsEnabled)
-            {
-                _logger.LogInformation(
-                    "Delta Matchmaker is enabled.");
-            }
-            else
-            {
-                _logger.LogInformation(
-                    "Delta Matchmaker is disabled (DeltaPortStart={Start}, DeltaPortEnd={End}). Using IP-based matching.",
-                    _serverConfig.DeltaPortStart,
-                    _serverConfig.DeltaPortEnd);
             }
 
             var runningOutsideContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == null;

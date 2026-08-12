@@ -7,8 +7,7 @@
     "UseUfw": false,
     "UseFirewalld": false,
     "DeltaPortStart": 22024,
-    "DeltaPortEnd": 22099,
-    "ReserveLastDeltaPortAsDefault": true
+    "DeltaPortEnd": 22099
   },
   "HttpServer": {
     "Enabled": true,

@@ -27,12 +27,25 @@ public sealed class PortPoolService : IDisposable
                              && _deltaPortEnd >= _deltaPortStart;
 
     /// <summary>
-    ///     The main UDP listener port. When delta ports are enabled and
-    ///     <see cref="ServerConfig.ReserveLastDeltaPortAsDefault" /> is set, the
-    ///     last port of the range is reserved for the main listener so the
-    ///     well-known default port is never used for the game socket.
+    ///     The port usable as a "default" UDP port right now.
+    ///     - Delta disabled: the configured <see cref="ServerConfig.ListenPort" />.
+    ///     - Delta enabled: only when the pool has exactly one port left, that
+    ///       last port is shared as the default entry for new players; otherwise 0.
     /// </summary>
-    public int DefaultPort { get; }
+    public int DefaultPort
+    {
+        get
+        {
+            if (!IsEnabled)
+            {
+                return _listenPort;
+            }
+
+            return _availablePorts.Count == 1 && _availablePorts.TryPeek(out var port)
+                ? port
+                : 0;
+        }
+    }
 
     /// <summary>
     ///     Invoked when a port is returned to the pool (via disconnect or timeout expiry).
@@ -53,25 +66,10 @@ public sealed class PortPoolService : IDisposable
 
         if (IsEnabled)
         {
-            // Reserve the last port of the delta range as the main listener
-            // (anti garbage-UDP-flood on the well-known default port).
-            if (cfg.ReserveLastDeltaPortAsDefault)
-            {
-                DefaultPort = _deltaPortEnd;
-                _logger.LogInformation(
-                    "PortPool reserved last port {Port} as the main UDP listener (anti-flood).",
-                    DefaultPort);
-            }
-            else
-            {
-                DefaultPort = _listenPort;
-            }
-
             var skipped = 0;
-            var poolEnd = cfg.ReserveLastDeltaPortAsDefault ? _deltaPortEnd - 1 : _deltaPortEnd;
-            for (var port = _deltaPortStart; port <= poolEnd; port++)
+            for (var port = _deltaPortStart; port <= _deltaPortEnd; port++)
             {
-                if (port == _listenPort || port == DefaultPort)
+                if (port == _listenPort)
                 {
                     skipped++;
                     continue;
@@ -89,23 +87,49 @@ public sealed class PortPoolService : IDisposable
 
             _logger.LogInformation(
                 "PortPool initialized with {Count} ports ({Start}-{End})",
-                _availablePorts.Count, _deltaPortStart, poolEnd);
+                _availablePorts.Count, _deltaPortStart, _deltaPortEnd);
         }
         else
         {
-            DefaultPort = _listenPort;
             _logger.LogInformation("PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
                 _deltaPortStart, _deltaPortEnd);
         }
     }
 
     /// <summary>
-    ///     Returns 0 if the pool is empty or disabled.
+    ///     Allocates a delta UDP port for a player.
+    ///     While the pool has at least two free ports, each player gets a unique
+    ///     port. When only one port is left, it is <b>not</b> handed out — it is
+    ///     shared by all new players (IP-based matching), so the server keeps a
+    ///     working default port and never runs out.
     /// </summary>
-    public int AllocatePort(string puid)
+    /// <returns>
+    ///     The port number, or 0 when the pool is empty / disabled.
+    ///     <paramref name="isShared" /> is <c>true</c> when the returned port is
+    ///     the shared default port (matching must fall back to the client IP).
+    /// </returns>
+    public int AllocatePort(string puid, out bool isShared)
     {
+        isShared = false;
+
         if (!IsEnabled)
         {
+            return 0;
+        }
+
+        // Only one port left: keep it in the pool as the shared default entry.
+        if (_availablePorts.Count <= 1)
+        {
+            if (_availablePorts.TryPeek(out var sharedPort))
+            {
+                isShared = true;
+                _logger.LogInformation(
+                    "PortPool sharing last port {Port} for PUID={Puid} (IP-based matching)",
+                    sharedPort, puid);
+                return sharedPort;
+            }
+
+            _logger.LogWarning("PortPool exhausted for PUID={Puid}", puid);
             return 0;
         }
 
@@ -140,13 +164,21 @@ public sealed class PortPoolService : IDisposable
             return;
         }
 
+        // Only exclusively-allocated ports are returned to the pool. Shared
+        // (default) ports stay in the pool and must never be re-added or have
+        // their listener stopped while other players still use them.
+        if (!_activeLeases.TryRemove(port, out _))
+        {
+            _logger.LogDebug("PortPool port {Port} is shared/default, not returned", port);
+            return;
+        }
+
         if (_timeouts.TryRemove(port, out var cts))
         {
             cts.Cancel();
             cts.Dispose();
         }
 
-        _activeLeases.TryRemove(port, out _);
         _availablePorts.Add(port);
 
         _logger.LogInformation("PortPool returned port {Port} to pool", port);

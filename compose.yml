@@ -9,10 +9,10 @@ services:
     ports:
       # HTTP API / admin panel (TCP)
       - "22023:22023/tcp"
-      # Main UDP listener now uses the last port of the delta range
-      # (DeltaPortEnd), so 22023/udp is no longer the game socket.
-      # Expose the whole delta range so players can connect.
-      # Adjust the range to match DeltaPortStart-DeltaPortEnd in config.json.
+      # Delta UDP port pool. With DeltaPortStart/End enabled, the server does
+      # NOT bind a static UDP port at startup — each player gets a unique port
+      # from this range, and when only one port is left it is shared by all
+      # new players (IP-based matching). Adjust to match config.json.
       - "22024-22099:22024-22099/udp"
       # Uncomment to expose admin HTTP panel:
       # - "80:80/tcp"

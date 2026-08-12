@@ -90,6 +90,19 @@ namespace Empostor.Server.Net
         }
 
         /// <summary>
+        ///     Records the main endpoint without creating a fixed UDP listener.
+        ///     Used when the delta port pool is enabled: no static UDP port is
+        ///     bound at startup — ports are only created when players arrive.
+        /// </summary>
+        public void Initialize(IPEndPoint ipEndPoint)
+        {
+            _mainEndPoint = ipEndPoint;
+            _logger.LogInformation(
+                "Matchmaker initialized on {Address} (delta mode, no static UDP port; ports created on demand)",
+                ipEndPoint.Address);
+        }
+
+        /// <summary>
         ///     Starts a UDP listener on a dynamically allocated delta port.
         /// </summary>
         public async ValueTask StartDeltaListenerAsync(int port)
