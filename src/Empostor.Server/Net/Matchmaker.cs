@@ -61,8 +61,12 @@ namespace Empostor.Server.Net
 
             // Subscribe to port return events from the pool
             _portPool.OnPortReturned += OnPortReturned;
-            // Auth cache port expiry also needs cleanup
-            authCache.OnPortExpired += port => _portPool.ReturnPort(port);
+            // NOTE: We deliberately do NOT subscribe to authCache.OnPortExpired.
+            // Expiring an auth-cache entry must never return a port or stop its
+            // UDP listener, otherwise an active player would be kicked when the
+            // auth TTL elapses mid-game. Ports are released only when a player
+            // actually disconnects (ClientManager.Remove -> ReturnPort) or when
+            // the 5-minute allocation timeout fires (no connection arrived).
         }
 
         public async ValueTask StartAsync(IPEndPoint ipEndPoint)

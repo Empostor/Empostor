@@ -228,7 +228,14 @@ public sealed class AuthCacheService : IDisposable
         }
 
         // Clean direct IP entries
-        var expiredIps = _byIpDirect.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
+        // Confirmed (actively connected) ports are skipped here too: their
+        // IP -> port mapping must survive while the player is connected, so
+        // a mid-game reconnect via IP fallback still authenticates.
+        var expiredIps = _byIpDirect
+            .Where(kv => Expired(kv.Value))
+            .Where(kv => !(_ipToPort.TryGetValue(kv.Key, out var p) && _confirmedPorts.ContainsKey(p)))
+            .Select(kv => kv.Key)
+            .ToList();
         foreach (var ip in expiredIps)
         {
             if (_byIpDirect.TryRemove(ip, out var info))
