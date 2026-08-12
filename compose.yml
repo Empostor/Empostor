@@ -13,7 +13,7 @@ services:
       # NOT bind a static UDP port at startup — each player gets a unique port
       # from this range, and when only one port is left it is shared by all
       # new players (IP-based matching). Adjust to match config.json.
-      - "22024-22099:22024-22099/udp"
+      - "22024-42024:22024-42024/udp"
       # Uncomment to expose admin HTTP panel:
       # - "80:80/tcp"
 
