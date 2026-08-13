@@ -50,7 +50,7 @@ public sealed class HplpController : ControllerBase
         var regionUrl = ResolveRegionUrl();
         var regionId = _hplpStore.RegionId;
 
-        var games = _gameManager.Games.Select(game => new
+        var games = _gameManager.Games.Where(g => g.IsPublic).Select(game => new
         {
             code = (string)game.Code,
             host_name = game.DisplayName ?? game.Host?.Client.Name ?? "—",
