@@ -20,9 +20,10 @@ namespace Empostor.Api.Net.Messages.S2C
             player.Client.PlatformSpecificData.Serialize(writer);
             writer.WritePacked(player.Character?.PlayerInfo?.PlayerLevel ?? 1);
 
-            // ProductUserId and FriendCode are not yet known, so set them to an empty string
-            writer.Write(string.Empty);
-            writer.Write(string.Empty);
+            // The client reads these two strings as ProductUserId and FriendCode.
+            // Empostor knows them from the auth cache, so send the real values.
+            writer.Write(player.Client.ProductUserId ?? string.Empty);
+            writer.Write(player.Client.FriendCode ?? string.Empty);
             writer.EndMessage();
         }
 

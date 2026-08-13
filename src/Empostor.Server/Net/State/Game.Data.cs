@@ -397,10 +397,34 @@ namespace Empostor.Server.Net.State
                     if (player != null)
                     {
                         await _eventManager.CallAsync(new PlayerSpawnedEvent(this, player, control));
-                        await Task.Delay(TimeSpan.FromMilliseconds(1500));
 
-                        // From Nmpostor
-                        await _eventManager.CallAsync(new PlayerReadyEvent(this, player, control));
+                        // Fire the ready event without blocking the GameData
+                        // handling loop. A synchronous Task.Delay here would
+                        // stall every subsequent packet from this client for
+                        // 1.5s per spawned PlayerControl; in host-authority
+                        // mode the host re-spawns every player's PlayerControl
+                        // on rejoin, so N players would block the whole
+                        // connection for N * 1.5s, causing reliable packets
+                        // to go un-acked (host kicked) and spawns to collide.
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await Task.Delay(TimeSpan.FromMilliseconds(1500));
+
+                                if (!player.Client.Connection?.IsConnected ?? true)
+                                {
+                                    return;
+                                }
+
+                                // From Nmpostor
+                                await _eventManager.CallAsync(new PlayerReadyEvent(this, player, control));
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogDebug(ex, "PlayerReadyEvent skipped for {Name}", player.Client.Name);
+                            }
+                        });
                     }
 
                     break;
