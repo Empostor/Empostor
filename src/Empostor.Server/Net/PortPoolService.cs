@@ -48,6 +48,14 @@ public sealed class PortPoolService : IDisposable
     }
 
     /// <summary>
+    ///     Gets a value indicating whether the pool has only one port left and
+    ///     is therefore sharing that last port across all new players. In this
+    ///     mode authentication falls back to IP matching, so the server should
+    ///     not hard-require a per-port auth binding.
+    /// </summary>
+    public bool IsSharingLastPort => IsEnabled && _availablePorts.Count <= 1;
+
+    /// <summary>
     ///     Invoked when a port is returned to the pool (via disconnect or timeout expiry).
     ///     Subscribers should stop the delta listener and close firewall rules.
     /// </summary>

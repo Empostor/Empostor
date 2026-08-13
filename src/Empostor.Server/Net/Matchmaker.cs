@@ -197,20 +197,34 @@ namespace Empostor.Server.Net
 
         private async ValueTask OnNewConnection(NewConnectionEventArgs e, int port)
         {
-            // Deserialize handshake without matchmakerToken
-            Empostor.Api.Net.Messages.C2S.HandshakeC2S.Deserialize(
-                e.HandshakeData,
-                out var clientVersion,
-                out var name,
-                out var language,
-                out var chatMode,
-                out var platformSpecificData);
+            HazelConnection? connection = null;
 
-            var connection = new HazelConnection(e.Connection, _connectionLogger, _antiCheatOptions);
-            await _eventManager.CallAsync(new ClientConnectionEvent(connection, e.HandshakeData));
-            await _clientManager.RegisterConnectionAsync(
-                connection, name, clientVersion, language, chatMode, platformSpecificData,
-                deltaPort: port);
+            try
+            {
+                // Deserialize handshake without matchmakerToken
+                Empostor.Api.Net.Messages.C2S.HandshakeC2S.Deserialize(
+                    e.HandshakeData,
+                    out var clientVersion,
+                    out var name,
+                    out var language,
+                    out var chatMode,
+                    out var platformSpecificData);
+
+                connection = new HazelConnection(e.Connection, _connectionLogger, _antiCheatOptions);
+                await _eventManager.CallAsync(new ClientConnectionEvent(connection, e.HandshakeData));
+                await _clientManager.RegisterConnectionAsync(
+                    connection, name, clientVersion, language, chatMode, platformSpecificData,
+                    deltaPort: port);
+            }
+            catch (Exception ex)
+            {
+                // Malformed / unauthenticated UDP handshake. Dispose the
+                // underlying connection so an attacker's socket is closed and
+                // removed from the listener — never leave it half-initialised.
+                _logger.LogDebug(ex, "Rejecting invalid UDP handshake on port {Port}", port);
+                connection?.DisposeInnerConnection();
+                e.Connection.Dispose();
+            }
         }
 
         private void OnPortReturned(int port)

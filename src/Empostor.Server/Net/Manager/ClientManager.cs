@@ -199,7 +199,7 @@ namespace Empostor.Server.Net.Manager
                 }
             }
 
-            // Fallback: match by IP
+            // Fallback: match by IP (used by shared/default delta ports)
             if (authInfo == null && clientIp != null)
             {
                 authInfo = _authCache.FindByIp(clientIp);
@@ -209,6 +209,21 @@ namespace Empostor.Server.Net.Manager
                     _logger.LogInformation(
                         "#{Id} {Name} │ {Ip} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
                         id, name, NormalizeIp(clientIp), locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
+                }
+                else if (deltaPort > 0 && !_portPool.IsSharingLastPort)
+                {
+                    // Dynamic delta mode: an active port that has no auth info
+                    // bound to it (neither by port nor by IP) is an
+                    // unauthenticated UDP connection — reject it instead of
+                    // admitting an anonymous client.
+                    // When the pool is down to its last port (shared mode) we
+                    // skip this check: everyone shares one port and matches by
+                    // IP, so requiring a per-port binding would block players.
+                    _logger.LogWarning(
+                        "#{Id} {Name} │ no auth │ port {Port} │ {Ip} │ rejecting unauthenticated UDP connection",
+                        id, name, deltaPort, NormalizeIp(clientIp));
+                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, "Authentication required. Please rejoin through the game server.");
+                    return;
                 }
                 else
                 {
