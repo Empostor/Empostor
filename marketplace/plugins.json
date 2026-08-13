@@ -161,5 +161,18 @@
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Message.dll"
       }
     ]
+  },
+  {
+    "id": "reactor.empostor.plugin",
+    "name": "Reactor.Empostor",
+    "description": "Reactor support plugin for Empostor",
+    "author": "XtraCube & Reactor",
+    "versions": [
+      {
+        "version": "2.2.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Message.dll"
+      }
+    ]
   }
 ]
