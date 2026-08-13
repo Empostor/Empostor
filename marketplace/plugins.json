@@ -171,7 +171,7 @@
       {
         "version": "2.2.0",
         "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Message.dll"
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Reactor.Empostor.dll"
       }
     ]
   }
