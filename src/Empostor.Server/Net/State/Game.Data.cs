@@ -398,26 +398,24 @@ namespace Empostor.Server.Net.State
                     {
                         await _eventManager.CallAsync(new PlayerSpawnedEvent(this, player, control));
 
-                        // Fire the ready event without blocking the GameData
-                        // handling loop. A synchronous Task.Delay here would
-                        // stall every subsequent packet from this client for
-                        // 1.5s per spawned PlayerControl; in host-authority
-                        // mode the host re-spawns every player's PlayerControl
-                        // on rejoin, so N players would block the whole
-                        // connection for N * 1.5s, causing reliable packets
-                        // to go un-acked (host kicked) and spawns to collide.
+                        // arrives before the PlayerControl spawn, so this fires immediately. The deadline is only a safety net for a  client that never announces its scene.
                         _ = Task.Run(async () =>
                         {
                             try
                             {
-                                await Task.Delay(TimeSpan.FromMilliseconds(1500));
-
-                                if (!player.Client.Connection?.IsConnected ?? true)
+                                var deadline = DateTime.UtcNow.AddSeconds(10);
+                                while (player.Scene != "OnlineGame")
                                 {
-                                    return;
+                                    if (DateTime.UtcNow > deadline
+                                        || !(player.Client.Connection?.IsConnected ?? false)
+                                        || GameState == GameStates.Destroyed)
+                                    {
+                                        return;
+                                    }
+
+                                    await Task.Delay(100);
                                 }
 
-                                // From Nmpostor
                                 await _eventManager.CallAsync(new PlayerReadyEvent(this, player, control));
                             }
                             catch (Exception ex)
