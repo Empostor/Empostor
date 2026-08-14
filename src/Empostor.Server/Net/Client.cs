@@ -269,8 +269,30 @@ namespace Empostor.Server.Net
 
                 case MessageFlags.PackedGameDataTo:
                 {
-                    if (!IsPackedGameDataToAllowed(reader))
+                    if (Player == null)
                     {
+                        return;
+                    }
+
+                    var game = Player.Game;
+
+                    // Innersloth Special: this message uses PackedInt32 instead of a normal int32
+                    var code = reader.ReadPackedInt32();
+
+                    if (code != game.Code.Value)
+                    {
+                        _logger.LogWarning("gcm2 {0} {1}", code, game.Code.Value);
+                        return;
+                    }
+                    
+                    // We're limiting this to hosts right now. If you have a use case for this for
+                    // players to use this feature, we're open to changing this.
+                    if (game.HostId != Id)
+                    {
+                        await ReportCheatAsync(
+                            new CheatContext(MessageFlags.FlagToString(flag)),
+                            CheatCategory.MustBeHost,
+                            "Client sent a PackedGameDataTo message");
                         return;
                     }
 
@@ -284,7 +306,7 @@ namespace Empostor.Server.Net
                             return;
                         }
 
-                        if (packed.ReadInt32() != Player!.Game.Code)
+                        if (packed.ReadInt32() != game.Code.Value)
                         {
                             _logger.LogWarning("Client [{Id}] PackedGameDataTo contained GameDataTo for wrong game", Id);
                             return;
@@ -448,7 +470,8 @@ namespace Empostor.Server.Net
             var game = Player.Game;
 
             // GameCode must match code of the current game assigned to the player.
-            if (message.ReadInt32() != game.Code)
+            var code = message.ReadInt32();
+            if (code != game.Code.Value)
             {
                 return false;
             }
