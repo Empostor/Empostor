@@ -42,6 +42,62 @@ jobs:
           files: build/*
           generate_release_notes: true
 
+  publish-nightly:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: build/
+
+      - name: Prepare latest files and manifest
+        run: |
+          set -euo pipefail
+          cd build
+          VERSION=$(ls Empostor-Server_*_linux-x64.tar.gz | head -1 | sed -E 's/^Empostor-Server_(.*)_linux-x64\.tar\.gz$/\1/')
+          echo "Version: ${VERSION}"
+          cp Empostor-Server_*_linux-x64.tar.gz   Empostor-Server-latest-linux-x64.tar.gz
+          cp Empostor-Server_*_linux-arm64.tar.gz Empostor-Server-latest-linux-arm64.tar.gz
+          cp Empostor-Server_*_win-x64.zip        Empostor-Server-latest-win-x64.zip
+          cp Empostor-Server_*_osx-x64.tar.gz     Empostor-Server-latest-osx-x64.tar.gz
+          {
+            echo '{'
+            echo "  \"version\": \"${VERSION}\","
+            echo "  \"linux-x64\": { \"file\": \"Empostor-Server-latest-linux-x64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-linux-x64.tar.gz | cut -d' ' -f1)\" },"
+            echo "  \"linux-arm64\": { \"file\": \"Empostor-Server-latest-linux-arm64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-linux-arm64.tar.gz | cut -d' ' -f1)\" },"
+            echo "  \"win-x64\": { \"file\": \"Empostor-Server-latest-win-x64.zip\", \"sha256\": \"$(sha256sum Empostor-Server-latest-win-x64.zip | cut -d' ' -f1)\" },"
+            echo "  \"osx-x64\": { \"file\": \"Empostor-Server-latest-osx-x64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-osx-x64.tar.gz | cut -d' ' -f1)\" }"
+            echo '}'
+          } > manifest.json
+          cat manifest.json
+
+      - name: Publish nightly release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd build
+          VERSION=$(ls Empostor-Server_*_linux-x64.tar.gz | head -1 | sed -E 's/^Empostor-Server_(.*)_linux-x64\.tar\.gz$/\1/')
+          gh release delete nightly -y --cleanup-tag || true
+          gh release create nightly \
+            Empostor-Server-latest-linux-x64.tar.gz \
+            Empostor-Server-latest-linux-arm64.tar.gz \
+            Empostor-Server-latest-win-x64.zip \
+            Empostor-Server-latest-osx-x64.tar.gz \
+            manifest.json \
+            --title "Nightly build (${VERSION})" \
+            --prerelease \
+            --notes "Automated nightly build from ${GITHUB_SHA}" \
+            --target "${GITHUB_SHA}"
+
   docker:
     needs: build
     runs-on: ubuntu-latest
