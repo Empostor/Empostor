@@ -397,24 +397,18 @@ namespace Empostor.Server.Net.State
                     {
                         await _eventManager.CallAsync(new PlayerSpawnedEvent(this, player, control));
 
-                        // arrives before the PlayerControl spawn, so this fires immediately. The deadline is only a safety net for a  client that never announces its scene.
                         _ = Task.Run(async () =>
                         {
                             try
                             {
-                                var deadline = DateTime.UtcNow.AddSeconds(10);
-                                while (player.Scene != "OnlineGame")
-                                {
-                                    if (DateTime.UtcNow > deadline
-                                        || !(player.Client.Connection?.IsConnected ?? false)
-                                        || GameState == GameStates.Destroyed)
-                                    {
-                                        return;
-                                    }
+                                await Task.Delay(TimeSpan.FromMilliseconds(1500));
 
-                                    await Task.Delay(100);
+                                if (!(player.Client.Connection?.IsConnected ?? false))
+                                {
+                                    return;
                                 }
 
+                                // From Nmpostor
                                 await _eventManager.CallAsync(new PlayerReadyEvent(this, player, control));
                             }
                             catch (Exception ex)
