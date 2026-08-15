@@ -540,14 +540,14 @@ namespace Empostor.Server.Net.State
 
         private async ValueTask DespawnPlayerInfoAsync(InnerPlayerInfo playerInfo)
         {
-            // Remove unconditionally: in host-authority (+25) mode the PlayerInfo is spawned
-            // by the client (OwnerId != ServerOwned), so checking OwnerId here would leave it
-            // lingering in GameData and other players would still see the player.
-            _logger.LogDebug("Despawning PlayerInfo {nid}", playerInfo.NetId);
-            GameNet.GameData.RemovePlayer(playerInfo.PlayerId);
-            RemoveNetObject(playerInfo);
+            if (playerInfo.OwnerId == ServerOwned)
+            {
+                _logger.LogDebug("Despawning PlayerInfo {nid}", playerInfo.NetId);
+                GameNet.GameData.RemovePlayer(playerInfo.PlayerId);
+                RemoveNetObject(playerInfo);
 
-            await SendObjectDespawnAsync(playerInfo);
+                await SendObjectDespawnAsync(playerInfo);
+            }
         }
 
         private bool AddNetObject(InnerNetObject obj)

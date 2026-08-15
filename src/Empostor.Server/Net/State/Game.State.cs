@@ -118,6 +118,15 @@ namespace Empostor.Server.Net.State
         {
             foreach (var (_, player) in _players.Where(x => x.Value.Limbo == LimboStates.WaitingForHost))
             {
+                // Pull players out of limbo and start their spawn timeout so a failed
+                // spawn is not silently stuck. Clear any stale Character too, so the
+                // spawn timeout can actually fire (a leftover Character != null would
+                // skip the timeout and leave the player stuck).
+                // (The PR's HandleJoinGameNext approach would re-set WaitingForHost
+                // and leave the player stuck on the wait-for-host screen, so we keep
+                // the direct pull-out instead.)
+                player.Character = null;
+                player.InitializeSpawnTimeout();
                 using var message = MessageWriter.Get(MessageType.Reliable);
                 WriteJoinedGameMessage(message, true, player);
                 WriteAlterGameMessage(message, false, IsPublic);

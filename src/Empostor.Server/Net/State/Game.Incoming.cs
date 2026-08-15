@@ -141,6 +141,9 @@ namespace Empostor.Server.Net.State
                 await PlayerAdd(sender);
             }
 
+            // +25 hosts may not despawn the previous PlayerControl when returning
+            // to the lobby, so clear the stale Character to let spawn timeout fire.
+            sender.Character = null;
             sender.InitializeSpawnTimeout();
             using (var message = MessageWriter.Get(MessageType.Reliable))
             {
