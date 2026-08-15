@@ -73,7 +73,7 @@ namespace Empostor.Server.Net.State
         {
             try
             {
-                if (Character == null && Game.GameState != GameStates.NotStarted)
+                if (Character == null)
                 {
                     _logger.LogInformation("{Code} - Player {Id} spawn timed out, kicking.", Game.Code, Client.Id);
                     await KickAsync();
