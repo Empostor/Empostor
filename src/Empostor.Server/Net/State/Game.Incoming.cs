@@ -188,13 +188,6 @@ namespace Empostor.Server.Net.State
             var isNew = false;
             if (player == null || player.Game != this)
             {
-                // Clean up any stale GameData from a previous connection of this client
-                if (GameNet.GameData.PlayersByClientId.TryGetValue(client.Id, out var staleInfo))
-                {
-                    _logger.LogDebug("Cleaning up stale PlayerInfo for rejoining client {Id}", client.Id);
-                    await DespawnPlayerInfoAsync(staleInfo);
-                }
-
                 var clientPlayer = new ClientPlayer(_serviceProvider.GetRequiredService<ILogger<ClientPlayer>>(), client, this, _timeoutConfig.SpawnTimeout);
                 if (!_clientManager.Validate(client))
                 {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,16 +61,14 @@ namespace Empostor.Server.Net.State
 
         private static readonly Dictionary<Type, uint> SpawnableObjectIds = SpawnableObjects.ToDictionary((i) => i.Value, (i) => i.Key);
 
-        private readonly List<InnerNetObject> _allObjects = new List<InnerNetObject>();
-
-        private readonly Dictionary<uint, InnerNetObject> _allObjectsFast = new Dictionary<uint, InnerNetObject>();
+        private readonly ConcurrentDictionary<uint, InnerNetObject> _allObjects = new ConcurrentDictionary<uint, InnerNetObject>();
 
         private uint _nextNetId = MinServerNetId;
 
         public T? FindObjectByNetId<T>(uint netId)
             where T : IInnerNetObject
         {
-            if (_allObjectsFast.TryGetValue(netId, out var obj))
+            if (_allObjects.TryGetValue(netId, out var obj))
             {
                 return (T)(IInnerNetObject)obj;
             }
@@ -104,7 +103,7 @@ namespace Empostor.Server.Net.State
                     case GameDataTag.DataFlag:
                     {
                         var netId = reader.ReadPackedUInt32();
-                        if (_allObjectsFast.TryGetValue(netId, out var obj))
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
                             await obj.DeserializeAsync(sender, target, reader, false);
                         }
@@ -119,7 +118,7 @@ namespace Empostor.Server.Net.State
                     case GameDataTag.RpcFlag:
                     {
                         var netId = reader.ReadPackedUInt32();
-                        if (_allObjectsFast.TryGetValue(netId, out var obj))
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
                             if (!await obj.HandleRpcAsync(sender, target, (RpcCalls)reader.ReadByte(), reader))
                             {
@@ -214,7 +213,7 @@ namespace Empostor.Server.Net.State
                     case GameDataTag.DespawnFlag:
                     {
                         var netId = reader.ReadPackedUInt32();
-                        if (_allObjectsFast.TryGetValue(netId, out var obj))
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
                             if (sender.Client.Id != obj.OwnerId && !sender.IsHost)
                             {
@@ -494,7 +493,7 @@ namespace Empostor.Server.Net.State
 
         private async ValueTask SyncServerObjectsAsync(ClientPlayer sender)
         {
-            foreach (var obj in _allObjectsFast.Values)
+            foreach (var obj in _allObjects.Values)
             {
                 if (obj.OwnerId == ServerOwned)
                 {
@@ -547,37 +546,24 @@ namespace Empostor.Server.Net.State
 
         private async ValueTask DespawnPlayerInfoAsync(InnerPlayerInfo playerInfo)
         {
-            if (playerInfo.OwnerId == ServerOwned)
-            {
-                _logger.LogDebug("Despawning PlayerInfo {nid}", playerInfo.NetId);
-                GameNet.GameData.RemovePlayer(playerInfo.PlayerId);
-                RemoveNetObject(playerInfo);
+            // Remove unconditionally: in host-authority (+25) mode the PlayerInfo is spawned
+            // by the client (OwnerId != ServerOwned), so checking OwnerId here would leave it
+            // lingering in GameData and other players would still see the player.
+            _logger.LogDebug("Despawning PlayerInfo {nid}", playerInfo.NetId);
+            GameNet.GameData.RemovePlayer(playerInfo.PlayerId);
+            RemoveNetObject(playerInfo);
 
-                await SendObjectDespawnAsync(playerInfo);
-            }
+            await SendObjectDespawnAsync(playerInfo);
         }
 
         private bool AddNetObject(InnerNetObject obj)
         {
-            if (_allObjectsFast.ContainsKey(obj.NetId))
-            {
-                return false;
-            }
-
-            _allObjects.Add(obj);
-            _allObjectsFast.Add(obj.NetId, obj);
-            return true;
+            return _allObjects.TryAdd(obj.NetId, obj);
         }
 
         private void RemoveNetObject(InnerNetObject obj)
         {
-            var index = _allObjects.IndexOf(obj);
-            if (index > -1)
-            {
-                _allObjects.RemoveAt(index);
-            }
-
-            _allObjectsFast.Remove(obj.NetId);
+            _allObjects.TryRemove(obj.NetId, out _);
         }
     }
 }
