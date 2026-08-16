@@ -71,6 +71,54 @@ public sealed class PlayerLogStore : JsonDataStore<List<PlayerLogEntry>>
     public List<int> GetLoggedClientIds() =>
         _entries.Where(e => e.ClientId.HasValue).Select(e => e.ClientId!.Value).Distinct().ToList();
 
+    /// <summary>
+    ///     Returns the most recent non-empty player name recorded for a client.
+    ///     Used by the admin panel so disconnected players still show their
+    ///     original name instead of a generic "Disconnected" label.
+    /// </summary>
+    public string? GetLatestName(int clientId) =>
+        _entries.Where(e => e.ClientId == clientId)
+            .OrderByDescending(e => e.Time)
+            .Select(e => e.PlayerName)
+            .FirstOrDefault(n => !string.IsNullOrEmpty(n));
+
+    /// <summary>
+    ///     Returns the most recent non-empty friend code recorded for a client.
+    /// </summary>
+    public string? GetLatestFriendCode(int clientId) =>
+        _entries.Where(e => e.ClientId == clientId)
+            .OrderByDescending(e => e.Time)
+            .Select(e => e.FriendCode)
+            .FirstOrDefault(f => !string.IsNullOrEmpty(f));
+
+    /// <summary>
+    ///     Removes logged entries and persists the store.
+    ///     When <paramref name="olderThan" /> is set, only entries strictly older
+    ///     than the cutoff are removed (recent entries are kept); otherwise all
+    ///     entries are removed.
+    /// </summary>
+    public void Clear(DateTime? olderThan = null)
+    {
+        if (olderThan.HasValue)
+        {
+            var kept = _entries.Where(e => e.Time >= olderThan.Value).ToList();
+            _entries.Clear();
+            _count = 0;
+            foreach (var entry in kept)
+            {
+                _entries.Enqueue(entry);
+                Interlocked.Increment(ref _count);
+            }
+        }
+        else
+        {
+            _entries.Clear();
+            _count = 0;
+        }
+
+        SaveFireAndForget();
+    }
+
     public byte[] ExportJson()
     {
         var json = JsonSerializer.Serialize(_entries.ToList(), JsonOpts);

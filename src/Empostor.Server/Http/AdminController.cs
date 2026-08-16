@@ -513,9 +513,58 @@ namespace Empostor.Server.Http
             return Ok(_playerLogs.GetLoggedClientIds().Select(id => new
             {
                 clientId = id,
-                name = FindClient(id)?.Name ?? "Disconnected",
-                friendCode = FindClient(id)?.FriendCode ?? "—",
+                name = FindClient(id)?.Name ?? _playerLogs.GetLatestName(id) ?? "Disconnected",
+                friendCode = FindClient(id)?.FriendCode ?? _playerLogs.GetLatestFriendCode(id) ?? "—",
             }));
+        }
+
+        [HttpPost("/api/admin/player/logs/clear")]
+        public IActionResult ClearPlayerLogs([FromQuery] string? olderThan)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            DateTime? cutoff = null;
+            if (!string.IsNullOrEmpty(olderThan)
+                && !olderThan.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                cutoff = ParseLogCutoff(olderThan);
+                if (cutoff == null)
+                {
+                    return BadRequest(new { error = "Invalid time range." });
+                }
+            }
+
+            _playerLogs.Clear(cutoff);
+            _logger.LogInformation("Admin cleared player logs (olderThan: {OlderThan})", olderThan ?? "all");
+            return Ok(new { cleared = true });
+        }
+
+        private static DateTime? ParseLogCutoff(string value)
+        {
+            var now = DateTime.UtcNow;
+            switch (value.Trim().ToLowerInvariant())
+            {
+                case "1h":
+                    return now.AddHours(-1);
+                case "24h":
+                    return now.AddDays(-1);
+                case "7d":
+                    return now.AddDays(-7);
+                case "30d":
+                    return now.AddDays(-30);
+                default:
+                    return DateTime.TryParse(
+                        value,
+                        null,
+                        System.Globalization.DateTimeStyles.AssumeUniversal
+                        | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                        out var dt)
+                        ? dt.ToUniversalTime()
+                        : (DateTime?)null;
+            }
         }
 
         [HttpGet("/api/admin/player/logs")]

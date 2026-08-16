@@ -962,6 +962,14 @@ internal static class AdminTemplateDefaults
                     </select>
                     <button class="bp bsm" onclick="fPlayerLogs()"><span data-i18n="player_logs.refresh">Refresh</span></button>
                     <button class="bsm" style="background:rgba(188,140,255,.12);color:var(--p);border:1px solid rgba(188,140,255,.25)" onclick="exportLogs()"><span data-i18n="player_logs.export">Export JSON</span></button>
+                    <select id="pl-clear-range" style="width:auto;min-width:160px">
+                        <option value="all" data-i18n="player_logs.clear_all">All logs</option>
+                        <option value="1h" data-i18n="player_logs.clear_1h">Older than 1 hour</option>
+                        <option value="24h" data-i18n="player_logs.clear_24h">Older than 24 hours</option>
+                        <option value="7d" data-i18n="player_logs.clear_7d">Older than 7 days</option>
+                        <option value="30d" data-i18n="player_logs.clear_30d">Older than 30 days</option>
+                    </select>
+                    <button class="bd bsm" onclick="clearLogs()"><span data-i18n="player_logs.clear">Clear Logs</span></button>
                 </div>
                 <table>
                     <thead>
@@ -1329,6 +1337,24 @@ internal static class AdminTemplateDefaults
             const sel = document.getElementById('pl-client');
             const url = sel.value ? `/api/admin/player/logs/export?clientId=${sel.value}` : '/api/admin/player/logs/export';
             window.open(url, '_blank');
+        }
+
+        async function clearLogs() {
+            const range = document.getElementById('pl-clear-range').value;
+            const msgKey = range === 'all'
+                ? _('player_logs.confirm_clear_all', 'Clear all player logs? This cannot be undone.')
+                : _('player_logs.confirm_clear_range', 'Clear logs older than the selected period? This cannot be undone.');
+            if (!confirm(msgKey)) return;
+            const { ok, data } = await api('POST', `/api/admin/player/logs/clear?olderThan=${encodeURIComponent(range)}`);
+            msg('bi-msg', ok, ok ? _('player_logs.cleared', 'Player logs cleared.') : (data.error ?? 'Error'));
+            if (!ok) return;
+            // Reset the client dropdown cache and table so the cleared state is
+            // reflected immediately (no stale player list / logs remain).
+            const sel = document.getElementById('pl-client');
+            sel.removeAttribute('data-loaded');
+            sel.value = '';
+            document.getElementById('pl-type').value = '';
+            fPlayerLogs();
         }
 
         async function fStats() {
