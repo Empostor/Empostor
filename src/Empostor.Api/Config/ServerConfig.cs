@@ -25,6 +25,13 @@ namespace Empostor.Api.Config
 
         public ushort DeltaPortEnd { get; set; } = 0;
 
+        /// <summary>
+        ///     When the dynamic port pool has this many (or fewer) free ports left,
+        ///     new players are rejected instead of being allocated a port. The
+        ///     remaining ports are kept as a buffer to avoid port-reuse races.
+        /// </summary>
+        public ushort DeltaPortLowWaterMark { get; set; } = 5;
+
         public string ResolvePublicIp()
         {
             return _resolvedPublicIp ??= IpUtils.ResolveIp(PublicIp);

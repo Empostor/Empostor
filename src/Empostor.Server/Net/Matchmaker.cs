@@ -156,19 +156,31 @@ namespace Empostor.Server.Net
 
         public async ValueTask StopDeltaListenerAsync(int port)
         {
-            if (_deltaListeners.TryRemove(port, out var listener))
+            try
             {
-                try
+                if (_deltaListeners.TryRemove(port, out var listener))
                 {
-                    await listener.DisposeAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Matchmaker error disposing delta listener on port {Port}", port);
-                }
+                    try
+                    {
+                        await listener.DisposeAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Matchmaker error disposing delta listener on port {Port}", port);
+                    }
 
-                await _firewall.ClosePortAsync((ushort)port);
-                _logger.LogInformation("Matchmaker delta UDP listener stopped on port {Port}", port);
+                    await _firewall.ClosePortAsync((ushort)port);
+                    _logger.LogInformation("Matchmaker delta UDP listener stopped on port {Port}", port);
+                }
+            }
+            finally
+            {
+                // The port's socket is now fully released (whether a listener
+                // was disposed here or never existed because bind failed
+                // earlier). Only now may the port go back into the allocatable
+                // pool, which prevents a new player from racing the old
+                // socket's bind.
+                _portPool.CompletePortReturn(port);
             }
         }
 

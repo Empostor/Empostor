@@ -19,45 +19,19 @@ public sealed class PortPoolService : IDisposable
     private readonly ConcurrentBag<int> _availablePorts = new();
     private readonly ConcurrentDictionary<int, PortLease> _activeLeases = new();
     private readonly ConcurrentDictionary<int, CancellationTokenSource> _timeouts = new();
+    private readonly ConcurrentDictionary<int, byte> _draining = new();
     private readonly int _deltaPortStart;
     private readonly int _deltaPortEnd;
     private readonly int _listenPort;
+    private readonly int _deltaLowWaterMark;
 
     public bool IsEnabled => _deltaPortStart > 0
                              && _deltaPortEnd >= _deltaPortStart;
 
     /// <summary>
-    ///     The port usable as a "default" UDP port right now.
-    ///     - Delta disabled: the configured <see cref="ServerConfig.ListenPort" />.
-    ///     - Delta enabled: only when the pool has exactly one port left, that
-    ///       last port is shared as the default entry for new players; otherwise 0.
-    /// </summary>
-    public int DefaultPort
-    {
-        get
-        {
-            if (!IsEnabled)
-            {
-                return _listenPort;
-            }
-
-            return _availablePorts.Count == 1 && _availablePorts.TryPeek(out var port)
-                ? port
-                : 0;
-        }
-    }
-
-    /// <summary>
-    ///     Gets a value indicating whether the pool has only one port left and
-    ///     is therefore sharing that last port across all new players. In this
-    ///     mode authentication falls back to IP matching, so the server should
-    ///     not hard-require a per-port auth binding.
-    /// </summary>
-    public bool IsSharingLastPort => IsEnabled && _availablePorts.Count <= 1;
-
-    /// <summary>
     ///     Invoked when a port is returned to the pool (via disconnect or timeout expiry).
-    ///     Subscribers should stop the delta listener and close firewall rules.
+    ///     Subscribers should stop the delta listener and close firewall rules,
+    ///     then call <see cref="CompletePortReturn" /> once the socket is fully disposed.
     /// </summary>
     public event Action<int>? OnPortReturned;
 
@@ -71,6 +45,7 @@ public sealed class PortPoolService : IDisposable
         _deltaPortStart = cfg.DeltaPortStart;
         _deltaPortEnd = cfg.DeltaPortEnd;
         _listenPort = cfg.ListenPort;
+        _deltaLowWaterMark = cfg.DeltaPortLowWaterMark;
 
         if (IsEnabled)
         {
@@ -106,38 +81,29 @@ public sealed class PortPoolService : IDisposable
 
     /// <summary>
     ///     Allocates a delta UDP port for a player.
-    ///     While the pool has at least two free ports, each player gets a unique
-    ///     port. When only one port is left, it is <b>not</b> handed out — it is
-    ///     shared by all new players (IP-based matching), so the server keeps a
-    ///     working default port and never runs out.
+    ///     Each player gets a unique port (used as a nonce to match the TCP auth
+    ///     session to the subsequent UDP connection). When the pool is at or
+    ///     below the low-water mark, 0 is returned and the caller should reject
+    ///     the player — the remaining ports are kept as a buffer.
     /// </summary>
     /// <returns>
-    ///     The port number, or 0 when the pool is empty / disabled.
-    ///     <paramref name="isShared" /> is <c>true</c> when the returned port is
-    ///     the shared default port (matching must fall back to the client IP).
+    ///     The port number, or 0 when the pool is empty / disabled / at low water.
     /// </returns>
-    public int AllocatePort(string puid, out bool isShared)
+    public int AllocatePort(string puid)
     {
-        isShared = false;
-
         if (!IsEnabled)
         {
             return 0;
         }
 
-        // Only one port left: keep it in the pool as the shared default entry.
-        if (_availablePorts.Count <= 1)
+        // Low-water mark: keep the remaining ports as a buffer. Rejecting new
+        // players here avoids the port-reuse race of handing out a port whose
+        // previous socket is still draining.
+        if (_availablePorts.Count <= _deltaLowWaterMark)
         {
-            if (_availablePorts.TryPeek(out var sharedPort))
-            {
-                isShared = true;
-                _logger.LogInformation(
-                    "PortPool sharing last port {Port} for PUID={Puid} (IP-based matching)",
-                    sharedPort, puid);
-                return sharedPort;
-            }
-
-            _logger.LogWarning("PortPool exhausted for PUID={Puid}", puid);
+            _logger.LogWarning(
+                "PortPool at low water mark ({Available} <= {LowWaterMark}), rejecting PUID={Puid}",
+                _availablePorts.Count, _deltaLowWaterMark, puid);
             return 0;
         }
 
@@ -172,12 +138,11 @@ public sealed class PortPoolService : IDisposable
             return;
         }
 
-        // Only exclusively-allocated ports are returned to the pool. Shared
-        // (default) ports stay in the pool and must never be re-added or have
-        // their listener stopped while other players still use them.
+        // Only exclusively-allocated ports are returned. Shared/default ports
+        // never existed anymore, so any port without an active lease is ignored.
         if (!_activeLeases.TryRemove(port, out _))
         {
-            _logger.LogDebug("PortPool port {Port} is shared/default, not returned", port);
+            _logger.LogDebug("PortPool port {Port} has no active lease, not returned", port);
             return;
         }
 
@@ -187,11 +152,33 @@ public sealed class PortPoolService : IDisposable
             cts.Dispose();
         }
 
-        _availablePorts.Add(port);
+        // Mark the port as "draining": it is not put back into the available
+        // pool yet. The old UDP socket still holds the port until the listener
+        // is disposed; only CompletePortReturn makes it reusable, otherwise the
+        // next player would race the old socket and fail to bind.
+        _draining[port] = 0;
 
-        _logger.LogInformation("PortPool returned port {Port} to pool", port);
+        _logger.LogInformation("PortPool port {Port} returned (draining)", port);
 
         OnPortReturned?.Invoke(port);
+    }
+
+    /// <summary>
+    ///     Called by the matchmaker after the delta UDP listener on the port has
+    ///     been fully disposed. Only now does the port become available again.
+    /// </summary>
+    public void CompletePortReturn(int port)
+    {
+        if (port <= 0)
+        {
+            return;
+        }
+
+        if (_draining.TryRemove(port, out _))
+        {
+            _availablePorts.Add(port);
+            _logger.LogInformation("PortPool port {Port} fully returned and reusable", port);
+        }
     }
 
     /// <summary>

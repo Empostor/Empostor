@@ -78,7 +78,7 @@ internal static class StartupBanner
         Row(sw, width, maxLabel, "HTTP API", $"http://{http.ListenIp}:{http.ListenPort}");
         Row(sw, width, maxLabel, "Admin Panel", $"http://{server.PublicIp}:{http.ListenPort}/admin");
         var poolInfo = deltaEnabled
-            ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports, last port shared when low)"
+            ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports, rejects below low-water mark {server.DeltaPortLowWaterMark})"
             : C("disabled", Yellow);
         Row(sw, width, maxLabel, "Port Pool", poolInfo);
 

@@ -88,9 +88,9 @@ public sealed class TokenController : ControllerBase
                 verifyCode: _nikoVerifyCode, friendCodeConfirmed: _nikoFriendCodeConfirmed);
 
             // Allocate a delta UDP port to match the TCP auth session to the
-            // subsequent UDP connection. When the pool only has one port left,
-            // it is shared by all new players (IP-based matching).
-            var deltaPort = _portPool.AllocatePort(productUserId, out var isSharedPort);
+            // subsequent UDP connection. In fixed-port mode (pool disabled) no
+            // port is allocated and no PUID/FriendCode matching is performed.
+            var deltaPort = _portPool.AllocatePort(productUserId);
 
             var authInfo = new UserAuthInfo
             {
@@ -109,43 +109,36 @@ public sealed class TokenController : ControllerBase
 
             if (deltaPort > 0)
             {
-                // The shared default port is matched by client IP because many
-                // players enter through the same port; unique ports are matched
-                // by port (nonce).
-                if (isSharedPort)
-                {
-                    if (clientIp != null)
-                    {
-                        _authCache.StoreByIp(NormalizeIpString(clientIp), authInfo);
-                    }
-
-                    _logger.LogInformation(
-                        "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added (shared default port).",
-                        playerName, productUserId, friendCode, clientIp, deltaPort);
-                }
-                else
-                {
-                    _authCache.StoreByPort(deltaPort, authInfo);
-
-                    _logger.LogInformation(
-                        "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
-                        playerName, productUserId, friendCode, clientIp, deltaPort);
-                }
-
-                // Start (or reuse) the delta listener for this port.
-                _ = _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
-            }
-            else
-            {
-                // Pool exhausted or feature disabled — fall back to IP-based matching
-                if (clientIp != null)
-                {
-                    _authCache.StoreByIp(NormalizeIpString(clientIp), authInfo);
-                }
+                // Unique per-player port (nonce): the subsequent UDP connection
+                // is matched by this port.
+                _authCache.StoreByPort(deltaPort, authInfo);
 
                 _logger.LogInformation(
                     "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
-                    playerName, productUserId, friendCode, clientIp, 0);
+                    playerName, productUserId, friendCode, clientIp, deltaPort);
+
+                // Await the listener bind so the socket is really listening
+                // before the port is handed back to the client.
+                await _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
+            }
+            else if (_portPool.IsEnabled)
+            {
+                // Dynamic delta mode but the pool is at/below the low-water
+                // mark: reject the player instead of falling back to IP matching.
+                _logger.LogWarning(
+                    "TokenUser {Name} {Puid} rejected: dynamic port pool exhausted.",
+                    playerName, productUserId);
+
+                return StatusCode(503, new { error = "Server is full, please try again later." });
+            }
+            else
+            {
+                // Fixed-port mode (DeltaPortStart=0, DeltaPortEnd=0): no dynamic
+                // ports, and PUID/FriendCode matching is intentionally skipped.
+                // The client connects over the fixed UDP port.
+                _logger.LogInformation(
+                    "TokenUser {Name} {Puid} {FriendCode} {Ip} added (fixed port, no matching).",
+                    playerName, productUserId, friendCode, clientIp);
             }
 
             var response = new TokenResponse

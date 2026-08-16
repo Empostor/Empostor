@@ -42,8 +42,8 @@ namespace Empostor.Server.Net
             if (_portPool.IsEnabled)
             {
                 // Dynamic delta mode: no static UDP port is bound at startup.
-                // Ports are allocated per player on demand, and the last free
-                // port is shared as the default entry once the pool runs low.
+                // Ports are allocated per player on demand; once the pool drops
+                // to the low-water mark, new players are rejected.
                 _matchmaker.Initialize(endpoint);
                 _logger.LogInformation(
                     "Delta Matchmaker enabled: no static UDP port at startup (pool {Start}-{End}), ports created per player.",

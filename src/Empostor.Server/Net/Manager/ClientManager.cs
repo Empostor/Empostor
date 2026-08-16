@@ -152,85 +152,65 @@ namespace Empostor.Server.Net.Manager
                 ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            // Primary: match by delta port (nonce)
+            // Match the auth session to this UDP connection. In dynamic delta
+            // mode (deltaPort > 0) the connection must match by its unique
+            // port (nonce); there is no IP fallback anymore. In fixed-port
+            // mode (deltaPort == 0) matching is skipped entirely: no PUID and
+            // no FriendCode are bound to the client.
             if (deltaPort > 0)
             {
                 authInfo = _authCache.FindByPort(deltaPort);
-                if (authInfo != null)
-                {
-                    // Port matched — cancel the allocation timeout
-                    _portPool.ConfirmPort(deltaPort);
-                    // Mark the auth-cache entry as active so the inactivity
-                    // timer never clears the port while the player is connected.
-                    _authCache.ConfirmPort(deltaPort);
-
-                    friendCode = authInfo.FriendCode;
-
-                    if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
-                    {
-                        var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
-                        if (nikoResult != null)
-                        {
-                            if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
-                                && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
-                            {
-                                friendCode = nikoResult.Value.FriendCode;
-                                authInfo.FriendCode = friendCode;
-                                authInfo.FriendCodeConfirmed = true;
-                            }
-                            else
-                            {
-                                _logger.LogWarning(
-                                    "Niko PUID mismatch for {Name}: expected {Expected} got {Got}",
-                                    name, authInfo.ProductUserId, nikoResult.Value.Puid);
-                            }
-                        }
-                    }
-
-                    _logger.LogInformation(
-                        "#{Id} {Name} │ port {Port} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
-                        id, name, deltaPort, locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
-                }
-                else
-                {
-                    _logger.LogWarning(
-                        "#{Id} {Name} │ port {Port} has no auth info, falling back to IP",
-                        id, name, deltaPort);
-                }
-            }
-
-            // Fallback: match by IP (used by shared/default delta ports)
-            if (authInfo == null && clientIp != null)
-            {
-                authInfo = _authCache.FindByIp(clientIp);
-                if (authInfo != null)
-                {
-                    friendCode = authInfo.FriendCode;
-                    _logger.LogInformation(
-                        "#{Id} {Name} │ {Ip} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
-                        id, name, NormalizeIp(clientIp), locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
-                }
-                else if (deltaPort > 0 && !_portPool.IsSharingLastPort)
+                if (authInfo == null)
                 {
                     // Dynamic delta mode: an active port that has no auth info
-                    // bound to it (neither by port nor by IP) is an
-                    // unauthenticated UDP connection — reject it instead of
-                    // admitting an anonymous client.
-                    // When the pool is down to its last port (shared mode) we
-                    // skip this check: everyone shares one port and matches by
-                    // IP, so requiring a per-port binding would block players.
+                    // bound to it is an unauthenticated UDP connection — reject
+                    // it instead of admitting an anonymous client.
                     _logger.LogWarning(
-                        "#{Id} {Name} │ no auth │ port {Port} │ {Ip} │ rejecting unauthenticated UDP connection",
+                        "#{Id} {Name} │ port {Port} has no auth info │ {Ip} │ rejecting unauthenticated UDP connection",
                         id, name, deltaPort, NormalizeIp(clientIp));
                     await connection.CustomDisconnectAsync(DisconnectReason.Custom, "Authentication required. Please rejoin through the game server.");
                     return;
                 }
-                else
+
+                // Port matched — cancel the allocation timeout
+                _portPool.ConfirmPort(deltaPort);
+                // Mark the auth-cache entry as active so the inactivity
+                // timer never clears the port while the player is connected.
+                _authCache.ConfirmPort(deltaPort);
+
+                friendCode = authInfo.FriendCode;
+
+                if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
                 {
-                    _logger.LogWarning(
-                        "#{Id} {Name} │ no auth │ port {Port} │ {Ip} │ {Location} │ {Lang} │ {Platform}{Reactor}",
-                        id, name, deltaPort, NormalizeIp(clientIp), locationStr, lang, platformStr, reactorStr);
+                    var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
+                    if (nikoResult != null)
+                    {
+                        if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
+                            && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            friendCode = nikoResult.Value.FriendCode;
+                            authInfo.FriendCode = friendCode;
+                            authInfo.FriendCodeConfirmed = true;
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Niko PUID mismatch for {Name}: expected {Expected} got {Got}",
+                                name, authInfo.ProductUserId, nikoResult.Value.Puid);
+                        }
+                    }
                 }
+
+                _logger.LogInformation(
+                    "#{Id} {Name} │ port {Port} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
+                    id, name, deltaPort, locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
+            }
+            else
+            {
+                // Fixed-port mode: no auth binding, no PUID/FriendCode.
+                _logger.LogInformation(
+                    "#{Id} {Name} │ fixed port │ {Location} │ {Lang} │ {Platform}{Reactor}",
+                    id, name, locationStr, lang, platformStr, reactorStr);
             }
 
             var client = _clientFactory.Create(connection, name, clientVersion, language, chatMode, platformSpecificData);

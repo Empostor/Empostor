@@ -12,10 +12,7 @@ public sealed class AuthCacheService : IDisposable
     private readonly ILogger<AuthCacheService> _logger;
 
     private readonly ConcurrentDictionary<string, UserAuthInfo> _byToken = new();
-    private readonly ConcurrentDictionary<string, string> _byIp = new();
     private readonly ConcurrentDictionary<int, UserAuthInfo> _byPort = new();
-    private readonly ConcurrentDictionary<string, UserAuthInfo> _byIpDirect = new();
-    private readonly ConcurrentDictionary<string, int> _ipToPort = new();
 
     /// <summary>
     ///     Ports that have an active connection. While a player is connected,
@@ -59,16 +56,6 @@ public sealed class AuthCacheService : IDisposable
 
         _byToken[matchmakerToken] = info;
 
-        if (clientIp != null)
-        {
-            var key = NormalizeIp(clientIp);
-            _byIp[key] = matchmakerToken;
-            if (clientIp.IsIPv4MappedToIPv6)
-            {
-                _byIp[clientIp.MapToIPv4().ToString()] = matchmakerToken;
-            }
-        }
-
         _logger.LogDebug("AuthCache stored PUID={Puid} FC={FC}", productUserId, friendCode ?? "(none)");
     }
 
@@ -83,40 +70,11 @@ public sealed class AuthCacheService : IDisposable
     }
 
     /// <summary>
-    ///     Stores auth info keyed by delta port. Also maps the IP for fallback lookups.
+    ///     Stores auth info keyed by delta port.
     /// </summary>
     public void StoreByPort(int port, UserAuthInfo info)
     {
         _byPort[port] = info;
-
-        if (info.ClientIp != null)
-        {
-            _byIpDirect[info.ClientIp] = info;
-            _ipToPort[info.ClientIp] = port;
-        }
-    }
-
-    /// <summary>
-    ///     Looks up the delta port assigned to a client IP.
-    ///     Returns 0 if no port is assigned (IP fallback or expired).
-    /// </summary>
-    public int FindPortByIp(IPAddress? clientIp)
-    {
-        if (clientIp == null)
-        {
-            return 0;
-        }
-
-        var key = NormalizeIp(clientIp);
-        return _ipToPort.TryGetValue(key, out var port) ? port : 0;
-    }
-
-    /// <summary>
-    ///     Stores auth info keyed by IP only (used when port pool is exhausted or feature disabled).
-    /// </summary>
-    public void StoreByIp(string ip, UserAuthInfo info)
-    {
-        _byIpDirect[ip] = info;
     }
 
     public UserAuthInfo? FindByPort(int port)
@@ -148,35 +106,11 @@ public sealed class AuthCacheService : IDisposable
     public void RemoveByPort(int port)
     {
         _confirmedPorts.TryRemove(port, out _);
-
-        if (_byPort.TryRemove(port, out var info) && info.ClientIp != null)
-        {
-            _byIpDirect.TryRemove(info.ClientIp, out _);
-            _ipToPort.TryRemove(info.ClientIp, out _);
-        }
+        _byPort.TryRemove(port, out _);
     }
 
-    public UserAuthInfo? FindByIp(IPAddress? clientIp)
-    {
-        if (clientIp == null)
-        {
-            return null;
-        }
-
-        var key = NormalizeIp(clientIp);
-
-        // Try direct IP storage first (new path: port-based or IP-only)
-        if (_byIpDirect.TryGetValue(key, out var info) && !Expired(info))
-        {
-            return info;
-        }
-
-        // Fall back to legacy token-based lookup
-        return _byIp.TryGetValue(key, out var token) ? FindByToken(token) : null;
-    }
-
-    public (int TokenCount, int IpMappingCount) GetStats()
-        => (_byToken.Count, _byIp.Count);
+    public (int TokenCount, int PortCount) GetStats()
+        => (_byToken.Count, _byPort.Count);
 
     public bool UpdateFriendCode(string matchmakerToken, string friendCode)
     {
@@ -196,10 +130,7 @@ public sealed class AuthCacheService : IDisposable
         var expired = _byToken.Where(kv => Expired(kv.Value)).Select(kv => kv.Key).ToList();
         foreach (var token in expired)
         {
-            if (_byToken.TryRemove(token, out var info) && info.ClientIp != null)
-            {
-                _byIp.TryRemove(info.ClientIp, out _);
-            }
+            _byToken.TryRemove(token, out _);
         }
 
         // Clean port-based entries
@@ -213,12 +144,6 @@ public sealed class AuthCacheService : IDisposable
         {
             if (_byPort.TryRemove(port, out var info))
             {
-                if (info.ClientIp != null)
-                {
-                    _byIpDirect.TryRemove(info.ClientIp, out _);
-                    _ipToPort.TryRemove(info.ClientIp, out _);
-                }
-
                 _logger.LogInformation(
                     "TokenUser {Name} {FriendCode} removed for inactivity timer. Port: {Port}",
                     info.Name, info.FriendCode, port);
@@ -227,29 +152,7 @@ public sealed class AuthCacheService : IDisposable
             }
         }
 
-        // Clean direct IP entries
-        // Confirmed (actively connected) ports are skipped here too: their
-        // IP -> port mapping must survive while the player is connected, so
-        // a mid-game reconnect via IP fallback still authenticates.
-        var expiredIps = _byIpDirect
-            .Where(kv => Expired(kv.Value))
-            .Where(kv => !(_ipToPort.TryGetValue(kv.Key, out var p) && _confirmedPorts.ContainsKey(p)))
-            .Select(kv => kv.Key)
-            .ToList();
-        foreach (var ip in expiredIps)
-        {
-            if (_byIpDirect.TryRemove(ip, out var info))
-            {
-                var port = _ipToPort.TryGetValue(ip, out var p) ? p : 0;
-                _ipToPort.TryRemove(ip, out _);
-
-                _logger.LogInformation(
-                    "TokenUser {Name} {FriendCode} removed for inactivity timer. Port: {Port}",
-                    info.Name, info.FriendCode, port);
-            }
-        }
-
-        var totalExpired = expired.Count + expiredPorts.Count + expiredIps.Count;
+        var totalExpired = expired.Count + expiredPorts.Count;
         if (totalExpired > 0)
         {
             _logger.LogDebug("AuthCache cleaned {Count} expired entries",

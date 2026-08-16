@@ -9,8 +9,6 @@ using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Server.Extensions;
-using Empostor.Server.Net;
-using Empostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -23,21 +21,15 @@ public sealed class GamesController : ControllerBase
     private readonly IGameManager _gameManager;
     private readonly ListingManager _listingManager;
     private readonly ServerConfig _serverConfig;
-    private readonly AuthCacheService _authCache;
-    private readonly PortPoolService _portPool;
 
     public GamesController(
         IGameManager gameManager,
         ListingManager listingManager,
-        IOptions<ServerConfig> serverConfig,
-        AuthCacheService authCache,
-        PortPoolService portPool)
+        IOptions<ServerConfig> serverConfig)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
         _serverConfig = serverConfig.Value;
-        _authCache = authCache;
-        _portPool = portPool;
     }
 
     /// <summary>
@@ -181,48 +173,36 @@ public sealed class GamesController : ControllerBase
         });
     }
 
+    /// <summary>
+    ///     Resolves the UDP port the requesting client should connect to.
+    ///     In dynamic delta mode every client is handed a unique UDP port in its
+    ///     auth response (POST /api/user) and echoes that token back as the
+    ///     Authorization bearer header on subsequent requests, so the port is
+    ///     read from the token. Falls back to the configured public port.
+    /// </summary>
     private ushort GetDeltaPort()
     {
-        var clientIp = GetClientIp();
-        if (clientIp == null)
+        var auth = HttpContext.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(auth) && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            return (ushort)(_portPool.DefaultPort > 0 ? _portPool.DefaultPort : _serverConfig.PublicPort);
-        }
-
-        var deltaPort = _authCache.FindPortByIp(clientIp);
-        if (deltaPort > 0)
-        {
-            return (ushort)deltaPort;
-        }
-
-        // Fall back to the main listener port (reserved default port when the
-        // delta pool is enabled, otherwise the configured public port).
-        return (ushort)(_portPool.DefaultPort > 0 ? _portPool.DefaultPort : _serverConfig.PublicPort);
-    }
-
-    private IPAddress? GetClientIp()
-    {
-        var xRealIp = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(xRealIp) && IPAddress.TryParse(xRealIp, out var realIp))
-        {
-            return Normalize(realIp);
-        }
-
-        var xForwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(xForwardedFor))
-        {
-            var first = xForwardedFor.Split(',')[0].Trim();
-            if (IPAddress.TryParse(first, out var fwdIp))
+            try
             {
-                return Normalize(fwdIp);
+                using var doc = JsonDocument.Parse(Convert.FromBase64String(auth["Bearer ".Length..]));
+                if (doc.RootElement.TryGetProperty("Port", out var portElement)
+                    && portElement.TryGetInt32(out var port)
+                    && port > 0)
+                {
+                    return (ushort)port;
+                }
+            }
+            catch
+            {
+                // Malformed or non-base64 token — fall through to the public port.
             }
         }
 
-        return Normalize(HttpContext.Connection.RemoteIpAddress);
+        return _serverConfig.PublicPort;
     }
-
-    private static IPAddress? Normalize(IPAddress? ip)
-        => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4() : ip;
 
     private static uint ConvertAddressToNumber(IPAddress address)
     {
