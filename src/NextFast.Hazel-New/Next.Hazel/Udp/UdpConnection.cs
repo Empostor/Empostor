@@ -33,17 +33,10 @@ public abstract partial class UdpConnection : NetworkConnection
         _readerPool = readerPool;
         _stoppingCts = new CancellationTokenSource();
 
-        // Bound the inbound queue so a slow/overloaded connection cannot let
-        // packets accumulate without limit. Once full, the oldest queued packet
-        // is dropped (DropOldest) — reliable packets are retransmitted by the
-        // sender anyway and unreliable ones carry fresh state each tick, so this
-        // keeps memory flat under sustained load instead of letting it balloon
-        // until the GC pressure starts disconnecting everyone.
-        Pipeline = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(1024)
+        Pipeline = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions
         {
             SingleReader = true,
-            SingleWriter = true,
-            FullMode = BoundedChannelFullMode.DropOldest,
+            SingleWriter = true
         });
     }
 
@@ -53,13 +46,8 @@ public abstract partial class UdpConnection : NetworkConnection
 
     public Task StartAsync()
     {
-        // Run the read loop on the thread pool instead of a dedicated
-        // long-running thread per connection. ReadAsync is fully async (it
-        // awaits the pipeline channel), so it only occupies a thread-pool
-        // thread while there is actually data to process. With hundreds of
-        // connections this avoids hundreds of dedicated threads (1 MB stack
-        // each) and the resulting context-switch overhead.
-        _executingTask = Task.Run(ReadAsync);
+        // Store the task we're executing
+        _executingTask = Task.Factory.StartNew(ReadAsync, TaskCreationOptions.LongRunning);
 
         // If the task is completed then return it, this will bubble cancellation and failure to the caller
         if (_executingTask.IsCompleted) return _executingTask;

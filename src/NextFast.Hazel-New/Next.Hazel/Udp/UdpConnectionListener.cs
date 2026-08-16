@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -66,20 +65,6 @@ public class UdpConnectionListener : NetworkConnectionListener
         {
         }
 
-        try
-        {
-            // Under high load (many players / high tick rate) the OS-level UDP
-            // receive queue can overflow and silently drop packets; reliable
-            // retransmission / keepalive then misreads that as a dead connection
-            // and disconnects players. Use a large buffer so bursts are absorbed
-            // instead of dropped.
-            _socket.Client.ReceiveBufferSize = 4 * 1024 * 1024;
-            _socket.Client.SendBufferSize = 4 * 1024 * 1024;
-        }
-        catch (SocketException)
-        {
-        }
-
         _reliablePacketTimer = new Timer(ManageReliablePackets, null, 100, Timeout.Infinite);
 
         _allConnections = new ConcurrentDictionary<EndPoint, UdpServerConnection>();
@@ -94,25 +79,10 @@ public class UdpConnectionListener : NetworkConnectionListener
 
     private async void ManageReliablePackets(object? state)
     {
-        // Resend reliably-sent packets for every connection. Run them
-        // concurrently instead of serially awaiting each connection: with many
-        // players one slow connection used to stall retransmission for everyone
-        // else, which made packet loss snowball into mass disconnects.
-        var connections = new List<UdpServerConnection>(_allConnections.Values);
-        var tasks = new Task[connections.Count];
-        for (var i = 0; i < connections.Count; i++)
+        foreach (var kvp in _allConnections)
         {
-            var conn = connections[i];
-            tasks[i] = conn.ManageReliablePackets().AsTask();
-        }
-
-        try
-        {
-            await Task.WhenAll(tasks);
-        }
-        catch
-        {
-            // ignored
+            var sock = kvp.Value;
+            await sock.ManageReliablePackets();
         }
 
         try
