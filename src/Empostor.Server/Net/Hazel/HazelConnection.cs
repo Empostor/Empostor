@@ -4,6 +4,7 @@ using Empostor.Api;
 using Empostor.Api.Config;
 using Empostor.Api.Net;
 using Next.Hazel;
+using Next.Hazel.Udp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -21,6 +22,16 @@ namespace Empostor.Server.Net.Hazel
             InnerConnection = innerConnection;
             innerConnection.DataReceived = ConnectionOnDataReceived;
             innerConnection.Disconnected = ConnectionOnDisconnected;
+
+            if (innerConnection is UdpConnection udp)
+            {
+                // Tolerate UDP packet loss under load (e.g. 40+ players). A few
+                // dropped reliable packets or keepalive pings are retransmitted
+                // for longer before the connection is declared dead, so a burst
+                // of loss no longer disconnects players.
+                udp.DisconnectTimeout = 10000;
+                udp.MissingPingsUntilDisconnect = 12;
+            }
         }
 
         public Connection InnerConnection { get; }
