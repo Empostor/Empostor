@@ -119,7 +119,16 @@ public sealed class TokenController : ControllerBase
 
                 // Await the listener bind so the socket is really listening
                 // before the port is handed back to the client.
-                await _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
+                var listenerStarted = await _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
+                if (!listenerStarted)
+                {
+                    _authCache.RemoveByPort(deltaPort);
+                    _logger.LogWarning(
+                        "TokenUser {Name} {Puid} rejected: failed to bind delta port {Port}.",
+                        playerName, productUserId, deltaPort);
+
+                    return StatusCode(503, new { error = "Server is full, please try again later." });
+                }
             }
             else if (_portPool.IsEnabled)
             {

@@ -12,7 +12,7 @@ public interface IDeltaListenerManager
     /// <summary>
     ///     Starts a UDP listener on a specific port.
     /// </summary>
-    ValueTask StartDeltaListenerAsync(int port);
+    ValueTask<bool> StartDeltaListenerAsync(int port);
 
     /// <summary>
     ///     Stops and disposes the UDP listener on a specific port.
