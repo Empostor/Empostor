@@ -4,7 +4,7 @@ namespace Empostor.Api.Config
     {
         public const string Section = "Timeout";
 
-        public int SpawnTimeout { get; set; } = 2500;
+        public int SpawnTimeout { get; set; } = 5000;
 
         public int ConnectionTimeout { get; set; } = 2500;
     }

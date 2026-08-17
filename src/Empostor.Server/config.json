@@ -30,7 +30,7 @@
     "PacketSizeLimit": 1203
   },
   "Timeout": {
-    "SpawnTimeout": 2500,
+    "SpawnTimeout": 5000,
     "ConnectionTimeout": 2500
   },
   "Compatibility": {

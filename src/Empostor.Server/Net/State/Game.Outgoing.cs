@@ -118,7 +118,7 @@ namespace Empostor.Server.Net.State
             writer.WritePacked(components.Count);
             foreach (var component in components)
             {
-                writer.WritePacked(obj.NetId);
+                writer.WritePacked(component.NetId);
                 writer.StartMessage(1);
                 await component.SerializeAsync(writer, true);
                 writer.EndMessage();

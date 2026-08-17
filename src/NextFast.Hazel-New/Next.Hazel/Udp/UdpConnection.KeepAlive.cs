@@ -9,7 +9,7 @@ namespace Next.Hazel.Udp;
 partial class UdpConnection
 {
     internal ConcurrentDictionary<ushort, PingPacket> activePingPackets = new();
-    private int keepAliveInterval = 1500;
+    private int keepAliveInterval = 1000;
 
     /// <summary>
     ///     The timer creating keepalive pulses.
