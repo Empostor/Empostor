@@ -32,5 +32,10 @@
   "command.players.not_in_lobby": "Ní féidir an t-ordú seo a úsáid ach sa stocaireacht.",
   "command.players.header": "=== Imreoirí ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Do phing: {0}ms"
+  "command.ping.result": "Do phing: {0}ms",
+  "ban.notice.header": "Tá cosc ort ar an bhfreastalaí seo.",
+  "ban.notice.reason": "Cúis: {0}",
+  "ban.notice.unban": "Am dí-chosc: {0}",
+  "ban.notice.unban_permanent": "Am dí-chosc: Buan",
+  "ban.notice.contact": "Má tá ceist agat, déan teagmháil le riarthóir."
 }

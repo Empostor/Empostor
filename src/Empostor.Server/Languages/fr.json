@@ -34,5 +34,10 @@
   "command.players.not_in_lobby": "Cette commande ne peut être utilisée que dans le lobby.",
   "command.players.header": "=== Joueurs ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Votre ping : {0}ms"
+  "command.ping.result": "Votre ping : {0}ms",
+  "ban.notice.header": "Vous êtes banni de ce serveur.",
+  "ban.notice.reason": "Raison : {0}",
+  "ban.notice.unban": "Débannissement : {0}",
+  "ban.notice.unban_permanent": "Débannissement : Permanent",
+  "ban.notice.contact": "En cas de question, contactez un administrateur."
 }

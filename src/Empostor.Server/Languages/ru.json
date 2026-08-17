@@ -34,5 +34,10 @@
   "command.players.not_in_lobby": "Эта команда может использоваться только в лобби.",
   "command.players.header": "=== Игроки ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}мс",
-  "command.ping.result": "Ваш пинг: {0}мс"
+  "command.ping.result": "Ваш пинг: {0}мс",
+  "ban.notice.header": "Вы забанены на этом сервере.",
+  "ban.notice.reason": "Причина: {0}",
+  "ban.notice.unban": "Время разбана: {0}",
+  "ban.notice.unban_permanent": "Время разбана: навсегда",
+  "ban.notice.contact": "Если у вас есть вопросы, обратитесь к администратору."
 }

@@ -32,5 +32,10 @@
   "command.players.not_in_lobby": "Ang command na ito ay maaari lamang gamitin sa lobby.",
   "command.players.header": "=== Mga Manlalaro ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Ang iyong ping: {0}ms"
+  "command.ping.result": "Ang iyong ping: {0}ms",
+  "ban.notice.header": "Banned ka sa server na ito.",
+  "ban.notice.reason": "Dahilan: {0}",
+  "ban.notice.unban": "Oras ng pag-unban: {0}",
+  "ban.notice.unban_permanent": "Oras ng pag-unban: Permanente",
+  "ban.notice.contact": "Kung may tanong, makipag-ugnayan sa administrator."
 }

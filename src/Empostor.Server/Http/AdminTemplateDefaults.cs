@@ -998,6 +998,7 @@ internal static class AdminTemplateDefaults
                         <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L5.62 21a2 2 0 01-2.83-2.83l7.91-7.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><span data-i18n="ban.title_ip">Ban IP</span></h3>
                         <div class="field"><label data-i18n="table.ip">IP</label><input id="bi-v" data-i18n-placeholder="ban.ip_placeholder" placeholder="1.2.3.4"></div>
                         <div class="field"><label data-i18n="table.reason">Reason</label><input id="bi-r" data-i18n-placeholder="ban.reason_placeholder" placeholder="Optional..."></div>
+                        <div class="field"><label data-i18n="ban.duration">Duration</label><div class="row"><input id="bi-dv" type="number" min="1" value="1" style="flex:0 0 64px"><select id="bi-du" style="flex:1"><option value="h" data-i18n="ban.unit_hours">Hours (1-24)</option><option value="d" data-i18n="ban.unit_days">Days (1-30)</option><option value="mo" data-i18n="ban.unit_months">Months (1-12)</option><option value="y" data-i18n="ban.unit_years">Years (1-10)</option><option value="permanent" selected data-i18n="ban.unit_permanent">Permanent</option></select></div></div>
                         <button class="bd" onclick="doBanIp()"><span data-i18n="ban.button_ip">Ban IP</span></button>
                         <div id="bi-msg" class="msg"></div>
                     </div>
@@ -1005,6 +1006,7 @@ internal static class AdminTemplateDefaults
                         <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L5.62 21a2 2 0 01-2.83-2.83l7.91-7.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><span data-i18n="ban.title_fc">Ban Friend Code</span></h3>
                         <div class="field"><label data-i18n="table.friend_code">Friend Code</label><input id="bf-v" data-i18n-placeholder="ban.fc_placeholder" placeholder="Name#1234"></div>
                         <div class="field"><label data-i18n="table.reason">Reason</label><input id="bf-r" data-i18n-placeholder="ban.reason_placeholder" placeholder="Optional..."></div>
+                        <div class="field"><label data-i18n="ban.duration">Duration</label><div class="row"><input id="bf-dv" type="number" min="1" value="1" style="flex:0 0 64px"><select id="bf-du" style="flex:1"><option value="h" data-i18n="ban.unit_hours">Hours (1-24)</option><option value="d" data-i18n="ban.unit_days">Days (1-30)</option><option value="mo" data-i18n="ban.unit_months">Months (1-12)</option><option value="y" data-i18n="ban.unit_years">Years (1-10)</option><option value="permanent" selected data-i18n="ban.unit_permanent">Permanent</option></select></div></div>
                         <button class="bd" onclick="doBanFc()"><span data-i18n="ban.button_fc">Ban FC</span></button>
                         <div id="bf-msg" class="msg"></div>
                     </div>
@@ -1280,7 +1282,8 @@ internal static class AdminTemplateDefaults
             document.getElementById('bl-fc').innerHTML = d.friendCodes.length ? d.friendCodes.map(b => bi(b, 'fc')).join('') : '<div class="empty">' + _('ban.none', 'None') + '</div>';
         }
         function bi(b, t) {
-            return `<div class="bi"><div><div class="bv">${e(b.value)}</div><div class="br2">${e(b.reason)}</div></div><div class="bt">${new Date(b.bannedAt).toLocaleString()}</div><button class="bsm" style="background:rgba(248,81,73,.15);color:var(--r);border:1px solid rgba(248,81,73,.3)" onclick="doUnban('${t}','${e(b.value)}')">${_('ban.unban', 'Unban')}</button></div>`;
+            const until = b.bannedUntil ? new Date(b.bannedUntil).toLocaleString() : _('ban.permanent', 'Permanent');
+            return `<div class="bi"><div><div class="bv">${e(b.value)}</div><div class="br2">${e(b.reason)}</div></div><div class="bt">${new Date(b.bannedAt).toLocaleString()}<br><span style="opacity:.7">${_('ban.until', 'Until')}: ${until}</span></div><button class="bsm" style="background:rgba(248,81,73,.15);color:var(--r);border:1px solid rgba(248,81,73,.3)" onclick="doUnban('${t}','${e(b.value)}')">${_('ban.unban', 'Unban')}</button></div>`;
         }
 
         async function fGamesEnd() {
@@ -1503,17 +1506,29 @@ internal static class AdminTemplateDefaults
             fKickList();
         }
 
+        function banDuration(vId, uId) {
+            const u = document.getElementById(uId).value;
+            if (u === 'permanent') return 'permanent';
+            let v = parseInt(document.getElementById(vId).value, 10);
+            if (isNaN(v) || v < 1) v = 1;
+            const max = { h: 24, d: 30, mo: 12, y: 10 }[u] || 24;
+            if (v > max) v = max;
+            return v + u;
+        }
+
         async function doBanIp() {
             const v = document.getElementById('bi-v').value.trim(), r = document.getElementById('bi-r').value.trim();
             if (!v) return msg('bi-msg', false, _('alert.ip_required', 'IP required'));
-            const { ok, data } = await api('POST', '/api/admin/ban/ip', { ip: v, reason: r });
+            const duration = banDuration('bi-dv', 'bi-du');
+            const { ok, data } = await api('POST', '/api/admin/ban/ip', { ip: v, reason: r, duration });
             msg('bi-msg', ok, ok ? _('alert.banned', 'Banned {0} ({1} disconnected)').replace('{0}', data.banned).replace('{1}', data.disconnected) : (data.error ?? 'Error'));
         }
 
         async function doBanFc() {
             const v = document.getElementById('bf-v').value.trim(), r = document.getElementById('bf-r').value.trim();
             if (!v) return msg('bf-msg', false, _('alert.fc_required', 'FC required'));
-            const { ok, data } = await api('POST', '/api/admin/ban/fc', { friendCode: v, reason: r });
+            const duration = banDuration('bf-dv', 'bf-du');
+            const { ok, data } = await api('POST', '/api/admin/ban/fc', { friendCode: v, reason: r, duration });
             msg('bf-msg', ok, ok ? _('alert.banned', 'Banned {0} ({1} disconnected)').replace('{0}', data.banned).replace('{1}', data.disconnected) : (data.error ?? 'Error'));
         }
 

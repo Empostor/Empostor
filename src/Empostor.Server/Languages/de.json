@@ -34,5 +34,10 @@
   "command.players.not_in_lobby": "Dieser Befehl kann nur in der Lobby verwendet werden.",
   "command.players.header": "=== Spieler ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Dein Ping: {0}ms"
+  "command.ping.result": "Dein Ping: {0}ms",
+  "ban.notice.header": "Du wurdest von diesem Server gebannt.",
+  "ban.notice.reason": "Grund: {0}",
+  "ban.notice.unban": "Entbannungszeit: {0}",
+  "ban.notice.unban_permanent": "Entbannungszeit: Dauerhaft",
+  "ban.notice.contact": "Bei Fragen wende dich an den Administrator."
 }

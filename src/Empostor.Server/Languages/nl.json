@@ -32,5 +32,10 @@
   "command.players.not_in_lobby": "Dit commando kan alleen in de lobby worden gebruikt.",
   "command.players.header": "=== Spelers ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Jouw ping: {0}ms"
+  "command.ping.result": "Jouw ping: {0}ms",
+  "ban.notice.header": "Je bent geband van deze server.",
+  "ban.notice.reason": "Reden: {0}",
+  "ban.notice.unban": "Ontbantijd: {0}",
+  "ban.notice.unban_permanent": "Ontbantijd: Permanent",
+  "ban.notice.contact": "Neem bij vragen contact op met de beheerder."
 }

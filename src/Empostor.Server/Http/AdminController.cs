@@ -487,7 +487,7 @@ namespace Empostor.Server.Http
                 return BadRequest(Err("Invalid IP"));
             }
 
-            var entry = _bans.BanIp(ip, req.Reason ?? "Banned by admin");
+            var entry = _bans.BanIp(ip, req.Reason ?? "Banned by admin", BanStore.ParseDuration(req.Duration));
             var kicked = 0;
             foreach (var c in _clientManager.Clients.ToList())
             {
@@ -521,7 +521,7 @@ namespace Empostor.Server.Http
                 return BadRequest(Err("FriendCode required"));
             }
 
-            var entry = _bans.BanFriendCode(req.FriendCode, req.Reason ?? "Banned by admin");
+            var entry = _bans.BanFriendCode(req.FriendCode, req.Reason ?? "Banned by admin", BanStore.ParseDuration(req.Duration));
             var kicked = 0;
             foreach (var c in _clientManager.Clients.ToList())
             {
@@ -901,9 +901,9 @@ namespace Empostor.Server.Http
 
         public sealed record ClientIdReq(int ClientId, string? Reason = null);
 
-        public sealed record BanIpReq(string Ip, string? Reason);
+        public sealed record BanIpReq(string Ip, string? Reason, string? Duration = null);
 
-        public sealed record BanFcReq(string FriendCode, string? Reason);
+        public sealed record BanFcReq(string FriendCode, string? Reason, string? Duration = null);
 
         public sealed record UnbanReq(string Value);
 
