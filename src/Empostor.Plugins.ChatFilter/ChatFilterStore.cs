@@ -1,28 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
-using Empostor.Api.Config;
+using Empostor.Api.Plugins;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
-namespace Empostor.Server.Service.Admin.Chat;
+namespace Empostor.Plugins.ChatFilter;
 
 public sealed class ChatFilterStore : JsonDataStore<ChatFilterConfig>
 {
-    private readonly object _wordsLock = new();
+    private const string ConfigFile = "[Empostor.Plugins.ChatFilter]Config.json";
 
+    private readonly object _wordsLock = new();
     private List<string> _blockedWords = new();
 
-    public ChatFilterStore(ILogger<ChatFilterStore> logger, IOptions<ChatFilterConfig> config)
+    public ChatFilterStore(ILogger<ChatFilterStore> logger)
         : base(logger, legacyPath: null)
     {
         Load();
 
-        // If no persisted file was loaded, fall back to config.json defaults
         if (_blockedWords.Count == 0 && !Enabled)
         {
-            var cfg = config.Value;
+            var cfg = PluginConfigLoader.Load<ChatFilterConfig>(ConfigPath());
             Enabled = cfg.Enabled;
             BlockMessage = cfg.BlockMessage;
             SpamThreshold = cfg.SpamThreshold;
@@ -121,4 +121,6 @@ public sealed class ChatFilterStore : JsonDataStore<ChatFilterConfig>
             _blockedWords = new List<string>(data.BlockedWords ?? new List<string>());
         }
     }
+
+    private static string ConfigPath() => Path.Combine(Directory.GetCurrentDirectory(), ConfigFile);
 }

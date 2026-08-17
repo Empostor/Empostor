@@ -5,9 +5,9 @@ using Empostor.Api.Events;
 using Empostor.Api.Events.Player;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Admin.Chat;
+namespace Empostor.Plugins.ChatFilter;
 
-internal sealed class ChatFilterListener : IEventListener
+public sealed class ChatFilterListener : IEventListener
 {
     private readonly ILogger<ChatFilterListener> _logger;
     private readonly ChatFilterStore _store;
@@ -30,7 +30,6 @@ internal sealed class ChatFilterListener : IEventListener
         var playerKey = e.ClientPlayer.Client.FriendCode ?? e.ClientPlayer.Client.Name;
         var message = e.Message;
 
-        // Word filter
         var words = _store.BlockedWords;
         if (words.Count > 0)
         {
@@ -63,7 +62,6 @@ internal sealed class ChatFilterListener : IEventListener
             }
         }
 
-        // Spam rate limit
         var threshold = _store.SpamThreshold;
         if (threshold > 0)
         {

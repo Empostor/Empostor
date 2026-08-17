@@ -1,28 +1,24 @@
 using System.Linq;
-using Empostor.Api.Config;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Player;
 using Empostor.Api.Games;
 using Empostor.Api.Net.Inner.Objects;
-using Microsoft.Extensions.Options;
 
-namespace Empostor.Server.Service.Stat;
+namespace Empostor.Plugins.PlayerStats;
 
-internal sealed class PlayerStatsListener : IEventListener
+public sealed class PlayerStatsListener : IEventListener
 {
-    private readonly PlayerStatsConfig _config;
     private readonly PlayerStatsStore _store;
 
-    public PlayerStatsListener(IOptions<PlayerStatsConfig> config, PlayerStatsStore store)
+    public PlayerStatsListener(PlayerStatsStore store)
     {
-        _config = config.Value;
         _store = store;
     }
 
     [EventListener]
     public void OnPlayerMurder(IPlayerMurderEvent e)
     {
-        if (!_config.Enabled)
+        if (!_store.Enabled)
         {
             return;
         }
@@ -44,7 +40,7 @@ internal sealed class PlayerStatsListener : IEventListener
     [EventListener]
     public void OnPlayerCompletedTask(IPlayerCompletedTaskEvent e)
     {
-        if (!_config.Enabled)
+        if (!_store.Enabled)
         {
             return;
         }
@@ -60,7 +56,7 @@ internal sealed class PlayerStatsListener : IEventListener
     [EventListener]
     public void OnPlayerExile(IPlayerExileEvent e)
     {
-        if (!_config.Enabled)
+        if (!_store.Enabled)
         {
             return;
         }
@@ -76,7 +72,7 @@ internal sealed class PlayerStatsListener : IEventListener
     [EventListener]
     public void OnGameEnded(IGameEndedEvent e)
     {
-        if (!_config.Enabled)
+        if (!_store.Enabled)
         {
             return;
         }

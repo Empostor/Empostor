@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Empostor.Api.Commands;
 
@@ -7,19 +6,11 @@ namespace Empostor.Plugins.PlayerChannel;
 
 public sealed class PlayerChannelCommand : ICommand
 {
-    private readonly Dictionary<string, ChannelEntry> _fcToChannel;
+    private readonly PlayerChannelConfig _config;
 
     public PlayerChannelCommand(PlayerChannelConfig config)
     {
-        _fcToChannel = new Dictionary<string, ChannelEntry>(StringComparer.OrdinalIgnoreCase);
-        foreach (var channel in config.Channels)
-        {
-            foreach (var fc in channel.FriendCodes)
-            {
-                if (!string.IsNullOrWhiteSpace(fc))
-                    _fcToChannel[fc] = channel;
-            }
-        }
+        _config = config;
     }
 
     public string Name => "channel";
@@ -43,7 +34,7 @@ public sealed class PlayerChannelCommand : ICommand
             return true;
         }
 
-        if (!_fcToChannel.TryGetValue(senderFc, out var channel))
+        if (!TryGetChannel(senderFc, out var channel))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
                 T(ctx, "playerchannel.not_in_channel", "[Refuse Channel] Not in any channel"),
@@ -64,6 +55,27 @@ public sealed class PlayerChannelCommand : ICommand
         }
 
         return true;
+    }
+
+    private bool TryGetChannel(string friendCode, out ChannelEntry channel)
+    {
+        channel = null!;
+        if (string.IsNullOrWhiteSpace(friendCode))
+            return false;
+
+        foreach (var c in _config.Channels)
+        {
+            foreach (var fc in c.FriendCodes)
+            {
+                if (!string.IsNullOrWhiteSpace(fc) && string.Equals(fc, friendCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    channel = c;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static string T(CommandContext ctx, string key, string defaultText)

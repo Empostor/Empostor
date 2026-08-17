@@ -9,11 +9,11 @@ public sealed class QqVerifyStore : IVerifyStore
     private readonly object _lock = new();
     private readonly Dictionary<string, PendingEntry> _pending = new();
     private static readonly TimeSpan Expiry = TimeSpan.FromMinutes(10);
-    private readonly string _botSecret;
+    private readonly QqVerifyConfig _config;
 
     public QqVerifyStore(QqVerifyConfig config)
     {
-        _botSecret = config.BotSecret;
+        _config = config;
     }
 
     public void AddPending(string friendCode, string qqNumber)
@@ -28,7 +28,7 @@ public sealed class QqVerifyStore : IVerifyStore
 
     public bool ValidateSecret(string secret)
     {
-        return !string.IsNullOrWhiteSpace(secret) && secret == _botSecret;
+        return !string.IsNullOrWhiteSpace(secret) && secret == _config.BotSecret;
     }
 
     public bool TryConfirm(string friendCode, string qqNumber)

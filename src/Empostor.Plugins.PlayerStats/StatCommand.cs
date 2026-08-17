@@ -1,20 +1,15 @@
 using System.Threading.Tasks;
 using Empostor.Api.Commands;
-using Empostor.Api.Config;
-using Empostor.Server.Service.Stat;
-using Microsoft.Extensions.Options;
 
-namespace Empostor.Server.Commands.Commands;
+namespace Empostor.Plugins.PlayerStats;
 
 public sealed class StatCommand : ICommand
 {
     private readonly PlayerStatsStore _store;
-    private readonly PlayerStatsConfig _config;
 
-    public StatCommand(PlayerStatsStore store, IOptions<PlayerStatsConfig> config)
+    public StatCommand(PlayerStatsStore store)
     {
         _store = store;
-        _config = config.Value;
     }
 
     public string Name => "stat";
@@ -27,7 +22,7 @@ public sealed class StatCommand : ICommand
 
     public async ValueTask<bool> ExecuteAsync(CommandContext ctx)
     {
-        if (!_config.Enabled)
+        if (!_store.Enabled)
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
                 ctx.GetString("command.stat.disabled"), ctx.PlayerControl);

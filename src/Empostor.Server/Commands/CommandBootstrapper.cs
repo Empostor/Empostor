@@ -12,20 +12,17 @@ internal sealed class CommandBootstrapper : IHostedService
 {
     private readonly ILogger<CommandBootstrapper> _logger;
     private readonly CommandService _commands;
-    private readonly StatCommand _statCommand;
     private readonly BanCommand _banCommand;
     private readonly IEnumerable<ICommand> _pluginCommands;
 
     public CommandBootstrapper(
         ILogger<CommandBootstrapper> logger,
         CommandService commands,
-        StatCommand statCommand,
         BanCommand banCommand,
         IEnumerable<ICommand> pluginCommands)
     {
         _logger = logger;
         _commands = commands;
-        _statCommand = statCommand;
         _banCommand = banCommand;
         _pluginCommands = pluginCommands;
     }
@@ -41,7 +38,6 @@ internal sealed class CommandBootstrapper : IHostedService
         _commands.Register(new EndCommand());
         _commands.Register(new KickCommand());
         _commands.Register(_banCommand);
-        _commands.Register(_statCommand);
         _commands.RegisterAll(_pluginCommands);
         _logger.LogInformation(
             "[Commands] Registered {Count} command(s): {Names}",

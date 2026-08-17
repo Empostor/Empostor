@@ -160,6 +160,23 @@ internal static class AdminTemplateDefaults
     <title>Empostor Admin</title>
     <style>
         :root {
+            --bg: #ffffff;
+            --s: #f6f8fa;
+            --b: #d0d7de;
+            --t: #1f2328;
+            --m: #57606a;
+            --a: #0969da;
+            --g: #1a7f37;
+            --y: #9a6700;
+            --r: #cf222e;
+            --p: #8250df;
+            --o: #bc4c00;
+            --field: #ffffff;
+            --hover: rgba(31, 35, 40, .05);
+            --on-a: #ffffff
+        }
+
+        [data-theme="dark"] {
             --bg: #0d1117;
             --s: #161b22;
             --b: #30363d;
@@ -170,7 +187,10 @@ internal static class AdminTemplateDefaults
             --y: #d29922;
             --r: #f85149;
             --p: #bc8cff;
-            --o: #ffa657
+            --o: #ffa657;
+            --field: #0d1117;
+            --hover: rgba(255, 255, 255, .04);
+            --on-a: #ffffff
         }
 
         * {
@@ -185,7 +205,22 @@ internal static class AdminTemplateDefaults
             font: 14px/1.5 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             display: flex;
-            flex-direction: column
+            flex-direction: column;
+            transition: background-color .18s ease, color .18s ease
+        }
+
+        header,
+        nav,
+        .sc,
+        .form,
+        input,
+        select,
+        textarea,
+        button,
+        table,
+        td,
+        th {
+            transition: background-color .18s ease, border-color .18s ease, color .18s ease
         }
 
         header {
@@ -238,6 +273,133 @@ internal static class AdminTemplateDefaults
             text-decoration: none
         }
 
+        .theme-sel {
+            width: auto;
+            min-width: 120px;
+            background: var(--field);
+            border: 1px solid var(--b);
+            border-radius: 6px;
+            color: var(--t);
+            padding: 5px 8px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer
+        }
+
+        .theme-toggle {
+            padding: 5px 9px;
+            background: var(--s);
+            color: var(--t);
+            border: 1px solid var(--b);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+            transition: transform .25s ease
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(18deg) scale(1.08)
+        }
+
+        .aw-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .aw-text {
+            font-size: 13px;
+            margin-bottom: 8px
+        }
+
+        .aw-text.mono {
+            font-family: monospace
+        }
+
+        .aw-desc {
+            font-size: 12px;
+            color: var(--m);
+            margin-bottom: 10px
+        }
+
+        .aw-children {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .aw-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 8px
+        }
+
+        .aw-toggle input {
+            width: auto
+        }
+
+        .aw-chips .chips-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px
+        }
+
+        .aw-chips .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--b);
+            color: var(--t);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 13px
+        }
+
+        .aw-chips .chip button {
+            background: none;
+            border: none;
+            color: var(--m);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1
+        }
+
+        .aw-divider {
+            border: none;
+            border-top: 1px solid var(--b);
+            margin: 12px 0
+        }
+
+        td.mono {
+            font-family: monospace
+        }
+
+        .tone-muted {
+            color: var(--m)
+        }
+
+        .tone-success {
+            color: var(--g)
+        }
+
+        .tone-danger {
+            color: var(--r)
+        }
+
+        .tone-warning {
+            color: var(--y)
+        }
+
+        .tone-accent {
+            color: var(--a)
+        }
+
         main {
             display: flex;
             flex: 1
@@ -275,7 +437,7 @@ internal static class AdminTemplateDefaults
 
         .ni:hover {
             color: var(--t);
-            background: rgba(255, 255, 255, .04)
+            background: var(--hover)
         }
 
         .ni.active {
@@ -385,7 +547,7 @@ internal static class AdminTemplateDefaults
         }
 
         tr:hover td {
-            background: rgba(255, 255, 255, .025)
+            background: var(--hover)
         }
 
         .code {
@@ -505,7 +667,7 @@ internal static class AdminTemplateDefaults
         select,
         textarea {
             width: 100%;
-            background: #0d1117;
+            background: var(--field);
             border: 1px solid var(--b);
             border-radius: 6px;
             color: var(--t);
@@ -658,7 +820,7 @@ internal static class AdminTemplateDefaults
             min-width: 200px;
             padding: 3px 6px;
             font-size: 11px;
-            background: #0d1117;
+            background: var(--field);
             border: 1px solid var(--b);
             border-radius: 4px;
             color: var(--t);
@@ -682,6 +844,8 @@ internal static class AdminTemplateDefaults
     <header>
         <div class="dot" id="dot"></div>
         <h1><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="login.title">Empostor Admin</span></h1><span class="sp"></span><span id="upd"></span>
+        <select id="theme-sel" class="theme-sel" title="Theme" onchange="selectTheme(this.value)"></select>
+        <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle light/dark" onclick="toggleMode()" aria-label="Toggle light/dark">🌙</button>
         <form method="POST" action="/admin/logout" style="margin:0"><button class="logout" type="submit" data-i18n="header.signout">Sign out</button></form>
     </header>
     <main>
@@ -691,9 +855,6 @@ internal static class AdminTemplateDefaults
             <div class="ni" onclick="nav('gm')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M14 12h4M12 10v4"/></svg><span data-i18n="nav.games">Games</span></div>
             <div class="ni" onclick="nav('cl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M1 20v-2a4 4 0 014-4h8a4 4 0 014 4v2"/><circle cx="17" cy="7" r="4"/><path d="M23 20v-2a4 4 0 00-3-3.87"/></svg><span data-i18n="nav.clients">Clients</span></div>
             <div class="ni" onclick="nav('pl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span data-i18n="nav.player_logs">Player Logs</span></div>
-            <div class="ni" onclick="nav('st')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="nav.statistics">Statistics</span></div>
-            <div class="ni" onclick="nav('cf')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span data-i18n="nav.chat_filter">Chat Filter</span></div>
-            <div class="ni" onclick="nav('dw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="nav.discord">Discord</span></div>
             <div class="ni" onclick="nav('hp')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span data-i18n="nav.hplp">HPLP</span></div>
             <div class="nsep"></div>
             <div class="nlbl" data-i18n="nav.actions">Actions</div>
@@ -715,6 +876,8 @@ internal static class AdminTemplateDefaults
             <div class="ni" onclick="nav('rp')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span data-i18n="nav.reports">Reports</span></div>
             <div class="ni" onclick="nav('si')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-i18n="nav.serverinfo">Server Info</span></div>
             <div class="nsep"></div>
+            <div class="nlbl" data-i18n="nav.plugins">Plugins</div>
+            <div id="plugins-nav"></div>
             <button class="lang-btn" onclick="reloadLang()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10"/></svg><span data-i18n="nav.reload_lang">Reload Lang</span></button>
         </nav>
         <ct>
@@ -985,88 +1148,6 @@ internal static class AdminTemplateDefaults
                         <tr><td colspan="5" class="empty">Loading...</td></tr>
                     </tbody>
                 </table>
-            </div>
-            <div id="p-st" class="pnl">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="stats.title">Player Statistics</span></h2>
-                    <button class="bp bsm" onclick="fStats()"><span data-i18n="stats.refresh">Refresh</span></button>
-                    <button class="bd bsm" onclick="resetStats()"><span data-i18n="stats.reset">Reset All</span></button>
-                </div>
-                <div id="st-empty" class="empty" style="display:none"><span data-i18n="stats.empty">Statistics not enabled in config.</span></div>
-                <table id="st-tbl" style="display:none">
-                    <thead>
-                        <tr>
-                            <th data-i18n="stats.rank">#</th>
-                            <th data-i18n="table.name">Name</th>
-                            <th data-i18n="table.friend_code">Friend Code</th>
-                            <th data-i18n="stats.games">Games</th>
-                            <th data-i18n="stats.wins">Wins</th>
-                            <th data-i18n="stats.losses">Losses</th>
-                            <th data-i18n="stats.impostor_wins">Imp. Wins</th>
-                            <th data-i18n="stats.kills">Kills</th>
-                            <th data-i18n="stats.deaths">Deaths</th>
-                            <th data-i18n="stats.tasks">Tasks</th>
-                            <th data-i18n="stats.exiled">Exiled</th>
-                        </tr>
-                    </thead>
-                    <tbody id="st-tbody"></tbody>
-                </table>
-            </div>
-            <div id="p-cf" class="pnl">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span data-i18n="chatfilter.title">Chat Filter</span></h2>
-                    <button class="bp bsm" onclick="saveCfSettings()"><span data-i18n="chatfilter.save">Save Settings</span></button>
-                </div>
-                <div class="form">
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:10px">
-                        <input type="checkbox" id="cf-enabled" onchange="saveCfSettings()">
-                        <span data-i18n="chatfilter.enabled">Enable Filtering</span>
-                    </label>
-                    <h4 data-i18n="chatfilter.words_title" style="margin:12px 0 8px">Blocked Words</h4>
-                    <div class="row" style="margin-bottom:8px">
-                        <input type="text" id="cf-word" data-i18n-placeholder="chatfilter.words_placeholder" placeholder="Add a word..." style="flex:1">
-                        <button class="bp bsm" onclick="addCfWord()"><span data-i18n="chatfilter.add_word">Add</span></button>
-                    </div>
-                    <div id="cf-words-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-                        <span style="color:var(--m);font-size:13px" data-i18n="chatfilter.no_words">No blocked words added.</span>
-                    </div>
-                    <h4 data-i18n="chatfilter.spam_title" style="margin:12px 0 8px">Spam Protection</h4>
-                    <div class="row">
-                        <div class="field">
-                            <label data-i18n="chatfilter.threshold">Message threshold</label>
-                            <input type="number" id="cf-threshold" min="1" max="100" style="width:80px" onchange="saveCfSettings()">
-                        </div>
-                        <div class="field">
-                            <label data-i18n="chatfilter.window">Window (seconds)</label>
-                            <input type="number" id="cf-window" min="1" max="60" style="width:80px" onchange="saveCfSettings()">
-                        </div>
-                    </div>
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:8px">
-                        <input type="checkbox" id="cf-block" onchange="saveCfSettings()">
-                        <span data-i18n="chatfilter.block_message">Block messages (uncheck = log only)</span>
-                    </label>
-                </div>
-                <div id="cf-r" class="msg"></div>
-            </div>
-            <div id="p-dw" class="pnl">
-                <div class="form">
-                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span data-i18n="discord.title">Discord Webhook</span></h2>
-                    <button class="bp bsm" onclick="saveDwSettings()"><span data-i18n="discord.save">Save Settings</span></button>
-                    <div style="margin-top:12px">
-                        <div class="field">
-                            <label data-i18n="discord.matchmaker_url">Matchmaker Webhook URL</label>
-                            <input type="text" id="dw-matchmaker-url" data-i18n-placeholder="discord.matchmaker_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
-                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.matchmaker_desc">Game Created, Game Started, Game Ended, Game Destroyed</span></div>
-                        </div>
-                        <div class="field" style="margin-top:10px">
-                            <label data-i18n="discord.admin_url">Admin Webhook URL</label>
-                            <input type="text" id="dw-admin-url" data-i18n-placeholder="discord.admin_url_placeholder" placeholder="https://discord.com/api/webhooks/..." onchange="saveDwSettings()">
-                            <div style="font-size:11px;color:var(--m);margin-top:4px"><span data-i18n="discord.admin_desc">Player Banned, Player Reported</span></div>
-                        </div>
-                        <div style="font-size:12px;color:var(--m);margin-top:10px"><span data-i18n="discord.hint">Leave a URL empty to disable its notifications. Leave both empty to disable all webhooks.</span></div>
-                    </div>
-                </div>
-                <div id="dw-r" class="msg"></div>
             </div>
             <div id="p-hp" class="pnl">
                 <div class="form">
@@ -1357,123 +1438,6 @@ internal static class AdminTemplateDefaults
             fPlayerLogs();
         }
 
-        async function fStats() {
-            const empty = document.getElementById('st-empty');
-            const tbl = document.getElementById('st-tbl');
-            const tbody = document.getElementById('st-tbody');
-            const { data } = await api('GET', '/api/admin/player/stats');
-            if (!data.enabled) {
-                empty.style.display = 'block';
-                tbl.style.display = 'none';
-                return;
-            }
-            empty.style.display = 'none';
-            tbl.style.display = '';
-            if (!data.players || !data.players.length) {
-                tbody.innerHTML = '<tr><td colspan="11" class="empty">' + _('stats.no_players', 'No player stats recorded yet.') + '</td></tr>';
-                return;
-            }
-            tbody.innerHTML = data.players.map((p, i) => `<tr>
-                <td style="color:var(--m)">${i+1}</td>
-                <td><b>${e(p.name)}</b></td>
-                <td><span class="fc">${e(p.friendCode)}</span></td>
-                <td>${p.gamesPlayed}</td>
-                <td style="color:var(--g)">${p.wins}</td>
-                <td style="color:var(--r)">${p.losses}</td>
-                <td style="color:var(--p)">${p.impostorWins}</td>
-                <td style="color:var(--r)">${p.kills}</td>
-                <td style="color:var(--o)">${p.deaths}</td>
-                <td style="color:var(--g)">${p.tasksCompleted}</td>
-                <td style="color:var(--y)">${p.timesExiled}</td>
-            </tr>`).join('');
-        }
-
-        async function resetStats() {
-            if (!confirm(_('stats.confirm_reset', 'Reset all player statistics? This cannot be undone.'))) return;
-            await api('POST', '/api/admin/player/stats/reset');
-            fStats();
-        }
-
-        async function fChatFilter() {
-            const { data } = await api('GET', '/api/admin/chatfilter');
-            document.getElementById('cf-enabled').checked = data.enabled;
-            document.getElementById('cf-block').checked = data.blockMessage;
-            document.getElementById('cf-threshold').value = data.spamThreshold;
-            document.getElementById('cf-window').value = data.spamWindowSeconds;
-            renderWordList(data.blockedWords || []);
-        }
-
-        function renderWordList(words) {
-            const el = document.getElementById('cf-words-list');
-            if (!words.length) {
-                el.innerHTML = '<span style="color:var(--m);font-size:13px" data-i18n="chatfilter.no_words">' + _('chatfilter.no_words', 'No blocked words added.') + '</span>';
-                return;
-            }
-            el.innerHTML = words.map(w => `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--b);color:var(--t);padding:3px 8px;border-radius:12px;font-size:13px">${e(w)}<button onclick="removeCfWord('${e(w)}')" style="background:none;border:none;color:var(--m);cursor:pointer;font-size:14px;padding:0;line-height:1" title="Remove">&times;</button></span>`).join('');
-        }
-
-        async function addCfWord() {
-            const inp = document.getElementById('cf-word');
-            const word = inp.value.trim();
-            if (!word) return;
-            const { ok, data } = await api('POST', '/api/admin/chatfilter/words/add', { word });
-            if (ok) {
-                inp.value = '';
-                renderWordList(data.blockedWords || []);
-                msg('cf-r', true, _('chatfilter.word_added', 'Word added.'));
-            } else {
-                msg('cf-r', false, data.error ?? 'Error');
-            }
-        }
-
-        async function removeCfWord(word) {
-            const { ok, data } = await api('POST', '/api/admin/chatfilter/words/remove', { word });
-            if (ok) {
-                renderWordList(data.blockedWords || []);
-                msg('cf-r', true, _('chatfilter.word_removed', 'Word removed.'));
-            } else {
-                msg('cf-r', false, data.error ?? 'Error');
-            }
-        }
-
-        async function saveCfSettings() {
-            const { ok, data } = await api('POST', '/api/admin/chatfilter/settings', {
-                enabled: document.getElementById('cf-enabled').checked,
-                blockMessage: document.getElementById('cf-block').checked,
-                spamThreshold: parseInt(document.getElementById('cf-threshold').value) || 5,
-                spamWindowSeconds: parseInt(document.getElementById('cf-window').value) || 10
-            });
-            if (ok) {
-                msg('cf-r', true, _('chatfilter.saved', 'Settings saved.'));
-            } else {
-                msg('cf-r', false, data.error ?? 'Error');
-            }
-        }
-
-        async function fDiscordWebhook() {
-            const { data } = await api('GET', '/api/admin/discord');
-            const mmUrlEl = document.getElementById('dw-matchmaker-url');
-            const adminUrlEl = document.getElementById('dw-admin-url');
-            if (document.activeElement !== mmUrlEl) {
-                mmUrlEl.value = data.matchmakerUrl || '';
-            }
-            if (document.activeElement !== adminUrlEl) {
-                adminUrlEl.value = data.adminUrl || '';
-            }
-        }
-
-        async function saveDwSettings() {
-            const { ok, data } = await api('POST', '/api/admin/discord', {
-                matchmakerUrl: document.getElementById('dw-matchmaker-url').value.trim(),
-                adminUrl: document.getElementById('dw-admin-url').value.trim()
-            });
-            if (ok) {
-                msg('dw-r', true, _('discord.saved', 'Discord webhook settings saved.'));
-            } else {
-                msg('dw-r', false, data.error ?? 'Error');
-            }
-        }
-
         async function fHplp() {
             const { data } = await api('GET', '/api/admin/hplp');
             document.getElementById('hp-enabled').checked = data.enabled;
@@ -1513,10 +1477,8 @@ internal static class AdminTemplateDefaults
             if (cur === 'bl') fBans();
             if (cur === 'ge') fGamesEnd();
             if (cur === 'pl') fPlayerLogs();
-            if (cur === 'st') fStats();
-            if (cur === 'cf') fChatFilter();
-            if (cur === 'dw') fDiscordWebhook();
             if (cur === 'hp') fHplp();
+            if (cur.startsWith('ext-')) loadExtension(cur.slice(4));
         }
 
         async function doBc() {
@@ -1660,10 +1622,190 @@ internal static class AdminTemplateDefaults
             fetchStatus();
         }
 
+        // ---- Plugin extensions (declarative widgets) ----
+        const ICONS = {
+            puzzle: '<path d="M10 3a1 1 0 011 1v1h2a1 1 0 011 1v1h4a1 1 0 011 1v4h1a1 1 0 011 1v2a1 1 0 01-1 1h-1v4a1 1 0 01-1 1h-4v1a1 1 0 01-1 1h-2a1 1 0 01-1-1v-1H5a1 1 0 01-1-1v-4H3a1 1 0 01-1-1v-2a1 1 0 011-1h1V5a1 1 0 011-1h4V3a1 1 0 011-1z"/>',
+            link: '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',
+            shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+            stats: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+            chat: '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
+            gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+            refresh: '<polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>',
+            trash: '<path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>',
+            plus: '<path d="M12 5v14M5 12h14"/>',
+            save: '<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+            webhook: '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',
+            database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+            filter: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+            list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'
+        };
+        function iconSvg(name, size) {
+            const p = ICONS[name] || ICONS.puzzle;
+            return '<svg width="' + (size || 16) + '" height="' + (size || 16) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+        }
+        function btnClass(style) {
+            switch (style) {
+                case 'danger': return 'bd';
+                case 'warning': return 'bw';
+                case 'secondary': return 'bsm';
+                default: return 'bp';
+            }
+        }
+        function renderWidget(w) {
+            if (!w) return '';
+            switch (w.type) {
+                case 'button': return '<button class="' + btnClass(w.style) + '" data-act="' + e(w.action) + '" data-w="button">' + (w.icon ? iconSvg(w.icon, 14) : '') + '<span>' + e(w.label) + '</span></button>';
+                case 'text': return '<div class="aw-text' + (w.tone && w.tone !== 'default' ? ' tone-' + w.tone : '') + (w.monospace ? ' mono' : '') + '">' + e(w.content) + '</div>';
+                case 'block': return '<div class="form"><h3>' + e(w.title || '') + '</h3>' + (w.description ? '<div class="aw-desc">' + e(w.description) + '</div>' : '') + '<div class="aw-children">' + (w.children || []).map(renderWidget).join('') + '</div></div>';
+                case 'textbox': return '<div class="field"><label>' + e(w.label) + '</label>' + (w.multiline ? '<textarea data-act="' + e(w.action) + '" data-w="textbox" placeholder="' + e(w.placeholder || '') + '">' + e(w.value || '') + '</textarea>' : '<input type="' + (w.secret ? 'password' : 'text') + '" data-act="' + e(w.action) + '" data-w="textbox" value="' + e(w.value || '') + '" placeholder="' + e(w.placeholder || '') + '">') + '</div>';
+                case 'toggle': return '<label class="aw-toggle"><input type="checkbox" data-act="' + e(w.action) + '" data-w="toggle"' + (w.value ? ' checked' : '') + '><span>' + e(w.label) + '</span></label>';
+                case 'select': return '<div class="field"><label>' + e(w.label) + '</label><select data-act="' + e(w.action) + '" data-w="select">' + (w.options || []).map(function (o) { return '<option value="' + e(o.value) + '"' + (o.value === w.value ? ' selected' : '') + '>' + e(o.label) + '</option>'; }).join('') + '</select></div>';
+                case 'number': return '<div class="field"><label>' + e(w.label) + '</label><input type="number" data-act="' + e(w.action) + '" data-w="number" value="' + e(w.value) + '"' + (w.min != null ? ' min="' + w.min + '"' : '') + (w.max != null ? ' max="' + w.max + '"' : '') + '></div>';
+                case 'table': return '<table><thead><tr>' + (w.columns || []).map(function (c) { return '<th>' + e(c) + '</th>'; }).join('') + '</tr></thead><tbody>' + (w.rows || []).map(function (r) { return '<tr>' + (r || []).map(function (c) { return '<td class="' + (c.tone && c.tone !== 'default' ? 'tone-' + c.tone : '') + (c.monospace ? ' mono' : '') + '">' + e(c.text) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+                case 'chips': return '<div class="aw-chips"><div class="chips-list">' + (w.items || []).map(function (c) { return '<span class="chip">' + e(c.label) + '<button data-act="' + e(w.removeAction) + '" data-w="chip-remove" data-value="' + e(c.value) + '" title="Remove">&times;</button></span>'; }).join('') + '</div><div class="row"><input type="text" data-w="chip-input" placeholder="' + e(w.placeholder || '') + '"><button class="bp bsm" data-act="' + e(w.addAction) + '" data-w="chip-add">' + e(w.addLabel || 'Add') + '</button></div></div>';
+                case 'divider': return '<hr class="aw-divider">';
+                default: return '';
+            }
+        }
+        let _extCur = null;
+        async function loadExtension(id) {
+            _extCur = id;
+            const body = document.querySelector('#p-ext-' + id + ' .ext-body');
+            if (!body) return;
+            const ae = document.activeElement;
+            if (ae && body.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+            const { ok, data } = await api('GET', '/api/admin/ext/' + encodeURIComponent(id));
+            if (!ok) { body.innerHTML = '<div class="empty">' + (data && data.error ? e(data.error) : 'Error') + '</div>'; return; }
+            body.innerHTML = (data.widgets || []).map(renderWidget).join('');
+        }
+        function toast(ok, text) {
+            let t = document.getElementById('ext-toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'ext-toast';
+                t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:300;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:opacity .2s;max-width:360px';
+                document.body.appendChild(t);
+            }
+            t.textContent = text;
+            t.style.background = ok ? 'rgba(63,185,80,.95)' : 'rgba(248,81,73,.95)';
+            t.style.color = '#fff';
+            t.style.opacity = '1';
+            clearTimeout(t._h);
+            t._h = setTimeout(function () { t.style.opacity = '0'; }, 3500);
+        }
+        async function dispatch(extId, action, value) {
+            const { ok, data } = await api('POST', '/api/admin/ext/' + encodeURIComponent(extId) + '/' + encodeURIComponent(action), { value: value });
+            if (data && data.message) toast(ok, data.message);
+            if (ok && data && data.refresh !== false) loadExtension(extId);
+            return { ok: ok, data: data };
+        }
+        document.addEventListener('click', function (ev) {
+            const el = ev.target.closest('[data-act]');
+            if (!el) return;
+            const holder = el.closest('[data-ext]');
+            const extId = holder ? holder.getAttribute('data-ext') : _extCur;
+            if (!extId) return;
+            const w = el.getAttribute('data-w');
+            let value;
+            if (w === 'chip-remove') value = el.getAttribute('data-value');
+            else if (w === 'chip-add') { const inp = el.parentElement.querySelector('[data-w="chip-input"]'); value = inp ? inp.value : ''; }
+            else if (w === 'toggle') value = el.checked;
+            else value = el.value;
+            dispatch(extId, el.getAttribute('data-act'), value);
+        });
+        document.addEventListener('change', function (ev) {
+            const el = ev.target.closest('[data-act]');
+            if (!el) return;
+            const w = el.getAttribute('data-w');
+            if (w !== 'textbox' && w !== 'number' && w !== 'select') return;
+            const holder = el.closest('[data-ext]');
+            const extId = holder ? holder.getAttribute('data-ext') : _extCur;
+            if (!extId) return;
+            dispatch(extId, el.getAttribute('data-act'), el.value);
+        });
+        async function initExtensions() {
+            try {
+                const { data } = await api('GET', '/api/admin/ext');
+                const navBox = document.getElementById('plugins-nav');
+                const ct = document.querySelector('ct');
+                (data || []).forEach(function (x) {
+                    const ni = document.createElement('div');
+                    ni.className = 'ni';
+                    ni.innerHTML = iconSvg(x.icon, 16) + '<span>' + e(x.title) + '</span>';
+                    ni.addEventListener('click', function () { nav('ext-' + x.id); });
+                    navBox.appendChild(ni);
+
+                    const pnl = document.createElement('div');
+                    pnl.id = 'p-ext-' + x.id;
+                    pnl.className = 'pnl';
+                    pnl.innerHTML = '<div class="ext-body" data-ext="' + e(x.id) + '"></div>';
+                    ct.appendChild(pnl);
+                });
+            } catch (err) { }
+        }
+
+        // ---- Theme (light/dark + third-party themes) ----
+        let _themeDefault = 'default';
+        let _modeDefault = 'dark';
+        let _themeCss = null;
+        function applyMode(mode) {
+            document.documentElement.setAttribute('data-theme', mode);
+            const btn = document.getElementById('theme-toggle');
+            if (btn) btn.textContent = mode === 'dark' ? '☀️' : '🌙';
+            try { localStorage.setItem('empostor_mode', mode); } catch (err) { }
+        }
+        function toggleMode() {
+            const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            applyMode(cur === 'dark' ? 'light' : 'dark');
+        }
+        async function loadThemeCss(id) {
+            if (!_themeCss) {
+                _themeCss = document.createElement('style');
+                _themeCss.id = 'theme-css';
+                document.head.appendChild(_themeCss);
+            }
+            const r = await fetch('/api/admin/theme/' + encodeURIComponent(id) + '/css');
+            if (r.ok) {
+                _themeCss.textContent = await r.text();
+                try { localStorage.setItem('empostor_theme', id); } catch (err) { }
+            }
+        }
+        function selectTheme(id) {
+            if (id === 'default') {
+                if (_themeCss) _themeCss.textContent = '';
+                try { localStorage.setItem('empostor_theme', id); } catch (err) { }
+                return;
+            }
+            loadThemeCss(id);
+        }
+        async function initThemes() {
+            try {
+                const { data } = await api('GET', '/api/admin/themes');
+                _themeDefault = data.default || 'default';
+                _modeDefault = data.defaultMode === 'light' ? 'light' : 'dark';
+                const sel = document.getElementById('theme-sel');
+                (data.themes || []).forEach(function (t) {
+                    const o = document.createElement('option');
+                    o.value = t.id;
+                    o.textContent = t.name;
+                    sel.appendChild(o);
+                });
+                let theme = _themeDefault;
+                let mode = _modeDefault;
+                try { theme = localStorage.getItem('empostor_theme') || _themeDefault; } catch (err) { }
+                try { mode = localStorage.getItem('empostor_mode') || _modeDefault; } catch (err) { }
+                sel.value = theme;
+                applyMode(mode);
+                if (theme !== 'default') await loadThemeCss(theme);
+            } catch (err) { }
+        }
+
         // Init
         fetchStatus();
         refreshTab();
         loadStrings();
+        initExtensions();
+        initThemes();
         setInterval(fetchStatus, 1000);
         setInterval(() => { if (document.visibilityState === 'visible') refreshTab(); }, 1000);
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { fetchStatus(); } });

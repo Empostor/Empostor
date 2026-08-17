@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Empostor.Plugins.Titles.Service;
@@ -17,10 +18,14 @@ public sealed class TitlesPluginStartup : IPluginHttpStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(_ => PluginConfigLoader.Load<TitlesConfig>(_configPath));
+        var config = PluginConfigLoader.Load<TitlesConfig>(_configPath);
+        services.AddSingleton(config);
         services.AddSingleton<TitleStore>();
+        services.AddSingleton<FriendCodeTitleListener>();
+        services.AddSingleton<IEventListener>(sp => sp.GetRequiredService<FriendCodeTitleListener>());
         services.AddSingleton<IEventListener, TitleEventListener>();
-        services.AddSingleton<IEventListener, FriendCodeTitleListener>();
+        services.AddSingleton<IAdminExtension>(
+            sp => new TitlesAdminExtension(config, _configPath, sp.GetRequiredService<FriendCodeTitleListener>()));
     }
 
     public void ConfigureWebApplication(IApplicationBuilder builder)

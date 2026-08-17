@@ -7,11 +7,12 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Player;
+using Empostor.Api.Innersloth;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Api;
+namespace Empostor.Plugins.DiscordWebhook;
 
-internal sealed class DiscordWebhookListener : IEventListener
+public sealed class DiscordWebhookListener : IEventListener
 {
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = false };
 
@@ -28,8 +29,6 @@ internal sealed class DiscordWebhookListener : IEventListener
         _http = http;
         _config = config;
     }
-
-    // ── Matchmaker events (fire-and-forget, do not block game flow) ──
 
     [EventListener]
     public void OnGameCreated(IGameCreatedEvent e)
@@ -89,8 +88,6 @@ internal sealed class DiscordWebhookListener : IEventListener
             ["Players"] = e.Game.PlayerCount.ToString(),
         });
     }
-
-    // ── Admin events (fire-and-forget) ──
 
     [EventListener]
     public void OnPlayerLeft(IGamePlayerLeftEvent e)

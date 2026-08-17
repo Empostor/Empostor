@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Commands;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
@@ -16,7 +17,8 @@ public sealed class NarratorStartup : IPluginStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(_ => PluginConfigLoader.Load<NarratorConfig>(_configPath));
+        var config = PluginConfigLoader.Load<NarratorConfig>(_configPath);
+        services.AddSingleton(config);
         services.AddSingleton<NarratorService>();
         services.AddSingleton<NarratorCommand>();
         services.AddSingleton<ICommand, NarratorCommand>(
@@ -24,5 +26,7 @@ public sealed class NarratorStartup : IPluginStartup
         services.AddSingleton<NarratorEventListener>();
         services.AddSingleton<IEventListener, NarratorEventListener>(
             sp => sp.GetRequiredService<NarratorEventListener>());
+        services.AddSingleton<IAdminExtension, NarratorAdminExtension>(
+            _ => new NarratorAdminExtension(config, _configPath));
     }
 }
