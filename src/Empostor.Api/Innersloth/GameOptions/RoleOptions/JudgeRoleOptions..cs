@@ -1,3 +1,4 @@
+using Empostor.Api.Innersloth;
 using Empostor.Api.Innersloth.GameOptions.RoleOptions;
 
 namespace Impostor.Api.Innersloth.GameOptions.RoleOptions;
