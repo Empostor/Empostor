@@ -53,7 +53,7 @@ namespace Empostor.Server.Recorder
             await base.HandleMessageAsync(reader, messageType);
 
             // Player created a game.
-            if (reader.Tag == MessageFlags.HostGame)
+            if (reader.Tag is MessageFlags.HostGame or MessageFlags.HostModdedGame)
             {
                 _createdGame = true;
             }
