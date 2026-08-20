@@ -5,11 +5,15 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Web;
 using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
+using Empostor.Api.Innersloth;
+using Empostor.Api.Innersloth.GameFilters;
 using Empostor.Server.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Http;
@@ -21,15 +25,18 @@ public sealed class GamesController : ControllerBase
     private readonly IGameManager _gameManager;
     private readonly ListingManager _listingManager;
     private readonly ServerConfig _serverConfig;
+    private readonly ILogger<GamesController> _logger;
 
     public GamesController(
         IGameManager gameManager,
         ListingManager listingManager,
-        IOptions<ServerConfig> serverConfig)
+        IOptions<ServerConfig> serverConfig,
+        ILogger<GamesController> logger)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
         _serverConfig = serverConfig.Value;
+        _logger = logger;
     }
 
     /// <summary>
@@ -108,26 +115,54 @@ public sealed class GamesController : ControllerBase
 
     /// <summary>
     /// Filtered lobby list (Among Us 16.0.0+).
-    /// No support filter conditions on the latest version.
     /// </summary>
     [HttpGet("filtered")]
-    public IActionResult ShowFilteredLobbies()
+    public IActionResult ShowFilteredLobbies([FromQuery] string filter)
     {
-        var port = GetDeltaPort();
-        var listings = _gameManager.Games
-            .Where(g => g.IsPublic)
-            .Select(g => GameListing.From(g, port))
-            .ToList();
-
-        return Ok(new
+        if (string.IsNullOrEmpty(filter))
         {
-            games = listings,
-            metadata = new
+            return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "filter query parameter not provided")));
+        }
+
+        try
+        {
+            var decodedFilter = HttpUtility.UrlDecode(filter);
+            var filtersList = JsonSerializer.Deserialize<GameFiltersList>(decodedFilter);
+
+            // filterSets wont be null. It must at least have ChatFilter and LangFilter
+            // Vanilla game only builds one filterSet and InnerSloth officials only handles first one (though you can send multiple filter sets. sloths only handle the first)
+            if (filtersList == null || filtersList.FilterSets.Count != 1
+                || filtersList.FilterSets[0].Filters.Count < 2
+                || !filtersList.FilterSets[0].Filters.Any(x => x.OptionType == "languages")
+                || !filtersList.FilterSets[0].Filters.Any(x => x.OptionType == "chat"))
             {
-                allGamesCount = _gameManager.Games.Count(),
-                matchingGamesCount = listings.Count,
-            },
-        });
+                return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "Invalid filterSets")));
+            }
+
+            var filteredGames = _listingManager.FindListingsV2(HttpContext, filtersList);
+            var port = GetDeltaPort();
+            var gameListings = filteredGames.Select(g => GameListing.From(g, port)).ToList();
+
+            var response = new
+            {
+                games = gameListings,
+                metadata = new
+                {
+                    allGamesCount = _gameManager.Games.Count(),
+                    matchingGamesCount = gameListings.Count,
+                },
+            };
+
+            return Ok(response);
+        }
+        catch (JsonException ex)
+        {
+            return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "Unable to deserialize filter json" + ex)));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "Unknown exception caught in filter" + ex)));
+        }
     }
 
     /// <summary>
@@ -236,10 +271,18 @@ public sealed class GamesController : ControllerBase
     private class MatchmakerError
     {
         [SetsRequiredMembers]
-        public MatchmakerError(DisconnectReason reason) { Reason = reason; }
+        public MatchmakerError(DisconnectReason reason, string message = "")
+        {
+            Reason = reason;
+            Message = message;
+        }
 
         [JsonPropertyName("Reason")]
         public required DisconnectReason Reason { get; init; }
+
+        [JsonPropertyName("Message")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public required string Message { get; init; } = string.Empty;
     }
 
     private class FindGameByCodeResponse

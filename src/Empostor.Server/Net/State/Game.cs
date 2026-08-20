@@ -46,7 +46,8 @@ namespace Empostor.Server.Net.State
             IEventManager eventManager,
             ICompatibilityManager compatibilityManager,
             IOptions<CompatibilityConfig> compatibilityConfig,
-            IOptions<TimeoutConfig> timeoutConfig)
+            IOptions<TimeoutConfig> timeoutConfig,
+            Guid? modGuid = null)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -60,6 +61,7 @@ namespace Empostor.Server.Net.State
             GameNet = new GameNet();
             Options = options;
             FilterOptions = filterOptions;
+            ModGuid = modGuid;
             _clientManager = clientManager;
             _eventManager = eventManager;
             _compatibilityManager = compatibilityManager;
@@ -95,6 +97,8 @@ namespace Empostor.Server.Net.State
         public IEnumerable<IClientPlayer> Players => _players.Select(p => p.Value);
 
         public bool IsHostAuthoritive => Host != null && Host.Client.GameVersion.HasDisableServerAuthorityFlag;
+
+        public Guid? ModGuid { get; }
 
         internal GameNet GameNet { get; }
 
