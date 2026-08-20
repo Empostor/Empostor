@@ -166,7 +166,6 @@ public sealed class LanguageService
   "command.note.set": "Note set: {0}",
   "command.color.invalid": "Invalid color ID. Valid range: 0–17.",
   "command.color.set": "Color changed to {0} ({1}).",
-
   "command.title.too_long": "Title too long. Max 12 characters.",
   "command.title.cleared": "Title removed.",
   "command.title.set": "Title set: {0}",
@@ -205,7 +204,12 @@ public sealed class LanguageService
   "command.note.description": "Set or clear a lobby note (host only).",
   "command.note.usage": "note <text> | note clear",
   "command.max.description": "Set max players for the lobby (host only).",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "ban.notice.header": "You are banned from this server.",
+  "ban.notice.reason": "Reason: {0}",
+  "ban.notice.unban": "Unban time: {0}",
+  "ban.notice.unban_permanent": "Unban time: Permanent",
+  "ban.notice.contact": "If you have any questions, please contact the administrator."
 }
 """;
 
@@ -260,7 +264,12 @@ public sealed class LanguageService
   "command.note.description": "设置或清除房间备注（仅房主）。",
   "command.note.usage": "note <文字> | note clear",
   "command.max.description": "设置房间最大人数（仅房主）。",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "ban.notice.header": "您已被服务器封禁",
+  "ban.notice.reason": "理由：{0}",
+  "ban.notice.unban": "解封时间：{0}",
+  "ban.notice.unban_permanent": "解封时间：永久",
+  "ban.notice.contact": "如有问题请联系管理员"
 }
 """;
 
@@ -315,7 +324,12 @@ public sealed class LanguageService
   "command.note.description": "設置或清除房間備註（僅房主）。",
   "command.note.usage": "note <文字> | note clear",
   "command.max.description": "設置房間最大人數（僅房主）。",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "ban.notice.header": "您已被伺服器封禁",
+  "ban.notice.reason": "理由：{0}",
+  "ban.notice.unban": "解封時間：{0}",
+  "ban.notice.unban_permanent": "解封時間：永久",
+  "ban.notice.contact": "如有問題請聯絡管理員"
 }
 """;
 
@@ -356,7 +370,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "이 명령어는 로비에서만 사용할 수 있습니다.",
   "command.players.header": "=== 플레이어 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "내 핑: {0}ms"
+  "command.ping.result": "내 핑: {0}ms",
+  "ban.notice.header": "이 서버에서 차단되었습니다.",
+  "ban.notice.reason": "사유: {0}",
+  "ban.notice.unban": "차단 해제 시간: {0}",
+  "ban.notice.unban_permanent": "차단 해제 시간: 영구",
+  "ban.notice.contact": "문의 사항이 있으면 관리자에게 연락해 주세요."
 }
 """;
 
@@ -397,7 +416,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Эта команда может использоваться только в лобби.",
   "command.players.header": "=== Игроки ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}мс",
-  "command.ping.result": "Ваш пинг: {0}мс"
+  "command.ping.result": "Ваш пинг: {0}мс",
+  "ban.notice.header": "Вы забанены на этом сервере.",
+  "ban.notice.reason": "Причина: {0}",
+  "ban.notice.unban": "Время разбана: {0}",
+  "ban.notice.unban_permanent": "Время разбана: навсегда",
+  "ban.notice.contact": "Если у вас есть вопросы, обратитесь к администратору."
 }
 """;
 
@@ -438,7 +462,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Dieser Befehl kann nur in der Lobby verwendet werden.",
   "command.players.header": "=== Spieler ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Dein Ping: {0}ms"
+  "command.ping.result": "Dein Ping: {0}ms",
+  "ban.notice.header": "Du wurdest von diesem Server gebannt.",
+  "ban.notice.reason": "Grund: {0}",
+  "ban.notice.unban": "Entbannungszeit: {0}",
+  "ban.notice.unban_permanent": "Entbannungszeit: Dauerhaft",
+  "ban.notice.contact": "Bei Fragen wende dich an den Administrator."
 }
 """;
 
@@ -479,7 +508,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Cette commande ne peut être utilisée que dans le lobby.",
   "command.players.header": "=== Joueurs ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Votre ping : {0}ms"
+  "command.ping.result": "Votre ping : {0}ms",
+  "ban.notice.header": "Vous êtes banni de ce serveur.",
+  "ban.notice.reason": "Raison : {0}",
+  "ban.notice.unban": "Débannissement : {0}",
+  "ban.notice.unban_permanent": "Débannissement : Permanent",
+  "ban.notice.contact": "En cas de question, contactez un administrateur."
 }
 """;
 
@@ -520,7 +554,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "このコマンドはロビーでのみ使用できます。",
   "command.players.header": "=== プレイヤー ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "あなたのPing: {0}ms"
+  "command.ping.result": "あなたのPing: {0}ms",
+  "ban.notice.header": "このサーバーからBANされています。",
+  "ban.notice.reason": "理由：{0}",
+  "ban.notice.unban": "BAN解除日時：{0}",
+  "ban.notice.unban_permanent": "BAN解除日時：永久",
+  "ban.notice.contact": "ご不明な点があれば管理者にお問い合わせください。"
 }
 """;
 
@@ -561,7 +600,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Este comando só pode ser usado no lobby.",
   "command.players.header": "=== Jogadores ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Seu ping: {0}ms"
+  "command.ping.result": "Seu ping: {0}ms",
+  "ban.notice.header": "Você foi banido deste servidor.",
+  "ban.notice.reason": "Motivo: {0}",
+  "ban.notice.unban": "Desbanimento: {0}",
+  "ban.notice.unban_permanent": "Desbanimento: Permanente",
+  "ban.notice.contact": "Em caso de dúvidas, contacte o administrador."
 }
 """;
 
@@ -600,7 +644,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Este comando só pode ser usado no lobby.",
   "command.players.header": "=== Jogadores ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Seu ping: {0}ms"
+  "command.ping.result": "Seu ping: {0}ms",
+  "ban.notice.header": "Você foi banido deste servidor.",
+  "ban.notice.reason": "Motivo: {0}",
+  "ban.notice.unban": "Desbanimento: {0}",
+  "ban.notice.unban_permanent": "Desbanimento: Permanente",
+  "ban.notice.contact": "Em caso de dúvidas, contate o administrador."
 }
 """;
 
@@ -639,7 +688,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Este comando solo puede usarse en el lobby.",
   "command.players.header": "=== Jugadores ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Tu ping: {0}ms"
+  "command.ping.result": "Tu ping: {0}ms",
+  "ban.notice.header": "Has sido baneado de este servidor.",
+  "ban.notice.reason": "Motivo: {0}",
+  "ban.notice.unban": "Fin del baneo: {0}",
+  "ban.notice.unban_permanent": "Fin del baneo: Permanente",
+  "ban.notice.contact": "Si tienes dudas, contacta con un administrador."
 }
 """;
 
@@ -678,7 +732,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Questo comando può essere usato solo nella lobby.",
   "command.players.header": "=== Giocatori ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Il tuo ping: {0}ms"
+  "command.ping.result": "Il tuo ping: {0}ms",
+  "ban.notice.header": "Sei stato bannato da questo server.",
+  "ban.notice.reason": "Motivo: {0}",
+  "ban.notice.unban": "Sbanno: {0}",
+  "ban.notice.unban_permanent": "Sbanno: Permanente",
+  "ban.notice.contact": "Per qualsiasi domanda, contatta l'amministratore."
 }
 """;
 
@@ -717,7 +776,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Dit commando kan alleen in de lobby worden gebruikt.",
   "command.players.header": "=== Spelers ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Jouw ping: {0}ms"
+  "command.ping.result": "Jouw ping: {0}ms",
+  "ban.notice.header": "Je bent geband van deze server.",
+  "ban.notice.reason": "Reden: {0}",
+  "ban.notice.unban": "Ontbantijd: {0}",
+  "ban.notice.unban_permanent": "Ontbantijd: Permanent",
+  "ban.notice.contact": "Neem bij vragen contact op met de beheerder."
 }
 """;
 
@@ -756,7 +820,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Ang command na ito ay maaari lamang gamitin sa lobby.",
   "command.players.header": "=== Mga Manlalaro ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Ang iyong ping: {0}ms"
+  "command.ping.result": "Ang iyong ping: {0}ms",
+  "ban.notice.header": "Banned ka sa server na ito.",
+  "ban.notice.reason": "Dahilan: {0}",
+  "ban.notice.unban": "Oras ng pag-unban: {0}",
+  "ban.notice.unban_permanent": "Oras ng pag-unban: Permanente",
+  "ban.notice.contact": "Kung may tanong, makipag-ugnayan sa administrator."
 }
 """;
 
@@ -795,7 +864,12 @@ public sealed class LanguageService
   "command.players.not_in_lobby": "Ní féidir an t-ordú seo a úsáid ach sa stocaireacht.",
   "command.players.header": "=== Imreoirí ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Do phing: {0}ms"
+  "command.ping.result": "Do phing: {0}ms",
+  "ban.notice.header": "Tá cosc ort ar an bhfreastalaí seo.",
+  "ban.notice.reason": "Cúis: {0}",
+  "ban.notice.unban": "Am dí-chosc: {0}",
+  "ban.notice.unban_permanent": "Am dí-chosc: Buan",
+  "ban.notice.contact": "Má tá ceist agat, déan teagmháil le riarthóir."
 }
 """;
 

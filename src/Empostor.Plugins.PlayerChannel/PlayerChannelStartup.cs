@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Commands;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,5 +21,7 @@ public sealed class PlayerChannelStartup : IPluginStartup
         services.AddSingleton<PlayerChannelCommand>();
         services.AddSingleton<ICommand, PlayerChannelCommand>(
             sp => sp.GetRequiredService<PlayerChannelCommand>());
+        services.AddSingleton<IAdminExtension, PlayerChannelAdminExtension>(
+            _ => new PlayerChannelAdminExtension(config, _configPath));
     }
 }

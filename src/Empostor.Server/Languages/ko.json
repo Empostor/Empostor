@@ -34,5 +34,10 @@
   "command.players.not_in_lobby": "이 명령어는 로비에서만 사용할 수 있습니다.",
   "command.players.header": "=== 플레이어 ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "내 핑: {0}ms"
+  "command.ping.result": "내 핑: {0}ms",
+  "ban.notice.header": "이 서버에서 차단되었습니다.",
+  "ban.notice.reason": "사유: {0}",
+  "ban.notice.unban": "차단 해제 시간: {0}",
+  "ban.notice.unban_permanent": "차단 해제 시간: 영구",
+  "ban.notice.contact": "문의 사항이 있으면 관리자에게 연락해 주세요."
 }

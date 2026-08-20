@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Commands;
 using Empostor.Api.Plugins;
 using Empostor.Api.Service.Admin.Verify;
@@ -16,10 +17,13 @@ public sealed class QqVerifyStartup : IPluginStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(_ => PluginConfigLoader.Load<QqVerifyConfig>(_configPath));
+        var config = PluginConfigLoader.Load<QqVerifyConfig>(_configPath);
+        services.AddSingleton(config);
         services.AddSingleton<IVerifyStore, QqVerifyStore>();
         services.AddSingleton<QqVerifyCommand>();
         services.AddSingleton<ICommand, QqVerifyCommand>(
             sp => sp.GetRequiredService<QqVerifyCommand>());
+        services.AddSingleton<IAdminExtension, QqVerifyAdminExtension>(
+            _ => new QqVerifyAdminExtension(config, _configPath));
     }
 }

@@ -9,13 +9,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Empostor.Api.Admin;
 using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
+using Empostor.Server.Http.Admin;
 using Empostor.Server.Service.Admin.Ban;
-using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
@@ -45,14 +46,12 @@ namespace Empostor.Server.Http
         private readonly AdminConfig _config;
         private readonly ReportStore _reportStore;
         private readonly PlayerLogStore _playerLogs;
-        private readonly PlayerStatsStore _playerStats;
-        private readonly PlayerStatsConfig _statsConfig;
-        private readonly ChatFilterStore _chatFilter;
-        private readonly DiscordWebhookStore _discordWebhook;
         private readonly HplpStore _hplpStore;
         private readonly IOptions<ServerConfig> _serverConfig;
         private readonly IOptions<HttpServerConfig> _httpServerConfig;
         private readonly IpGeolocationService _ipGeo;
+        private readonly AdminExtensionRegistry _extensions;
+        private readonly AdminThemeRegistry _themes;
         private readonly string _passwordHash;
         private static readonly ConcurrentDictionary<string, (int Count, DateTime FirstAttempt)> _loginFailures = new();
 
@@ -64,14 +63,12 @@ namespace Empostor.Server.Http
             IOptions<AdminConfig> config,
             ReportStore reportStore,
             PlayerLogStore playerLogs,
-            PlayerStatsStore playerStats,
-            IOptions<PlayerStatsConfig> statsConfig,
-            ChatFilterStore chatFilter,
-            DiscordWebhookStore discordWebhook,
             HplpStore hplpStore,
             IOptions<ServerConfig> serverConfig,
             IOptions<HttpServerConfig> httpServerConfig,
-            IpGeolocationService ipGeo)
+            IpGeolocationService ipGeo,
+            AdminExtensionRegistry extensions,
+            AdminThemeRegistry themes)
         {
             _logger = logger;
             _gameManager = gameManager;
@@ -80,14 +77,12 @@ namespace Empostor.Server.Http
             _config = config.Value;
             _reportStore = reportStore;
             _playerLogs = playerLogs;
-            _playerStats = playerStats;
-            _statsConfig = statsConfig.Value;
-            _chatFilter = chatFilter;
-            _discordWebhook = discordWebhook;
             _hplpStore = hplpStore;
             _serverConfig = serverConfig;
             _httpServerConfig = httpServerConfig;
             _ipGeo = ipGeo;
+            _extensions = extensions;
+            _themes = themes;
             _passwordHash = ComputeHash(_config.Password);
 
             if (string.IsNullOrEmpty(_config.Password)
@@ -200,6 +195,135 @@ namespace Empostor.Server.Http
             var strings = LoadStrings();
             lock (_stringsLock) { _adminStrings = strings; }
             return Ok(strings);
+        }
+
+        [HttpGet("/api/admin/ext")]
+        public IActionResult GetExtensions()
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            return Ok(_extensions.Extensions.Select(e => new
+            {
+                id = e.Id,
+                title = e.Title,
+                icon = e.Icon,
+                section = e.Section,
+            }));
+        }
+
+        [HttpGet("/api/admin/ext/{id}")]
+        public IActionResult GetExtension(string id)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            var builder = _extensions.Build(id);
+            if (builder == null)
+            {
+                return NotFound(Err("Extension not found"));
+            }
+
+            return Ok(new
+            {
+                id = builder.ExtensionId,
+                title = builder.Title,
+                icon = builder.Icon,
+                section = builder.Section,
+                widgets = builder.Widgets,
+            });
+        }
+
+        [HttpPost("/api/admin/ext/{id}/{action}")]
+        public async Task<IActionResult> InvokeExtension(string id, string action)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            var builder = _extensions.Build(id);
+            if (builder == null)
+            {
+                return NotFound(Err("Extension not found"));
+            }
+
+            if (!builder.Actions.TryGetValue(action, out var handler))
+            {
+                return NotFound(Err("Action not found"));
+            }
+
+            string? value = null;
+            JsonElement? payload = null;
+            try
+            {
+                using var doc = await JsonDocument.ParseAsync(Request.Body);
+                payload = doc.RootElement.Clone();
+                if (payload.Value.ValueKind == JsonValueKind.Object
+                    && payload.Value.TryGetProperty("value", out var raw))
+                {
+                    value = raw.ValueKind switch
+                    {
+                        JsonValueKind.String => raw.GetString(),
+                        JsonValueKind.True => "true",
+                        JsonValueKind.False => "false",
+                        JsonValueKind.Number => raw.GetRawText(),
+                        _ => null,
+                    };
+                }
+            }
+            catch (JsonException)
+            {
+                // No/invalid body; the action still runs without a value.
+            }
+
+            var context = new AdminActionContext(builder.ExtensionId, action, value, payload, HttpContext.RequestServices);
+            try
+            {
+                var result = await handler(context);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Admin extension action '{Id}/{Action}' failed", id, action);
+                return Ok(AdminActionResult.Fail($"Action failed: {ex.Message}"));
+            }
+        }
+
+        [HttpGet("/api/admin/themes")]
+        public IActionResult GetThemes()
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new
+            {
+                themes = _themes.Themes,
+                @default = _config.Theme,
+                defaultMode = _config.ThemeMode,
+            });
+        }
+
+        [HttpGet("/api/admin/theme/{id}/css")]
+        public IActionResult GetThemeCss(string id)
+        {
+            if (!IsAuthenticated())
+            {
+                return Unauthorized();
+            }
+
+            if (!_themes.Exists(id))
+            {
+                return NotFound();
+            }
+
+            return Content(_themes.BuildCss(id), "text/css; charset=utf-8");
         }
 
         [HttpGet("/api/admin/status")]
@@ -363,7 +487,7 @@ namespace Empostor.Server.Http
                 return BadRequest(Err("Invalid IP"));
             }
 
-            var entry = _bans.BanIp(ip, req.Reason ?? "Banned by admin");
+            var entry = _bans.BanIp(ip, req.Reason ?? "Banned by admin", BanStore.ParseDuration(req.Duration));
             var kicked = 0;
             foreach (var c in _clientManager.Clients.ToList())
             {
@@ -397,7 +521,7 @@ namespace Empostor.Server.Http
                 return BadRequest(Err("FriendCode required"));
             }
 
-            var entry = _bans.BanFriendCode(req.FriendCode, req.Reason ?? "Banned by admin");
+            var entry = _bans.BanFriendCode(req.FriendCode, req.Reason ?? "Banned by admin", BanStore.ParseDuration(req.Duration));
             var kicked = 0;
             foreach (var c in _clientManager.Clients.ToList())
             {
@@ -607,217 +731,6 @@ namespace Empostor.Server.Http
             return File(data, "application/json; charset=utf-8", name);
         }
 
-        [HttpGet("/api/admin/player/stats")]
-        public IActionResult GetPlayerStats()
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            if (!_statsConfig.Enabled)
-            {
-                return Ok(new { enabled = false });
-            }
-
-            return Ok(new
-            {
-                enabled = true,
-                players = _playerStats.GetAll().Select(s => new
-                {
-                    friendCode = s.FriendCode,
-                    name = s.LastKnownName ?? "—",
-                    gamesPlayed = s.GamesPlayed,
-                    wins = s.Wins,
-                    losses = s.Losses,
-                    impostorWins = s.ImpostorWins,
-                    kills = s.Kills,
-                    deaths = s.Deaths,
-                    tasksCompleted = s.TasksCompleted,
-                    timesExiled = s.TimesExiled,
-                    firstSeen = s.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss"),
-                    lastSeen = s.LastSeen.ToString("yyyy-MM-dd HH:mm:ss"),
-                }),
-            });
-        }
-
-        [HttpGet("/api/admin/player/stats/{friendCode}")]
-        public IActionResult GetPlayerStat(string friendCode)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            var s = _playerStats.GetByFriendCode(friendCode);
-            if (s == null)
-            {
-                return NotFound(Err("Player not found"));
-            }
-
-            return Ok(new
-            {
-                friendCode = s.FriendCode,
-                name = s.LastKnownName ?? "—",
-                gamesPlayed = s.GamesPlayed,
-                wins = s.Wins,
-                losses = s.Losses,
-                impostorWins = s.ImpostorWins,
-                kills = s.Kills,
-                deaths = s.Deaths,
-                tasksCompleted = s.TasksCompleted,
-                timesExiled = s.TimesExiled,
-                firstSeen = s.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss"),
-                lastSeen = s.LastSeen.ToString("yyyy-MM-dd HH:mm:ss"),
-            });
-        }
-
-        [HttpPost("/api/admin/player/stats/reset")]
-        public IActionResult ResetPlayerStats()
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            _playerStats.ClearAll();
-            return Ok(new { reset = true });
-        }
-
-        [HttpGet("/api/admin/chatfilter")]
-        public IActionResult GetChatFilter()
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            return Ok(new
-            {
-                enabled = _chatFilter.Enabled,
-                blockedWords = _chatFilter.BlockedWords,
-                blockMessage = _chatFilter.BlockMessage,
-                spamThreshold = _chatFilter.SpamThreshold,
-                spamWindowSeconds = _chatFilter.SpamWindowSeconds,
-            });
-        }
-
-        [HttpPost("/api/admin/chatfilter/words/add")]
-        public IActionResult AddChatFilterWord([FromBody] ChatFilterWordReq req)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            if (string.IsNullOrWhiteSpace(req.Word))
-            {
-                return BadRequest(Err("Word required"));
-            }
-
-            _chatFilter.AddWord(req.Word);
-            return Ok(new { blockedWords = _chatFilter.BlockedWords });
-        }
-
-        [HttpPost("/api/admin/chatfilter/words/remove")]
-        public IActionResult RemoveChatFilterWord([FromBody] ChatFilterWordReq req)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            if (string.IsNullOrWhiteSpace(req.Word))
-            {
-                return BadRequest(Err("Word required"));
-            }
-
-            _chatFilter.RemoveWord(req.Word);
-            return Ok(new { blockedWords = _chatFilter.BlockedWords });
-        }
-
-        [HttpPost("/api/admin/chatfilter/settings")]
-        public async Task<IActionResult> UpdateChatFilterSettings([FromBody] ChatFilterSettingsReq req)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            if (req.Enabled.HasValue)
-            {
-                _chatFilter.Enabled = req.Enabled.Value;
-            }
-
-            if (req.BlockMessage.HasValue)
-            {
-                _chatFilter.BlockMessage = req.BlockMessage.Value;
-            }
-
-            if (req.SpamThreshold.HasValue)
-            {
-                _chatFilter.SpamThreshold = req.SpamThreshold.Value;
-            }
-
-            if (req.SpamWindowSeconds.HasValue)
-            {
-                _chatFilter.SpamWindowSeconds = req.SpamWindowSeconds.Value;
-            }
-
-            await _chatFilter.SaveAsync();
-
-            return Ok(new
-            {
-                enabled = _chatFilter.Enabled,
-                blockedWords = _chatFilter.BlockedWords,
-                blockMessage = _chatFilter.BlockMessage,
-                spamThreshold = _chatFilter.SpamThreshold,
-                spamWindowSeconds = _chatFilter.SpamWindowSeconds,
-            });
-        }
-
-        [HttpGet("/api/admin/discord")]
-        public IActionResult GetDiscordWebhook()
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            return Ok(new
-            {
-                matchmakerUrl = _discordWebhook.MatchmakerUrl,
-                adminUrl = _discordWebhook.AdminUrl,
-            });
-        }
-
-        [HttpPost("/api/admin/discord")]
-        public async Task<IActionResult> UpdateDiscordWebhook([FromBody] DiscordWebhookSettingsReq req)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            if (req.MatchmakerUrl != null)
-            {
-                _discordWebhook.MatchmakerUrl = req.MatchmakerUrl;
-            }
-
-            if (req.AdminUrl != null)
-            {
-                _discordWebhook.AdminUrl = req.AdminUrl;
-            }
-
-            await _discordWebhook.SaveAsync();
-
-            return Ok(new
-            {
-                matchmakerUrl = _discordWebhook.MatchmakerUrl,
-                adminUrl = _discordWebhook.AdminUrl,
-            });
-        }
-
         [HttpGet("/api/admin/hplp")]
         public IActionResult GetHplp()
         {
@@ -988,21 +901,15 @@ namespace Empostor.Server.Http
 
         public sealed record ClientIdReq(int ClientId, string? Reason = null);
 
-        public sealed record BanIpReq(string Ip, string? Reason);
+        public sealed record BanIpReq(string Ip, string? Reason, string? Duration = null);
 
-        public sealed record BanFcReq(string FriendCode, string? Reason);
+        public sealed record BanFcReq(string FriendCode, string? Reason, string? Duration = null);
 
         public sealed record UnbanReq(string Value);
 
         public sealed record GameCodeReq(string GameCode, string? Reason = null);
 
         public sealed record GamePublicReq(string GameCode, bool IsPublic);
-
-        public sealed record ChatFilterWordReq(string Word);
-
-        public sealed record ChatFilterSettingsReq(bool? Enabled, bool? BlockMessage, int? SpamThreshold, int? SpamWindowSeconds);
-
-        public sealed record DiscordWebhookSettingsReq(string? MatchmakerUrl, string? AdminUrl);
 
         public sealed record HplpSettingsReq(bool? Enabled, string? RegionId, string? RegionName, string? PublicUrl);
 

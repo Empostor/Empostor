@@ -1,31 +1,28 @@
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Empostor.Api.Config;
+using Empostor.Api.Plugins;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
-namespace Empostor.Server.Service.Api;
+namespace Empostor.Plugins.DiscordWebhook;
 
 public sealed class DiscordWebhookStore : JsonDataStore<DiscordWebhookConfig>
 {
-    public DiscordWebhookStore(ILogger<DiscordWebhookStore> logger, IOptions<DiscordWebhookConfig> config)
+    private const string ConfigFile = "[Empostor.Plugins.DiscordWebhook]Config.json";
+
+    public DiscordWebhookStore(ILogger<DiscordWebhookStore> logger)
         : base(logger, legacyPath: "discord_webhook.json")
     {
         JsonOpts.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-
-        // Try loading from persisted file (handled by base.Load if file exists)
         Load();
 
-        // If no persisted data was loaded, fall back to config.json defaults
         if (string.IsNullOrEmpty(MatchmakerUrl) && string.IsNullOrEmpty(AdminUrl))
         {
-            var cfg = config.Value;
-            MatchmakerUrl = cfg.MatchmakerUrl;
-            AdminUrl = cfg.AdminUrl;
-
-            // Migrate legacy WebhookUrl if present
-            MigrateLegacy(cfg);
+            var cfg = PluginConfigLoader.Load<DiscordWebhookConfig>(ConfigPath());
+            var legacy = string.IsNullOrWhiteSpace(cfg.WebhookUrl) ? string.Empty : cfg.WebhookUrl;
+            MatchmakerUrl = string.IsNullOrWhiteSpace(cfg.MatchmakerUrl) ? legacy : cfg.MatchmakerUrl;
+            AdminUrl = string.IsNullOrWhiteSpace(cfg.AdminUrl) ? legacy : cfg.AdminUrl;
         }
     }
 
@@ -49,19 +46,5 @@ public sealed class DiscordWebhookStore : JsonDataStore<DiscordWebhookConfig>
 
     public new async ValueTask SaveAsync() => await base.SaveAsync();
 
-    private static void MigrateLegacy(DiscordWebhookConfig cfg)
-    {
-        if (!string.IsNullOrWhiteSpace(cfg.WebhookUrl))
-        {
-            if (string.IsNullOrWhiteSpace(cfg.MatchmakerUrl))
-            {
-                cfg.MatchmakerUrl = cfg.WebhookUrl;
-            }
-
-            if (string.IsNullOrWhiteSpace(cfg.AdminUrl))
-            {
-                cfg.AdminUrl = cfg.WebhookUrl;
-            }
-        }
-    }
+    private static string ConfigPath() => Path.Combine(Directory.GetCurrentDirectory(), ConfigFile);
 }

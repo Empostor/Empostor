@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Empostor.Plugin.Code.Handlers;
@@ -14,5 +15,6 @@ public sealed class CodeStartup : IPluginStartup
     {
         services.AddSingleton<IGameCodeManager, GameCodeManager>();
         services.AddSingleton<IEventListener, GameEventListener>();
+        services.AddSingleton<IAdminExtension, CodeAdminExtension>();
     }
 }

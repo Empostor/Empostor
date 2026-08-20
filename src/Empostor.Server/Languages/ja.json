@@ -34,5 +34,10 @@
   "command.players.not_in_lobby": "このコマンドはロビーでのみ使用できます。",
   "command.players.header": "=== プレイヤー ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "あなたのPing: {0}ms"
+  "command.ping.result": "あなたのPing: {0}ms",
+  "ban.notice.header": "このサーバーからBANされています。",
+  "ban.notice.reason": "理由：{0}",
+  "ban.notice.unban": "BAN解除日時：{0}",
+  "ban.notice.unban_permanent": "BAN解除日時：永久",
+  "ban.notice.contact": "ご不明な点があれば管理者にお問い合わせください。"
 }

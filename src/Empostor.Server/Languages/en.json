@@ -10,7 +10,6 @@
   "command.note.set": "Note set: {0}",
   "command.color.invalid": "Invalid color ID. Valid range: 0–17.",
   "command.color.set": "Color changed to {0} ({1}).",
-
   "command.title.too_long": "Title too long. Max 12 characters.",
   "command.title.cleared": "Title removed.",
   "command.title.set": "Title set: {0}",
@@ -66,5 +65,10 @@
   "command.ban.cannot_ban_self": "You cannot ban yourself.",
   "command.ban.banned": "{0} has been banned. Reason: {1}",
   "command.ban.description": "Ban a player by friend code or name. Host only.",
-  "command.ban.usage_cmd": "ban <player> [reason]"
+  "command.ban.usage_cmd": "ban <player> [reason]",
+  "ban.notice.header": "You are banned from this server.",
+  "ban.notice.reason": "Reason: {0}",
+  "ban.notice.unban": "Unban time: {0}",
+  "ban.notice.unban_permanent": "Unban time: Permanent",
+  "ban.notice.contact": "If you have any questions, please contact the administrator."
 }

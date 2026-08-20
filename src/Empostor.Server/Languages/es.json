@@ -32,5 +32,10 @@
   "command.players.not_in_lobby": "Este comando solo puede usarse en el lobby.",
   "command.players.header": "=== Jugadores ({0}) ===",
   "command.players.entry": "{0} | {1} | {2}ms",
-  "command.ping.result": "Tu ping: {0}ms"
+  "command.ping.result": "Tu ping: {0}ms",
+  "ban.notice.header": "Has sido baneado de este servidor.",
+  "ban.notice.reason": "Motivo: {0}",
+  "ban.notice.unban": "Fin del baneo: {0}",
+  "ban.notice.unban_permanent": "Fin del baneo: Permanente",
+  "ban.notice.contact": "Si tienes dudas, contacta con un administrador."
 }

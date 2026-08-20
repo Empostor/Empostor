@@ -60,20 +60,5 @@
     "RegionId": "default",
     "RegionName": "Empostor Server",
     "PublicUrl": ""
-  },
-  "DiscordWebhook": {
-    "MatchmakerUrl": "",
-    "AdminUrl": ""
-  },
-  "PlayerStats": {
-    "Enabled": false,
-    "PersistToFile": true
-  },
-  "ChatFilter": {
-    "Enabled": false,
-    "BlockedWords": [],
-    "BlockMessage": true,
-    "SpamThreshold": 5,
-    "SpamWindowSeconds": 10
   }
 }

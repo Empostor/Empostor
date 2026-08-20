@@ -1,47 +1,37 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Empostor.Api.Plugins;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Stat;
-
-public sealed class PlayerStatsEntry
-{
-    public string FriendCode { get; init; } = string.Empty;
-
-    public string? LastKnownName { get; set; }
-
-    public int GamesPlayed { get; set; }
-
-    public int Wins { get; set; }
-
-    public int Losses { get; set; }
-
-    public int ImpostorWins { get; set; }
-
-    public int Kills { get; set; }
-
-    public int Deaths { get; set; }
-
-    public int TasksCompleted { get; set; }
-
-    public int TimesExiled { get; set; }
-
-    public DateTime FirstSeen { get; init; } = DateTime.UtcNow;
-
-    public DateTime LastSeen { get; set; } = DateTime.UtcNow;
-}
+namespace Empostor.Plugins.PlayerStats;
 
 public sealed class PlayerStatsStore : JsonDataStore<List<PlayerStatsEntry>>
 {
+    private const string ConfigFile = "[Empostor.Plugins.PlayerStats]Config.json";
+
     private ConcurrentDictionary<string, PlayerStatsEntry> _stats = new(StringComparer.OrdinalIgnoreCase);
 
     public PlayerStatsStore(ILogger<PlayerStatsStore> logger)
         : base(logger, legacyPath: "Data/player_stats.json")
     {
         Load();
+        var cfg = PluginConfigLoader.Load<PlayerStatsConfig>(ConfigPath());
+        Enabled = cfg.Enabled;
+    }
+
+    public bool Enabled { get; private set; }
+
+    public void SetEnabled(bool value)
+    {
+        Enabled = value;
+        var path = ConfigPath();
+        var cfg = PluginConfigLoader.Load<PlayerStatsConfig>(path);
+        cfg.Enabled = value;
+        PluginConfigLoader.Save(path, cfg);
     }
 
     public PlayerStatsEntry GetOrCreate(string friendCode, string? name = null)
@@ -133,4 +123,6 @@ public sealed class PlayerStatsStore : JsonDataStore<List<PlayerStatsEntry>>
 
     private static string Normalize(string friendCode)
         => (friendCode ?? string.Empty).Trim();
+
+    private static string ConfigPath() => Path.Combine(Directory.GetCurrentDirectory(), ConfigFile);
 }
