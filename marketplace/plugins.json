@@ -174,5 +174,44 @@
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Reactor.Empostor.dll"
       }
     ]
+  },
+  {
+    "id": "cn.hayashiume.chatfilter",
+    "name": "Chat Filter",
+    "description": "Filter the message depend on the banwords",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "2.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.ChatFilter.dll"
+      }
+    ]
+  },
+  {
+    "id": "cn.hayashiume.discordwebhook",
+    "name": "Discord Webhook",
+    "description": "Send lobby and admin message to dicord by webhook",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "2.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.DiscordWebhook.dll"
+      }
+    ]
+  },
+  {
+    "id": "cn.hayashiume.playerstats",
+    "name": "Player Stats",
+    "description": "Stat player logs with #stats command",
+    "author": "HayashiUme",
+    "versions": [
+      {
+        "version": "2.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.PlayerStats.dll"
+      }
+    ]
   }
 ]
