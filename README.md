@@ -1,7 +1,7 @@
 # Empostor
 Empostor is an open-source private server implementation for Among Us.
 
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/5fPmpxxnrc)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://dsc.gg/empostor)
 [![GitHub license](https://badgen.net/github/license/Empostor/Empostor)](https://github.com/Empostor/Empostor/blob/main/LICENSE)
 [![GitHub latest commit](https://badgen.net/github/last-commit/Empostor/Empostor)](https://github.com/Empostor/Empostor/commit/)
 [![GitHub all releases](https://img.shields.io/github/downloads/Empostor/Empostor/total.svg)](https://github.com/Empostor/Empostor/releases/)
@@ -11,6 +11,7 @@ Empostor is an open-source private server implementation for Among Us.
 ## Features
 - FriendCode support (authentication)
 - Dynamic ports
+- Admin Panel (dashboard)
 - Plugin support
 - Server-side anticheat
 
@@ -29,7 +30,7 @@ It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/Ht
 ## Client Setup
 
 ### Windows
-1. Go [here](https://impostor.github.io/Impostor) and enter your server's IP/domain, port and name. Press "Download server file"
+1. Go [here](https://empostor.github.io/empostor) and enter your server's IP/domain, port and name. Press "Download server file"
 2. Press Win + R and enter this (leave the quotation marks):
 ```cmd
 "%userprofile%\AppData\LocalLow\Innersloth\Among Us"
@@ -39,7 +40,7 @@ It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/Ht
 
 ### Android/iOS
 1. Launch Among Us. When you reach the main menu, close the app.
-2. Go [here](https://impostor.github.io/Impostor) and enter your server's IP/domain, port and name.
+2. Go [here](https://empostor.github.io/empostor) and enter your server's IP/domain, port and name.
 3. Scroll until you see Instructions and press the Android or Apple logo.
 4. Press "Open in Among Us". Among Us should open.
 5. Your server should appear in the regions list!
