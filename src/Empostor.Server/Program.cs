@@ -45,6 +45,7 @@ using Next.Hazel.Extensions;
 using Serilog;
 using Serilog.Events;
 using Serilog.Settings.Configuration;
+using Empostor.Server.Service;
 
 namespace Empostor.Server
 {
@@ -164,6 +165,7 @@ namespace Empostor.Server
                     services.AddSingleton<IpGeolocationService>();
                     services.AddSingleton<IModuleTagRegistry>(ModuleTagRegistry.Instance);
                     services.AddSingleton<ICompatibilityManager, CompatibilityManager>();
+                    services.AddSingleton<ClientIdStore>();
                     services.AddSingleton<ClientManager>();
                     services.AddSingleton<IClientManager>(p => p.GetRequiredService<ClientManager>());
 
