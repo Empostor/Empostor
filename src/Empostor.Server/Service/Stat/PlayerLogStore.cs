@@ -72,6 +72,17 @@ public sealed class PlayerLogStore : JsonDataStore<List<PlayerLogEntry>>
         _entries.Where(e => e.ClientId.HasValue).Select(e => e.ClientId!.Value).Distinct().ToList();
 
     /// <summary>
+    ///     Returns the highest client ID present in the log, or 0 when empty.
+    ///     Used to seed the client ID counter on startup so a freshly assigned
+    ///     ID can never collide with an ID that already exists in the log.
+    /// </summary>
+    public int GetMaxClientId() =>
+        _entries.Where(e => e.ClientId.HasValue)
+            .Select(e => e.ClientId!.Value)
+            .DefaultIfEmpty(0)
+            .Max();
+
+    /// <summary>
     ///     Returns the most recent non-empty player name recorded for a client.
     ///     Used by the admin panel so disconnected players still show their
     ///     original name instead of a generic "Disconnected" label.

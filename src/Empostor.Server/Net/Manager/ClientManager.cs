@@ -10,9 +10,10 @@ using Empostor.Api.Config;
 using Empostor.Api.Events.Managers;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
+using Empostor.Api.Service;
 using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Factories;
-using Empostor.Api.Service;
+using Empostor.Server.Service;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Utils;
@@ -36,6 +37,7 @@ namespace Empostor.Server.Net.Manager
         private readonly AuthApiConfig _authApiConfig;
         private readonly PortPoolService _portPool;
         private readonly IpGeolocationService _ipGeo;
+        private readonly ClientIdStore _clientIdStore;
         private int _idLast;
 
         public ClientManager(
@@ -49,7 +51,8 @@ namespace Empostor.Server.Net.Manager
             IHttpClientFactory httpClientFactory,
             IOptions<AuthApiConfig> authApiConfig,
             PortPoolService portPool,
-            IpGeolocationService ipGeo)
+            IpGeolocationService ipGeo,
+            ClientIdStore clientIdStore)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -63,6 +66,8 @@ namespace Empostor.Server.Net.Manager
             _authApiConfig = authApiConfig.Value;
             _portPool = portPool;
             _ipGeo = ipGeo;
+            _clientIdStore = clientIdStore;
+            _idLast = checked((int)_clientIdStore.GetLastId());
 
             if (_compatibilityConfig.AllowFutureGameVersions)
             {
@@ -91,6 +96,7 @@ namespace Empostor.Server.Net.Manager
         {
             var clientId = Interlocked.Increment(ref _idLast);
             if (clientId < 1) { _idLast = 0; clientId = Interlocked.Increment(ref _idLast); }
+            _clientIdStore.SetLastId(clientId);
             return clientId;
         }
 
@@ -152,11 +158,6 @@ namespace Empostor.Server.Net.Manager
                 ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            // Match the auth session to this UDP connection. In dynamic delta
-            // mode (deltaPort > 0) the connection must match by its unique
-            // port (nonce); there is no IP fallback anymore. In fixed-port
-            // mode (deltaPort == 0) matching is skipped entirely: no PUID and
-            // no FriendCode are bound to the client.
             if (deltaPort > 0)
             {
                 authInfo = _authCache.FindByPort(deltaPort);

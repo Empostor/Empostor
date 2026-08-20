@@ -25,6 +25,7 @@ using Empostor.Server.Net.Manager;
 using Empostor.Server.Net.Messages;
 using Empostor.Server.Plugins;
 using Empostor.Server.Recorder;
+using Empostor.Server.Service;
 using Empostor.Server.Service.Admin.Ban;
 using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
@@ -168,6 +169,7 @@ namespace Empostor.Server
                     services.AddSingleton<IpGeolocationService>();
                     services.AddSingleton<IModuleTagRegistry>(ModuleTagRegistry.Instance);
                     services.AddSingleton<ICompatibilityManager, CompatibilityManager>();
+                    services.AddSingleton<ClientIdStore>();
                     services.AddSingleton<ClientManager>();
                     services.AddSingleton<IClientManager>(p => p.GetRequiredService<ClientManager>());
 
