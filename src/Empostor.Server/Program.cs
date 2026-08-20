@@ -26,7 +26,6 @@ using Empostor.Server.Net.Messages;
 using Empostor.Server.Plugins;
 using Empostor.Server.Recorder;
 using Empostor.Server.Service.Admin.Ban;
-using Empostor.Server.Service.Admin.Chat;
 using Empostor.Server.Service.Admin.Reactor;
 using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
@@ -114,10 +113,7 @@ namespace Empostor.Server
                     services.Configure<TimeoutConfig>(host.Configuration.GetSection(TimeoutConfig.Section));
                     services.Configure<HttpServerConfig>(host.Configuration.GetSection(HttpServerConfig.Section));
                     services.Configure<AdminConfig>(host.Configuration.GetSection(AdminConfig.Section));
-                    services.Configure<DiscordWebhookConfig>(host.Configuration.GetSection(DiscordWebhookConfig.Section));
                     services.Configure<HplpConfig>(host.Configuration.GetSection(HplpConfig.Section));
-                    services.Configure<PlayerStatsConfig>(host.Configuration.GetSection(PlayerStatsConfig.Section));
-                    services.Configure<ChatFilterConfig>(host.Configuration.GetSection(ChatFilterConfig.Section));
                     services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
 
                     services.AddSingleton<AuthCacheService>();
@@ -203,15 +199,11 @@ namespace Empostor.Server
                     services.AddSingleton<IEventListener, ReactorHandshakeListener>();
                     services.AddSingleton<PlayerLogStore>();
                     services.AddSingleton<IEventListener, PlayerLogListener>();
-                    services.AddSingleton<PlayerStatsStore>();
-                    services.AddSingleton<StatCommand>();
                     services.AddSingleton<BanCommand>();
-                    services.AddSingleton<DiscordWebhookStore>();
                     services.AddSingleton<HplpStore>();
-                    services.AddSingleton<IEventListener, DiscordWebhookListener>();
-                    services.AddSingleton<IEventListener, PlayerStatsListener>();
-                    services.AddSingleton<ChatFilterStore>();
-                    services.AddSingleton<IEventListener, ChatFilterListener>();
+
+                    services.AddSingleton<Http.Admin.AdminExtensionRegistry>();
+                    services.AddSingleton<Http.Admin.AdminThemeRegistry>();
 
                     // Language
                     services.AddSingleton<LanguageService>();

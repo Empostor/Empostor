@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ namespace Empostor.Plugins.FriendCodeValidator
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IEventListener, FriendCodeValidationListener>();
+            services.AddSingleton<IAdminExtension, FriendCodeValidatorAdminExtension>();
         }
     }
 }

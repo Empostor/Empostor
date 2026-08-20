@@ -11,6 +11,7 @@ using Empostor.Api.Innersloth.GameOptions;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Custom;
 using Empostor.Api.Net.Inner;
+using Empostor.Api.Net.Inner.Objects;
 using Empostor.Api.Net.Messages.Rpcs;
 using Empostor.Server.Events.Meeting;
 using Empostor.Server.Events.Player;
@@ -21,10 +22,12 @@ namespace Empostor.Server.Net.Inner.Objects
 {
     internal partial class InnerMeetingHud : InnerNetObject
     {
+        private static readonly GameVersion JudgeMinVersion = new GameVersion(2026, 7, 15); // 18.0
+
         private readonly ILogger<InnerMeetingHud> _logger;
         private readonly IEventManager _eventManager;
-
         private readonly CancellationTokenSource _timerToken;
+        private readonly List<JudgeOverrule> _judgeOverrules = new();
 
         [AllowNull]
         private PlayerVoteArea[] _playerStates;
@@ -63,6 +66,8 @@ namespace Empostor.Server.Net.Inner.Objects
         }
 
         public InnerPlayerInfo? Reporter { get; private set; }
+
+        public IReadOnlyCollection<IInnerMeetingHud.IJudgeOverrule> JudgeOverrules => _judgeOverrules;
 
         public override ValueTask<bool> SerializeAsync(IMessageWriter writer, bool initialState)
         {
@@ -107,6 +112,19 @@ namespace Empostor.Server.Net.Inner.Objects
                     }
                 }
             }
+
+            if (sender.Client.GameVersion >= JudgeMinVersion)
+            {
+                var overruleQueueListLength = reader.ReadPackedInt32();
+                if (overruleQueueListLength > 0)
+                {
+                    _judgeOverrules.Clear();
+                    for (var i = 0; i < overruleQueueListLength; i++)
+                    {
+                        _judgeOverrules.Add(JudgeOverrule.Deserialize(reader));
+                    }
+                }
+            }
         }
 
         public override async ValueTask<bool> HandleRpcAsync(ClientPlayer sender, ClientPlayer? target, RpcCalls call, IMessageReader reader)
@@ -121,6 +139,7 @@ namespace Empostor.Server.Net.Inner.Objects
                     }
 
                     Rpc22Close.Deserialize(reader);
+                    _judgeOverrules.Clear();
                     break;
                 }
 
@@ -131,10 +150,23 @@ namespace Empostor.Server.Net.Inner.Objects
                         return false;
                     }
 
-                    Rpc23VotingComplete.Deserialize(reader, out var states, out var playerId, out var tie);
-                    foreach (var messageReader in states)
+                    if (sender.Client.GameVersion >= JudgeMinVersion)
                     {
-                        messageReader.Dispose();
+                        Rpc23VotingComplete.Deserialize(reader, out var states, out var playerId, out var tie, out var wasOverruled, out var overrideId);
+
+                        foreach (var messageReader in states)
+                        {
+                            messageReader.Dispose();
+                        }
+                    }
+                    else
+                    {
+                        Rpc23VotingComplete.Deserialize(reader, out var states, out var playerId, out var tie);
+
+                        foreach (var messageReader in states)
+                        {
+                            messageReader.Dispose();
+                        }
                     }
 
                     // This would be a nice place to implement an anti cheat.
@@ -158,6 +190,12 @@ namespace Empostor.Server.Net.Inner.Objects
 
                     Rpc25ClearVote.Deserialize(reader);
                     break;
+                }
+
+                case RpcCalls.QueueOverruleVotes:
+                {
+                    Rpc66QueueOverruleVotes.Deserialize(reader, out var judgePlayerId, out var targetPlayerId, out var overruleNonce);
+                    return await HandleQueueOverruleVotesAsync(sender, target, judgePlayerId, targetPlayerId, overruleNonce);
                 }
 
                 default:
@@ -218,6 +256,87 @@ namespace Empostor.Server.Net.Inner.Objects
             }
 
             return true;
+        }
+
+        private async ValueTask<bool> HandleQueueOverruleVotesAsync(ClientPlayer sender, ClientPlayer? target, byte judgePlayerId, byte targetPlayerId, ushort overruleNonce)
+        {
+            if (!await ValidateRole(RpcCalls.QueueOverruleVotes, sender, sender.Character?.PlayerInfo, RoleTypes.Judge) ||
+                !await ValidateTarget(RpcCalls.QueueOverruleVotes, sender, target) ||
+                !await ValidateHost(RpcCalls.QueueOverruleVotes, target!))
+            {
+                return false;
+            }
+
+            // A Judge can only queue an overrule for themself.
+            if (judgePlayerId != sender.Character!.PlayerId)
+            {
+                if (await sender.Client.ReportCheatAsync(RpcCalls.QueueOverruleVotes, CheatCategory.Ownership, "Client sent a Judge overrule for another player"))
+                {
+                    return false;
+                }
+            }
+
+            // The client only generates nonces in the 1..65535 range.
+            if (overruleNonce == 0)
+            {
+                if (await sender.Client.ReportCheatAsync(RpcCalls.QueueOverruleVotes, CheatCategory.GameFlow, "Client sent a Judge overrule with an uninitialized nonce"))
+                {
+                    return false;
+                }
+            }
+
+            // A Judge can only overrule once per meeting.
+            if (_judgeOverrules.Any(overrule => overrule.JudgePlayerId == judgePlayerId))
+            {
+                if (await sender.Client.ReportCheatAsync(RpcCalls.QueueOverruleVotes, CheatCategory.GameFlow, "Client sent more than one Judge overrule in the same meeting"))
+                {
+                    return false;
+                }
+            }
+
+            // The overruled player must exist.
+            if (Game.GameNet.GameData!.GetPlayerById(targetPlayerId) == null)
+            {
+                if (await sender.Client.ReportCheatAsync(RpcCalls.QueueOverruleVotes, CheatCategory.InvalidObject, "Client sent a Judge overrule for an unknown player"))
+                {
+                    return false;
+                }
+            }
+
+            AddOrUpdateJudgeOverrule(judgePlayerId, targetPlayerId, overruleNonce);
+
+            return true;
+        }
+
+        private void AddOrUpdateJudgeOverrule(byte judgePlayerId, byte targetPlayerId, ushort overruleNonce)
+        {
+            var existing = _judgeOverrules.Find(overrule => overrule.JudgePlayerId == judgePlayerId);
+            if (existing != null)
+            {
+                existing.OverruledPlayerId = targetPlayerId;
+                existing.OverruleNonce = overruleNonce;
+            }
+            else
+            {
+                _judgeOverrules.Add(new JudgeOverrule(judgePlayerId, targetPlayerId, overruleNonce));
+            }
+        }
+
+        private JudgeOverrule? GetWinningOverrule()
+        {
+            var gameData = Game.GameNet.GameData!;
+            foreach (var overrule in _judgeOverrules)
+            {
+                var judge = gameData.GetPlayerById(overrule.JudgePlayerId);
+                var target = gameData.GetPlayerById(overrule.OverruledPlayerId);
+
+                if (judge != null && target != null && !judge.Disconnected && !target.Disconnected)
+                {
+                    return overrule;
+                }
+            }
+
+            return null;
         }
 
         private async ValueTask CheckForEndVotingAsync()
@@ -286,13 +405,35 @@ namespace Empostor.Server.Net.Inner.Objects
             var max = MaxPair(self, out var tie);
             var exiled = tie ? null : Game.GameNet.GameData!.GetPlayerById(max.Key)?.Controller;
 
+            // exile or others?
+            var wasOverruled = false;
+            ushort overrideId = 0;
+
+            var winningOverrule = GetWinningOverrule();
+            if (winningOverrule != null)
+            {
+                wasOverruled = true;
+                overrideId = winningOverrule.OverruleNonce;
+
+                var overruled = Game.GameNet.GameData!.GetPlayerById(winningOverrule.OverruledPlayerId);
+                if (overruled != null && overruled.IsImpostor)
+                {
+                    exiled = overruled.Controller;
+                }
+                else
+                {
+                    var judge = Game.GameNet.GameData!.GetPlayerById(winningOverrule.JudgePlayerId);
+                    exiled = judge?.Controller;
+                }
+            }
+
             if (exiled != null && exiled.PlayerInfo != null)
             {
                 exiled.PlayerInfo.LastDeathReason = DeathReason.Exile;
                 await _eventManager.CallAsync(new PlayerExileEvent(Game, Game.GetClientPlayer(exiled!.OwnerId)!, exiled));
             }
 
-            await _eventManager.CallAsync(new MeetingEndedEvent(Game, this, exiled, tie));
+            await _eventManager.CallAsync(new MeetingEndedEvent(Game, this, exiled, tie, wasOverruled, overrideId));
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -48,6 +49,11 @@ namespace Empostor.Api.Games
         /// Vanilla Among Us does not request this, but certain client-side mods will.
         /// </remarks>
         bool IsHostAuthoritive { get; }
+
+        /// <summary>
+        /// Gets the mod GUID that the game was registered with through the AMCI.
+        /// </summary>
+        Guid? ModGuid { get; }
 
         IClientPlayer? GetClientPlayer(int clientId);
 

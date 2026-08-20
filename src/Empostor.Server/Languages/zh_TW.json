@@ -48,5 +48,10 @@
   "command.note.description": "設置或清除房間備註（僅房主）。",
   "command.note.usage": "note <文字> | note clear",
   "command.max.description": "設置房間最大人數（僅房主）。",
-  "command.max.usage": "max <1-15>"
+  "command.max.usage": "max <1-15>",
+  "ban.notice.header": "您已被伺服器封禁",
+  "ban.notice.reason": "理由：{0}",
+  "ban.notice.unban": "解封時間：{0}",
+  "ban.notice.unban_permanent": "解封時間：永久",
+  "ban.notice.contact": "如有問題請聯絡管理員"
 }

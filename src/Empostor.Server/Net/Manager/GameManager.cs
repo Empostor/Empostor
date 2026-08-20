@@ -81,7 +81,7 @@ namespace Empostor.Server.Net.Manager
             await _eventManager.CallAsync(new GameDestroyedEvent(game));
         }
 
-        public async ValueTask<IGame?> CreateAsync(IClient? owner, IGameOptions options, GameFilterOptions filterOptions)
+        public async ValueTask<IGame?> CreateAsync(IClient? owner, IGameOptions options, GameFilterOptions filterOptions, Guid? modGuid = null)
         {
             if (owner != null && !_gamesCreatedBy.TryAdd(owner, null))
             {
@@ -96,10 +96,10 @@ namespace Empostor.Server.Net.Manager
                 return null;
             }
 
-            var (success, game) = await TryCreateAsync(options, filterOptions, owner, @event.GameCode);
+            var (success, game) = await TryCreateAsync(options, filterOptions, owner, @event.GameCode, modGuid);
             for (var i = 0; i < 10 && !success; i++)
             {
-                (success, game) = await TryCreateAsync(options, filterOptions, owner);
+                (success, game) = await TryCreateAsync(options, filterOptions, owner, modGuid: modGuid);
             }
 
             if (owner != null)
@@ -120,10 +120,12 @@ namespace Empostor.Server.Net.Manager
             return CreateAsync(null, options, filterOptions);
         }
 
-        private async ValueTask<(bool Success, Game? Game)> TryCreateAsync(IGameOptions options, GameFilterOptions filterOptions, IClient? owner, GameCode? desiredGameCode = null)
+        private async ValueTask<(bool Success, Game? Game)> TryCreateAsync(IGameOptions options, GameFilterOptions filterOptions, IClient? owner, GameCode? desiredGameCode = null, Guid? modGuid = null)
         {
             var gameCode = desiredGameCode ?? _gameCodeFactory.Create();
-            var game = ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions);
+            var game = modGuid.HasValue
+                ? ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions, modGuid.Value)
+                : ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions);
             if (!_games.TryAdd(gameCode, game))
             {
                 return (false, null);

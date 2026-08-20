@@ -18,6 +18,7 @@ namespace Empostor.Server.Http;
 /// </summary>
 [ApiController]
 [Route("/x-api")]
+[Route("/public_api")]
 public sealed class HplpController : ControllerBase
 {
     private readonly IGameManager _gameManager;
