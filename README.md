@@ -2,6 +2,7 @@
 Empostor is an open-source private server implementation for Among Us.
 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://dsc.gg/empostor)
+[![QQ](https://img.shields.io/badge/QQ-Group-black?style=flat-square)](https://qm.qq.com/q/GeX3Q0Ft0k)
 [![GitHub license](https://badgen.net/github/license/Empostor/Empostor)](https://github.com/Empostor/Empostor/blob/main/LICENSE)
 [![GitHub latest commit](https://badgen.net/github/last-commit/Empostor/Empostor)](https://github.com/Empostor/Empostor/commit/)
 [![GitHub all releases](https://img.shields.io/github/downloads/Empostor/Empostor/total.svg)](https://github.com/Empostor/Empostor/releases/)
@@ -55,3 +56,10 @@ The documentation is available [here](https://empostor.github.io)!
 
 ## License
 This project is licensed under the [GPL-v3.0 License](https://github.com/Empostor/Empostor/blob/main/LICENSE).
+
+## Credits
+
+- [Impostor](https://github.com/Impostor/Impostor)
+- [Next-Impostor](https://github.com/BunchHanpiDev/Next-Impostor)
+- [NextFast.Hazel](https://github.com/Next-Fast/NextFast.Hazel)
+- [Reactor.Impostor](https://github.com/NuclearPowered/Reactor.Impostor)
