@@ -76,18 +76,6 @@ namespace Empostor.Server.Net.State
             return default;
         }
 
-        private enum GameDataResult
-        {
-            /// <summary>Keep the current message in the packet and continue with the next one.</summary>
-            Continue,
-
-            /// <summary>Remove the current message from the packet and continue with the next one.</summary>
-            Remove,
-
-            /// <summary>Drop the whole packet (a cheat was detected and the connection should not relay it).</summary>
-            Abort,
-        }
-
         public async ValueTask<bool> HandleGameDataAsync(IMessageReader parent, ClientPlayer sender, bool toPlayer)
         {
             // Find target player.
@@ -105,271 +93,240 @@ namespace Empostor.Server.Net.State
                 _logger.LogTrace("Received GameData for target {0}.", targetId);
             }
 
-            var startPosition = parent.Position;
-
+            // Parse GameData messages.
             while (parent.Position < parent.Length)
             {
                 using var reader = parent.ReadMessage();
 
-                if (sender.Client.Player == null)
+                switch (reader.Tag)
                 {
-                    return false;
-                }
-
-                if (toPlayer && (target == null || !_players.ContainsKey(target.Client.Id)))
-                {
-                    return false;
-                }
-
-                GameDataResult result;
-
-                try
-                {
-                    result = await HandleGameDataInnerAsync(reader, sender, target);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "{Code} - Error while handling a GameData message, skipping it", Code);
-                    parent.RemoveMessage(reader);
-                    continue;
-                }
-
-                if (result == GameDataResult.Abort)
-                {
-                    // A cheat was detected, drop the whole packet.
-                    return false;
-                }
-
-                if (result == GameDataResult.Remove)
-                {
-                    parent.RemoveMessage(reader);
-                }
-            }
-
-            return parent.Length > startPosition;
-        }
-
-        private async ValueTask<GameDataResult> HandleGameDataInnerAsync(IMessageReader reader, ClientPlayer sender, ClientPlayer? target)
-        {
-            switch (reader.Tag)
-            {
-                case GameDataTag.DataFlag:
-                {
-                    var netId = reader.ReadPackedUInt32();
-                    if (_allObjects.TryGetValue(netId, out var obj))
+                    case GameDataTag.DataFlag:
                     {
-                        await obj.DeserializeAsync(sender, target, reader, false);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("{Code} - Received DataFlag for unregistered NetId {NetId}", Code, netId);
-                    }
-
-                    return GameDataResult.Continue;
-                }
-
-                case GameDataTag.RpcFlag:
-                {
-                    var netId = reader.ReadPackedUInt32();
-                    if (_allObjects.TryGetValue(netId, out var obj))
-                    {
-                        if (!await obj.HandleRpcAsync(sender, target, (RpcCalls)reader.ReadByte(), reader))
+                        var netId = reader.ReadPackedUInt32();
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
-                            return GameDataResult.Remove;
+                            await obj.DeserializeAsync(sender, target, reader, false);
                         }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("{Code} - Received RpcFlag for unregistered NetId {NetId}", Code, netId);
-                    }
-
-                    return GameDataResult.Continue;
-                }
-
-                case GameDataTag.SpawnFlag:
-                {
-                    // Only the host is allowed to spawn objects.
-                    if (!sender.IsHost)
-                    {
-                        if (await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.SpawnFlag)), CheatCategory.MustBeHost, "Tried to send SpawnFlag as non-host."))
+                        else
                         {
-                            return GameDataResult.Abort;
-                        }
-                    }
-
-                    var objectId = reader.ReadPackedUInt32();
-                    if (SpawnableObjects.TryGetValue(objectId, out var spawnableObjectType))
-                    {
-                        var innerNetObject = (InnerNetObject)ActivatorUtilities.CreateInstance(_serviceProvider, spawnableObjectType, this);
-                        var ownerClientId = reader.ReadPackedInt32();
-
-                        innerNetObject.SpawnFlags = (SpawnFlags)reader.ReadByte();
-
-                        var components = innerNetObject.GetComponentsInChildren<InnerNetObject>();
-                        var componentsCount = reader.ReadPackedInt32();
-
-                        if (componentsCount != components.Count)
-                        {
-                            _logger.LogError(
-                                "Children didn't match for spawnable {0}, name {1} ({2} != {3})",
-                                objectId,
-                                innerNetObject.GetType().Name,
-                                componentsCount,
-                                components.Count);
-                            return GameDataResult.Continue;
+                            _logger.LogWarning("{Code} - Received DataFlag for unregistered NetId {NetId}", Code, netId);
                         }
 
-                        _logger.LogDebug(
-                            "Spawning {0} components, SpawnFlags {1}",
-                            innerNetObject.GetType().Name,
-                            innerNetObject.SpawnFlags);
+                        break;
+                    }
 
-                        for (var i = 0; i < componentsCount; i++)
+                    case GameDataTag.RpcFlag:
+                    {
+                        var netId = reader.ReadPackedUInt32();
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
-                            var obj = components[i];
+                            if (!await obj.HandleRpcAsync(sender, target, (RpcCalls)reader.ReadByte(), reader))
+                            {
+                                parent.RemoveMessage(reader);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("{Code} - Received RpcFlag for unregistered NetId {NetId}", Code, netId);
+                        }
 
-                            obj.NetId = reader.ReadPackedUInt32();
-                            obj.OwnerId = ownerClientId;
+                        break;
+                    }
+
+                    case GameDataTag.SpawnFlag:
+                    {
+                        // Only the host is allowed to spawn objects.
+                        if (!sender.IsHost)
+                        {
+                            if (await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.SpawnFlag)), CheatCategory.MustBeHost, "Tried to send SpawnFlag as non-host."))
+                            {
+                                return false;
+                            }
+                        }
+
+                        var objectId = reader.ReadPackedUInt32();
+                        if (SpawnableObjects.TryGetValue(objectId, out var spawnableObjectType))
+                        {
+                            var innerNetObject = (InnerNetObject)ActivatorUtilities.CreateInstance(_serviceProvider, spawnableObjectType, this);
+                            var ownerClientId = reader.ReadPackedInt32();
+
+                            innerNetObject.SpawnFlags = (SpawnFlags)reader.ReadByte();
+
+                            var components = innerNetObject.GetComponentsInChildren<InnerNetObject>();
+                            var componentsCount = reader.ReadPackedInt32();
+
+                            if (componentsCount != components.Count)
+                            {
+                                _logger.LogError(
+                                    "Children didn't match for spawnable {0}, name {1} ({2} != {3})",
+                                    objectId,
+                                    innerNetObject.GetType().Name,
+                                    componentsCount,
+                                    components.Count);
+                                continue;
+                            }
 
                             _logger.LogDebug(
-                                "- {0}, NetId {1}, OwnerId {2}",
-                                obj.GetType().Name,
-                                obj.NetId,
-                                obj.OwnerId);
+                                "Spawning {0} components, SpawnFlags {1}",
+                                innerNetObject.GetType().Name,
+                                innerNetObject.SpawnFlags);
 
-                            if (!AddNetObject(obj))
+                            for (var i = 0; i < componentsCount; i++)
                             {
-                                _logger.LogTrace("Failed to AddNetObject, it already exists.");
+                                var obj = components[i];
 
-                                obj.NetId = uint.MaxValue;
-                                break;
+                                obj.NetId = reader.ReadPackedUInt32();
+                                obj.OwnerId = ownerClientId;
+
+                                _logger.LogDebug(
+                                    "- {0}, NetId {1}, OwnerId {2}",
+                                    obj.GetType().Name,
+                                    obj.NetId,
+                                    obj.OwnerId);
+
+                                if (!AddNetObject(obj))
+                                {
+                                    _logger.LogTrace("Failed to AddNetObject, it already exists.");
+
+                                    obj.NetId = uint.MaxValue;
+                                    break;
+                                }
+
+                                using var readerSub = reader.ReadMessage();
+                                if (readerSub.Length > 0)
+                                {
+                                    await obj.DeserializeAsync(sender, target, readerSub, true);
+                                }
+
+                                await OnSpawnAsync(sender, obj);
                             }
 
-                            using var readerSub = reader.ReadMessage();
-                            if (readerSub.Length > 0)
-                            {
-                                await obj.DeserializeAsync(sender, target, readerSub, true);
-                            }
-
-                            await OnSpawnAsync(sender, obj);
+                            continue;
                         }
 
-                        return GameDataResult.Continue;
+                        _logger.LogWarning("Couldn't find spawnable object {ObjectId}", objectId);
+                        break;
                     }
 
-                    _logger.LogWarning("Couldn't find spawnable object {ObjectId}", objectId);
-                    return GameDataResult.Continue;
-                }
-
-                // Only the host is allowed to despawn objects.
-                case GameDataTag.DespawnFlag:
-                {
-                    var netId = reader.ReadPackedUInt32();
-                    if (_allObjects.TryGetValue(netId, out var obj))
+                    // Only the host is allowed to despawn objects.
+                    case GameDataTag.DespawnFlag:
                     {
-                        if (sender.Client.Id != obj.OwnerId && !sender.IsHost)
+                        var netId = reader.ReadPackedUInt32();
+                        if (_allObjects.TryGetValue(netId, out var obj))
                         {
-                            _logger.LogWarning(
-                                "Player {0} ({1}) tried to send DespawnFlag for {2} but was denied.",
+                            if (sender.Client.Id != obj.OwnerId && !sender.IsHost)
+                            {
+                                _logger.LogWarning(
+                                    "Player {0} ({1}) tried to send DespawnFlag for {2} but was denied.",
+                                    sender.Client.Name,
+                                    sender.Client.Id,
+                                    netId);
+                                return false;
+                            }
+
+                            RemoveNetObject(obj);
+                            await OnDestroyAsync(obj);
+                            _logger.LogDebug("Destroyed InnerNetObject {0} ({1}), OwnerId {2}", obj.GetType().Name, netId, obj.OwnerId);
+                        }
+                        else
+                        {
+                            _logger.LogDebug(
+                                "Player {0} ({1}) sent DespawnFlag for unregistered NetId {2}.",
                                 sender.Client.Name,
                                 sender.Client.Id,
                                 netId);
-                            return GameDataResult.Abort;
                         }
 
-                        RemoveNetObject(obj);
-                        await OnDestroyAsync(obj);
-                        _logger.LogDebug("Destroyed InnerNetObject {0} ({1}), OwnerId {2}", obj.GetType().Name, netId, obj.OwnerId);
-                    }
-                    else
-                    {
-                        _logger.LogDebug(
-                            "Player {0} ({1}) sent DespawnFlag for unregistered NetId {2}.",
-                            sender.Client.Name,
-                            sender.Client.Id,
-                            netId);
+                        break;
                     }
 
-                    return GameDataResult.Continue;
-                }
-
-                case GameDataTag.SceneChangeFlag:
-                {
-                    // Sender is only allowed to change his own scene.
-                    var clientId = reader.ReadPackedInt32();
-                    var scene = reader.ReadString();
-
-                    if (clientId != sender.Client.Id)
+                    case GameDataTag.SceneChangeFlag:
                     {
-                        _logger.LogWarning(
-                            "Player {0} ({1}) tried to send SceneChangeFlag for another player.",
-                            sender.Client.Name,
-                            sender.Client.Id);
-                        return GameDataResult.Abort;
-                    }
+                        // Sender is only allowed to change his own scene.
+                        var clientId = reader.ReadPackedInt32();
+                        var scene = reader.ReadString();
 
-                    // According to game assembly, sender is only allowed to send OnlineGame.
-                    if (scene != "OnlineGame")
-                    {
-                        _logger.LogWarning(
-                            "Player {PlayerName} ({ClientId}) tried to send SceneChangeFlag with disallowed scene \"{Scene}\".",
-                            sender.Client.Name,
-                            sender.Client.Id,
-                            scene);
-                        return GameDataResult.Abort;
-                    }
-
-                    sender.Scene = scene;
-
-                    _logger.LogTrace("> Scene {0} to {1}", clientId, sender.Scene);
-
-                    await SyncServerObjectsAsync(sender);
-                    await SpawnPlayerInfoAsync(sender);
-
-                    return GameDataResult.Continue;
-                }
-
-                case GameDataTag.ReadyFlag:
-                {
-                    var clientId = reader.ReadPackedInt32();
-
-                    if (clientId != sender.Client.Id)
-                    {
-                        _logger.LogWarning(
-                            "Player {0} ({1}) tried to send ReadyFlag for another player.",
-                            sender.Client.Name,
-                            sender.Client.Id);
-                        return GameDataResult.Abort;
-                    }
-
-                    _logger.LogTrace("> IsReady {0}", clientId);
-                    return GameDataResult.Continue;
-                }
-
-                case GameDataTag.ConsoleDeclareClientPlatformFlag:
-                {
-                    var clientId = reader.ReadPackedInt32();
-                    var platform = (RuntimePlatform)reader.ReadPackedInt32();
-
-                    if (clientId != sender.Client.Id)
-                    {
-                        if (await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.ConsoleDeclareClientPlatformFlag)), CheatCategory.Ownership, "Client sent info with wrong client id"))
+                        if (clientId != sender.Client.Id)
                         {
-                            return GameDataResult.Abort;
+                            _logger.LogWarning(
+                                "Player {0} ({1}) tried to send SceneChangeFlag for another player.",
+                                sender.Client.Name,
+                                sender.Client.Id);
+                            return false;
                         }
+
+                        // According to game assembly, sender is only allowed to send OnlineGame.
+                        if (scene != "OnlineGame")
+                        {
+                            _logger.LogWarning(
+                                "Player {PlayerName} ({ClientId}) tried to send SceneChangeFlag with disallowed scene \"{Scene}\".",
+                                sender.Client.Name,
+                                sender.Client.Id,
+                                scene);
+                            return false;
+                        }
+
+                        sender.Scene = scene;
+
+                        _logger.LogTrace("> Scene {0} to {1}", clientId, sender.Scene);
+
+                        await SyncServerObjectsAsync(sender);
+                        await SpawnPlayerInfoAsync(sender);
+
+                        break;
                     }
 
-                    sender.Platform = platform;
+                    case GameDataTag.ReadyFlag:
+                    {
+                        var clientId = reader.ReadPackedInt32();
 
-                    return GameDataResult.Continue;
+                        if (clientId != sender.Client.Id)
+                        {
+                            _logger.LogWarning(
+                                "Player {0} ({1}) tried to send ReadyFlag for another player.",
+                                sender.Client.Name,
+                                sender.Client.Id);
+                            return false;
+                        }
+
+                        _logger.LogTrace("> IsReady {0}", clientId);
+                        break;
+                    }
+
+                    case GameDataTag.ConsoleDeclareClientPlatformFlag:
+                    {
+                        var clientId = reader.ReadPackedInt32();
+                        var platform = (RuntimePlatform)reader.ReadPackedInt32();
+
+                        if (clientId != sender.Client.Id)
+                        {
+                            if (await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.ConsoleDeclareClientPlatformFlag)), CheatCategory.Ownership, "Client sent info with wrong client id"))
+                            {
+                                return false;
+                            }
+                        }
+
+                        sender.Platform = platform;
+
+                        break;
+                    }
+
+                    default:
+                    {
+                        _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
+                        break;
+                    }
                 }
 
-                default:
+                if (sender.Client.Player == null)
                 {
-                    _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
-                    return GameDataResult.Continue;
+                    // Disconnect handler was probably invoked, cancel the rest.
+                    return false;
                 }
             }
+
+            return true;
         }
 
         private async ValueTask OnSpawnAsync(ClientPlayer sender, InnerNetObject netObj)
