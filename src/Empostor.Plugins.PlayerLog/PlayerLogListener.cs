@@ -2,8 +2,9 @@ using Empostor.Api.Events;
 using Empostor.Api.Events.Client;
 using Empostor.Api.Events.Meeting;
 using Empostor.Api.Events.Player;
+using Empostor.Api.Innersloth;
 
-namespace Empostor.Server.Service.Stat;
+namespace Empostor.Plugins.PlayerLog;
 
 internal sealed class PlayerLogListener : IEventListener
 {

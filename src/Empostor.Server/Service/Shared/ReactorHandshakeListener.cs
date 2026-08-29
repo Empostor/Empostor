@@ -4,7 +4,7 @@ using Empostor.Api.Events;
 using Empostor.Api.Events.Client;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Admin.Reactor
+namespace Empostor.Server.Service.Shared
 {
     // Based on Reactor.Empostor protocol:
     // https://github.com/NuclearPowered/Reactor.Empostor

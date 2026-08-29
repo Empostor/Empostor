@@ -13,7 +13,7 @@ using Empostor.Api.Net.Messages.C2S;
 using Empostor.Api.Net.Messages.S2C;
 using Empostor.Server.Events.Player;
 using Empostor.Server.Net.Manager;
-using Empostor.Server.Service.Admin.Report;
+using Empostor.Server.Service.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Next.Hazel;

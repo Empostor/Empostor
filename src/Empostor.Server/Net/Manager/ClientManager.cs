@@ -14,9 +14,10 @@ using Empostor.Api.Service;
 using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Factories;
 using Empostor.Server.Service;
-using Empostor.Server.Service.Admin.Reactor;
+using Empostor.Server.Service.Shared;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Utils;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Next.Hazel;

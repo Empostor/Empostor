@@ -4,7 +4,7 @@ using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Api.Innersloth;
-using Empostor.Server.Service.Admin.Reactor;
+using Empostor.Server.Service.Shared;
 using Empostor.Server.Service.Api;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

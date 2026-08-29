@@ -6,7 +6,7 @@ using Empostor.Api.Net.Messages;
 using Empostor.Server.Net;
 using Empostor.Server.Net.Hazel;
 using Empostor.Server.Net.Manager;
-using Empostor.Server.Service.Admin.Report;
+using Empostor.Server.Service.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

@@ -193,5 +193,44 @@
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.PlayerStats.dll"
       }
     ]
+  },
+  {
+    "id": "gg.empostor.playerlog",
+    "name": "Player Log",
+    "description": "Logs all player activity (chat, kills, meetings, joins, leaves) and provides an admin panel to view, search, and export logs.",
+    "author": "Empostor",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.PlayerLog.dll"
+      }
+    ]
+  },
+  {
+    "id": "gg.empostor.monitor",
+    "name": "Monitor",
+    "description": "Provides /api/monitor/status and /api/monitor/health endpoints for server health checks and uptime monitoring.",
+    "author": "Empostor",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Monitor.dll"
+      }
+    ]
+  },
+  {
+    "id": "gg.empostor.privacy",
+    "name": "Privacy Policy",
+    "description": "Serves a customizable privacy policy page at /privacy with an admin panel editor.",
+    "author": "Empostor",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "empostor_version": "2.0.0",
+        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.Privacy.dll"
+      }
+    ]
   }
 ]

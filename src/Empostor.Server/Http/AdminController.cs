@@ -16,11 +16,8 @@ using Empostor.Api.Games.Managers;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
 using Empostor.Server.Http.Admin;
-using Empostor.Server.Service.Admin.Ban;
-using Empostor.Server.Service.Admin.Reactor;
-using Empostor.Server.Service.Admin.Report;
 using Empostor.Server.Service.Api;
-using Empostor.Server.Service.Stat;
+using Empostor.Server.Service.Shared;
 using Empostor.Server.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +42,6 @@ namespace Empostor.Server.Http
         private readonly BanStore _bans;
         private readonly AdminConfig _config;
         private readonly ReportStore _reportStore;
-        private readonly PlayerLogStore _playerLogs;
         private readonly HplpStore _hplpStore;
         private readonly IOptions<ServerConfig> _serverConfig;
         private readonly IOptions<HttpServerConfig> _httpServerConfig;
@@ -62,7 +58,6 @@ namespace Empostor.Server.Http
             BanStore bans,
             IOptions<AdminConfig> config,
             ReportStore reportStore,
-            PlayerLogStore playerLogs,
             HplpStore hplpStore,
             IOptions<ServerConfig> serverConfig,
             IOptions<HttpServerConfig> httpServerConfig,
@@ -76,7 +71,6 @@ namespace Empostor.Server.Http
             _bans = bans;
             _config = config.Value;
             _reportStore = reportStore;
-            _playerLogs = playerLogs;
             _hplpStore = hplpStore;
             _serverConfig = serverConfig;
             _httpServerConfig = httpServerConfig;
@@ -505,7 +499,7 @@ namespace Empostor.Server.Http
                 }
             }
 
-            return Ok(new { banned = entry.Value, disconnected = kicked });
+            return Ok(new { banned = entry, disconnected = kicked });
         }
 
         [HttpPost("/api/admin/ban/fc")]
@@ -538,7 +532,7 @@ namespace Empostor.Server.Http
                 }
             }
 
-            return Ok(new { banned = entry.Value, disconnected = kicked });
+            return Ok(new { banned = entry, disconnected = kicked });
         }
 
         [HttpPost("/api/admin/unban/ip")]
@@ -549,7 +543,12 @@ namespace Empostor.Server.Http
                 return Unauthorized();
             }
 
-            return Ok(new { removed = _bans.UnbanIp(req.Value) });
+            if (!IPAddress.TryParse(req.Value, out var ip))
+            {
+                return BadRequest(Err("Invalid IP"));
+            }
+
+            return Ok(new { removed = _bans.UnbanIp(ip) });
         }
 
         [HttpPost("/api/admin/unban/fc")]
@@ -624,111 +623,6 @@ namespace Empostor.Server.Http
                 reason = r.Reason.ToString(),
                 outcome = r.Outcome.ToString(),
             }));
-        }
-
-        [HttpGet("/api/admin/player/logs/clients")]
-        public IActionResult GetPlayerLogClients()
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            return Ok(_playerLogs.GetLoggedClientIds().Select(id => new
-            {
-                clientId = id,
-                name = FindClient(id)?.Name ?? _playerLogs.GetLatestName(id) ?? "Disconnected",
-                friendCode = FindClient(id)?.FriendCode ?? _playerLogs.GetLatestFriendCode(id) ?? "—",
-            }));
-        }
-
-        [HttpPost("/api/admin/player/logs/clear")]
-        public IActionResult ClearPlayerLogs([FromQuery] string? olderThan)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            DateTime? cutoff = null;
-            if (!string.IsNullOrEmpty(olderThan)
-                && !olderThan.Equals("all", StringComparison.OrdinalIgnoreCase))
-            {
-                cutoff = ParseLogCutoff(olderThan);
-                if (cutoff == null)
-                {
-                    return BadRequest(new { error = "Invalid time range." });
-                }
-            }
-
-            _playerLogs.Clear(cutoff);
-            _logger.LogInformation("Admin cleared player logs (olderThan: {OlderThan})", olderThan ?? "all");
-            return Ok(new { cleared = true });
-        }
-
-        private static DateTime? ParseLogCutoff(string value)
-        {
-            var now = DateTime.UtcNow;
-            switch (value.Trim().ToLowerInvariant())
-            {
-                case "1h":
-                    return now.AddHours(-1);
-                case "24h":
-                    return now.AddDays(-1);
-                case "7d":
-                    return now.AddDays(-7);
-                case "30d":
-                    return now.AddDays(-30);
-                default:
-                    return DateTime.TryParse(
-                        value,
-                        null,
-                        System.Globalization.DateTimeStyles.AssumeUniversal
-                        | System.Globalization.DateTimeStyles.AdjustToUniversal,
-                        out var dt)
-                        ? dt.ToUniversalTime()
-                        : (DateTime?)null;
-            }
-        }
-
-        [HttpGet("/api/admin/player/logs")]
-        public IActionResult GetPlayerLogs([FromQuery] int? clientId)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            var logs = clientId.HasValue
-                ? _playerLogs.GetByClient(clientId.Value)
-                : _playerLogs.GetAll();
-            return Ok(logs.Select(e => new
-            {
-                time = e.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                type = e.Type,
-                clientId = e.ClientId,
-                playerName = e.PlayerName ?? "—",
-                friendCode = e.FriendCode ?? "—",
-                gameCode = e.GameCode ?? "—",
-                detail = e.Detail ?? "—",
-            }));
-        }
-
-        [HttpGet("/api/admin/player/logs/export")]
-        public IActionResult ExportPlayerLogs([FromQuery] int? clientId)
-        {
-            if (!IsAuthenticated())
-            {
-                return Unauthorized();
-            }
-
-            var data = clientId.HasValue
-                ? _playerLogs.ExportJson(clientId.Value)
-                : _playerLogs.ExportJson();
-            var name = clientId.HasValue
-                ? $"player_{clientId}_logs.json"
-                : "all_player_logs.json";
-            return File(data, "application/json; charset=utf-8", name);
         }
 
         [HttpGet("/api/admin/hplp")]

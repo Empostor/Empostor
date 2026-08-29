@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
@@ -9,7 +8,7 @@ using Empostor.Api.Games.Managers;
 using Empostor.Api.Net.Manager;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Empostor.Server.Http;
+namespace Empostor.Plugins.Monitor;
 
 [ApiController]
 public sealed class MonitorController : ControllerBase

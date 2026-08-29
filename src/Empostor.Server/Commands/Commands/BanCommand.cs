@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Empostor.Api.Commands;
 using Empostor.Api.Net;
-using Empostor.Server.Service.Admin.Ban;
+using Empostor.Server.Service.Shared;
 using Next.Hazel;
 
 namespace Empostor.Server.Commands.Commands;
@@ -64,14 +64,14 @@ public sealed class BanCommand : ICommand
         // Ban by friend code if available
         if (!string.IsNullOrEmpty(fc))
         {
-            _banStore.BanFriendCode(fc, reason);
+            _banStore.BanFriendCode(fc, reason, null);
         }
 
         // Ban by IP
         var ip = target.Client.Connection?.EndPoint?.Address;
         if (ip != null)
         {
-            _banStore.BanIp(ip, reason);
+            _banStore.BanIp(ip, reason, null);
         }
 
         await target.Client.DisconnectAsync(DisconnectReason.Banned, reason);

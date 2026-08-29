@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Empostor.Api.Net;
 
-namespace Empostor.Server.Service.Admin.Reactor
+namespace Empostor.Server.Service.Shared
 {
 
     public static class ReactorModExtensions

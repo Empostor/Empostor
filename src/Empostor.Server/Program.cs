@@ -25,14 +25,11 @@ using Empostor.Server.Net.Manager;
 using Empostor.Server.Net.Messages;
 using Empostor.Server.Plugins;
 using Empostor.Server.Recorder;
-using Empostor.Server.Service.Admin.Ban;
-using Empostor.Server.Service.Admin.Reactor;
-using Empostor.Server.Service.Admin.Report;
+using Empostor.Server.Service.Shared;
 using Empostor.Server.Service.Api;
 using Empostor.Api.Service;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Service.Firewall;
-using Empostor.Server.Service.Stat;
 using Empostor.Server.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -199,8 +196,6 @@ namespace Empostor.Server
                     services.AddSingleton<ReportStore>();
                     services.AddSingleton<IEventListener, BanEnforcementListener>();
                     services.AddSingleton<IEventListener, ReactorHandshakeListener>();
-                    services.AddSingleton<PlayerLogStore>();
-                    services.AddSingleton<IEventListener, PlayerLogListener>();
                     services.AddSingleton<BanCommand>();
                     services.AddSingleton<HplpStore>();
 

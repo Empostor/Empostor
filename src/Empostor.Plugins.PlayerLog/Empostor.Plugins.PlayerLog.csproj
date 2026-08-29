@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>Empostor.Plugins.PlayerLog</AssemblyName>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
+  </ItemGroup>
+  <Target Name="CopyToMarketplace" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\..\marketplace" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

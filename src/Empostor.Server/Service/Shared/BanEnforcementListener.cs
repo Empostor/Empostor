@@ -5,7 +5,7 @@ using Empostor.Api.Events.Client;
 using Empostor.Api.Languages;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Admin.Ban;
+namespace Empostor.Server.Service.Shared;
 
 public sealed class BanEnforcementListener : IEventListener
 {
@@ -26,7 +26,7 @@ public sealed class BanEnforcementListener : IEventListener
         var client = e.Client;
         var ip = client.Connection?.EndPoint?.Address;
 
-        // IP 封禁检查
+        // IP ban check
         if (ip != null && _bans.GetIpBan(ip) is { } ipBan)
         {
             _logger.LogWarning("BanRejecting banned IP {Ip} ({Name})", ip, client.Name);
@@ -34,7 +34,7 @@ public sealed class BanEnforcementListener : IEventListener
             return;
         }
 
-        // FriendCode 封禁检查
+        // FriendCode ban check
         if (_bans.GetFriendCodeBan(client.FriendCode) is { } fcBan)
         {
             _logger.LogWarning("BanRejecting banned FriendCode {FC} ({Name})", client.FriendCode, client.Name);

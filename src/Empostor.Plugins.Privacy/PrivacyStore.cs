@@ -1,70 +1,42 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using Empostor.Api.Admin;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Http;
+namespace Empostor.Plugins.Privacy;
 
-[ApiController]
-[Route("/privacy")]
-public sealed class PrivacyController : ControllerBase
+public sealed class PrivacyStore
 {
     private static readonly string PagesDir = Path.Combine(Directory.GetCurrentDirectory(), "Pages");
     private static readonly string PrivacyFile = Path.Combine(PagesDir, "privacy.html");
-    private static bool _initialized;
-    private static readonly object _initLock = new();
 
-    private readonly ILogger<PrivacyController> _logger;
+    private readonly ILogger<PrivacyStore> _logger;
+    private bool _initialized;
+    private readonly object _initLock = new();
 
-    public PrivacyController(ILogger<PrivacyController> logger)
+    public PrivacyStore(ILogger<PrivacyStore> logger)
     {
         _logger = logger;
+    }
+
+    public string GetContent()
+    {
         EnsureFile();
+        if (!File.Exists(PrivacyFile))
+        {
+            return DefaultPrivacyHtml();
+        }
+
+        return File.ReadAllText(PrivacyFile);
     }
 
-    [HttpGet]
-    public IActionResult GetPrivacy()
+    public void SaveContent(string content)
     {
-        if (!System.IO.File.Exists(PrivacyFile))
-        {
-            return Content(DefaultPrivacyHtml(), "text/html; charset=utf-8");
-        }
-
-        var html = System.IO.File.ReadAllText(PrivacyFile);
-        return Content(html, "text/html; charset=utf-8");
-    }
-
-    [HttpPost]
-    [Route("/admin/api/privacy")]
-    public async Task<IActionResult> UpdatePrivacy()
-    {
-        using var reader = new StreamReader(Request.Body);
-        var body = await reader.ReadToEndAsync();
-
-        try
-        {
-            var doc = System.Text.Json.JsonDocument.Parse(body);
-            var content = doc.RootElement.GetProperty("content").GetString() ?? string.Empty;
-            var token = doc.RootElement.GetProperty("token").GetString() ?? string.Empty;
-
-            var adminToken = Environment.GetEnvironmentVariable("EMP_HTTP_TOKEN")
-                          ?? Environment.GetEnvironmentVariable("EMP_ADMIN_TOKEN")
-                          ?? "empostor";
-
-            if (token != adminToken)
-            {
-                return Unauthorized(new { error = "Invalid token." });
-            }
-
-            System.IO.File.WriteAllText(PrivacyFile, content);
-            _logger.LogInformation("PrivacyControllerPrivacy policy updated.");
-            return Ok(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        EnsureFile();
+        File.WriteAllText(PrivacyFile, content);
+        _logger.LogInformation("Privacy policy updated.");
     }
 
     private void EnsureFile()
@@ -88,10 +60,10 @@ public sealed class PrivacyController : ControllerBase
                 Directory.CreateDirectory(PagesDir);
             }
 
-            if (!System.IO.File.Exists(PrivacyFile))
+            if (!File.Exists(PrivacyFile))
             {
-                System.IO.File.WriteAllText(PrivacyFile, DefaultPrivacyHtml());
-                _logger.LogInformation("PrivacyControllerWritten default Pages/privacy.html");
+                File.WriteAllText(PrivacyFile, DefaultPrivacyHtml());
+                _logger.LogInformation("Written default Pages/privacy.html");
             }
         }
     }

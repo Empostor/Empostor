@@ -8,7 +8,7 @@ using System.Threading;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Stat;
+namespace Empostor.Plugins.PlayerLog;
 
 public sealed class PlayerLogEntry
 {
@@ -77,32 +77,18 @@ public sealed class PlayerLogStore : JsonDataStore<List<PlayerLogEntry>>
         .DefaultIfEmpty(0)
         .Max();
 
-    /// <summary>
-    ///     Returns the most recent non-empty player name recorded for a client.
-    ///     Used by the admin panel so disconnected players still show their
-    ///     original name instead of a generic "Disconnected" label.
-    /// </summary>
     public string? GetLatestName(int clientId) =>
         _entries.Where(e => e.ClientId == clientId)
             .OrderByDescending(e => e.Time)
             .Select(e => e.PlayerName)
             .FirstOrDefault(n => !string.IsNullOrEmpty(n));
 
-    /// <summary>
-    ///     Returns the most recent non-empty friend code recorded for a client.
-    /// </summary>
     public string? GetLatestFriendCode(int clientId) =>
         _entries.Where(e => e.ClientId == clientId)
             .OrderByDescending(e => e.Time)
             .Select(e => e.FriendCode)
             .FirstOrDefault(f => !string.IsNullOrEmpty(f));
 
-    /// <summary>
-    ///     Removes logged entries and persists the store.
-    ///     When <paramref name="olderThan" /> is set, only entries strictly older
-    ///     than the cutoff are removed (recent entries are kept); otherwise all
-    ///     entries are removed.
-    /// </summary>
     public void Clear(DateTime? olderThan = null)
     {
         if (olderThan.HasValue)

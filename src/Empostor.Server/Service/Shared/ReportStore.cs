@@ -4,7 +4,7 @@ using System.Linq;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Admin.Report
+namespace Empostor.Server.Service.Shared
 {
     public sealed class ReportStore : JsonDataStore<List<ReportStore.ReportEntry>>
     {

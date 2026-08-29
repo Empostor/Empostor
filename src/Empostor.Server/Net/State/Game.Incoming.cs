@@ -6,7 +6,7 @@ using Empostor.Api.Games;
 using Empostor.Api.Net;
 using Next.Hazel;
 using Empostor.Server.Events;
-using Empostor.Server.Service.Admin.Reactor;
+using Empostor.Server.Service.Shared;
 using Empostor.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

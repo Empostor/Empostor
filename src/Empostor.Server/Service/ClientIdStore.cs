@@ -1,5 +1,4 @@
 using Empostor.Api.Service;
-using Empostor.Server.Service.Stat;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Service;
@@ -16,14 +15,17 @@ public sealed class ClientIdStore : JsonDataStore<long>
 {
     private long _lastId;
 
-    public ClientIdStore(ILogger<ClientIdStore> logger, PlayerLogStore playerLogs)
+    public ClientIdStore(ILogger<ClientIdStore> logger)
         : base(logger)
     {
         Load();
+    }
 
-        _lastId = System.Math.Max(_lastId, playerLogs.GetMaxClientId());
-        if (_lastId > 0)
+    public void InitializeWithMaxId(long maxId)
+    {
+        if (maxId > _lastId)
         {
+            _lastId = maxId;
             SaveFireAndForget();
         }
     }
