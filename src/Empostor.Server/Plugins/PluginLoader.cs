@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Empostor.Api.Plugins;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +16,8 @@ namespace Empostor.Server.Plugins
     public static class PluginLoader
     {
         private static readonly ILogger Logger = Log.ForContext(typeof(PluginLoader));
+
+        internal static IReadOnlyList<Assembly> LoadedPluginAssemblies { get; private set; } = Array.Empty<Assembly>();
 
         public static IHostBuilder UsePluginLoader(this IHostBuilder builder, PluginConfig config)
         {
@@ -105,6 +108,10 @@ namespace Empostor.Server.Plugins
             }
 
             var orderedPlugins = LoadOrderPlugins(plugins);
+            LoadedPluginAssemblies = orderedPlugins
+                .Select(p => p.PluginType.Assembly)
+                .Distinct()
+                .ToList();
 
             foreach (var plugin in orderedPlugins)
             {
@@ -120,9 +127,48 @@ namespace Empostor.Server.Plugins
                 {
                     plugin.Startup?.ConfigureServices(services);
                 }
+
+                EnsureMvcApplicationParts(services, orderedPlugins);
             });
 
             return builder;
+        }
+
+        private static void EnsureMvcApplicationParts(IServiceCollection services, IReadOnlyList<PluginInformation> plugins)
+        {
+            var manager = services
+                .LastOrDefault(d => d.ServiceType == typeof(ApplicationPartManager))
+                ?.ImplementationInstance as ApplicationPartManager;
+            if (manager == null)
+            {
+                return;
+            }
+
+            EnsureAssemblyPart(manager, typeof(PluginLoader).Assembly, insertFirst: true);
+            foreach (var plugin in plugins)
+            {
+                EnsureAssemblyPart(manager, plugin.PluginType.Assembly, insertFirst: false);
+            }
+        }
+
+        private static void EnsureAssemblyPart(ApplicationPartManager manager, Assembly assembly, bool insertFirst)
+        {
+            if (manager.ApplicationParts.OfType<AssemblyPart>().Any(p => p.Assembly == assembly))
+            {
+                return;
+            }
+
+            var part = new AssemblyPart(assembly);
+            if (insertFirst)
+            {
+                manager.ApplicationParts.Insert(0, part);
+            }
+            else
+            {
+                manager.ApplicationParts.Add(part);
+            }
+
+            Logger.Information("Registered MVC controllers from {Assembly}.", assembly.GetName().Name);
         }
 
         private static void CheckPaths(IEnumerable<string> paths)

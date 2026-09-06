@@ -14,11 +14,10 @@ public sealed class PrivacyPluginStartup : IPluginStartup, IPluginHttpStartup
     {
         services.AddSingleton<PrivacyStore>();
         services.AddSingleton<IAdminExtension, PrivacyAdminExtension>();
-        services.AddControllers()
-            .AddApplicationPart(typeof(PrivacyPluginStartup).Assembly);
     }
 
     public void ConfigureWebApplication(IApplicationBuilder app)
     {
+        app.UseMiddleware<PrivacyMiddleware>();
     }
 }

@@ -33,6 +33,7 @@ using Empostor.Server.Service.Firewall;
 using Empostor.Server.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -269,7 +270,8 @@ namespace Empostor.Server
                 {
                     builder.ConfigureServices(s =>
                     {
-                        s.AddControllers();
+                        s.AddControllers()
+                            .ConfigureApplicationPartManager(EnsureServerApplicationPart);
                     });
                     builder.Configure(app =>
                     {
@@ -288,6 +290,33 @@ namespace Empostor.Server
             }
 
             return hostBuilder;
+        }
+
+        private static void EnsureServerApplicationPart(ApplicationPartManager manager)
+        {
+            EnsureAssemblyPart(manager, typeof(Program).Assembly, insertFirst: true);
+            foreach (var assembly in PluginLoader.LoadedPluginAssemblies)
+            {
+                EnsureAssemblyPart(manager, assembly, insertFirst: false);
+            }
+        }
+
+        private static void EnsureAssemblyPart(ApplicationPartManager manager, Assembly assembly, bool insertFirst)
+        {
+            if (manager.ApplicationParts.OfType<AssemblyPart>().Any(p => p.Assembly == assembly))
+            {
+                return;
+            }
+
+            var part = new AssemblyPart(assembly);
+            if (insertFirst)
+            {
+                manager.ApplicationParts.Insert(0, part);
+            }
+            else
+            {
+                manager.ApplicationParts.Add(part);
+            }
         }
     }
 }
