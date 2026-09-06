@@ -749,7 +749,7 @@ public sealed class TokenController : ControllerBase
         public string? FriendCode { get; init; }
 
         [JsonPropertyName("ExpiresAt")]
-        public DateTime ExpiresAt { get; init; } = new DateTime(2099, 12, 31);
+        public DateTime ExpiresAt { get; init; } = new DateTime(2012, 12, 21);
     }
 
     private sealed class NikoPutRequest
