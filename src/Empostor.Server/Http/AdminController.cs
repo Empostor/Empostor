@@ -15,6 +15,7 @@ using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
+using Empostor.Plugins.PlayerLog;
 using Empostor.Server.Http.Admin;
 using Empostor.Server.Service.Api;
 using Empostor.Server.Service.Shared;
