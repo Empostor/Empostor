@@ -68,6 +68,23 @@ public sealed class PlayerLogStore : JsonDataStore<List<PlayerLogEntry>>
     public List<PlayerLogEntry> GetByClient(int clientId) =>
         _entries.Where(e => e.ClientId == clientId).ToList();
 
+    public int GetCount() => _count;
+
+    public int GetCountByClient(int clientId) =>
+        _entries.Count(e => e.ClientId == clientId);
+
+    public List<PlayerLogEntry> GetPage(int page, int pageSize)
+    {
+        var skip = (page - 1) * pageSize;
+        return _entries.Skip(skip).Take(pageSize).ToList();
+    }
+
+    public List<PlayerLogEntry> GetPageByClient(int clientId, int page, int pageSize)
+    {
+        var skip = (page - 1) * pageSize;
+        return _entries.Where(e => e.ClientId == clientId).Skip(skip).Take(pageSize).ToList();
+    }
+
     public List<int> GetLoggedClientIds() =>
         _entries.Where(e => e.ClientId.HasValue).Select(e => e.ClientId!.Value).Distinct().ToList();
 

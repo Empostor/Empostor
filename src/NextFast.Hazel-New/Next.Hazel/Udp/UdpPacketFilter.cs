@@ -61,12 +61,14 @@ public sealed class UdpPacketFilter : IDisposable
         // 1. Size check (cheapest, no state).
         if (length < MinPacketLength || length > MaxPacketLength)
         {
+            Logger.Debug("UdpPacketFilter dropped packet from {Ip}: length {Length} outside [{Min}, {Max}]", ip, length, MinPacketLength, MaxPacketLength);
             return true;
         }
 
         // 2. Send-option byte check (layer-7, no state).
         if (!_validOption[buffer[0]])
         {
+            Logger.Debug("UdpPacketFilter dropped packet from {Ip}: invalid first byte 0x{Byte:X2}", ip, buffer[0]);
             return true;
         }
 

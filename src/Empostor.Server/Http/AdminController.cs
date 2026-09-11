@@ -48,6 +48,7 @@ namespace Empostor.Server.Http
         private readonly IpGeolocationService _ipGeo;
         private readonly AdminExtensionRegistry _extensions;
         private readonly AdminThemeRegistry _themes;
+        private readonly PlayerLogStore? _playerLogs;
         private readonly string _passwordHash;
         private static readonly ConcurrentDictionary<string, (int Count, DateTime FirstAttempt)> _loginFailures = new();
 
@@ -63,7 +64,8 @@ namespace Empostor.Server.Http
             IOptions<HttpServerConfig> httpServerConfig,
             IpGeolocationService ipGeo,
             AdminExtensionRegistry extensions,
-            AdminThemeRegistry themes)
+            AdminThemeRegistry themes,
+            PlayerLogStore? playerLogs = null)
         {
             _logger = logger;
             _gameManager = gameManager;
@@ -77,6 +79,7 @@ namespace Empostor.Server.Http
             _ipGeo = ipGeo;
             _extensions = extensions;
             _themes = themes;
+            _playerLogs = playerLogs;
             _passwordHash = ComputeHash(_config.Password);
 
             if (string.IsNullOrEmpty(_config.Password)
@@ -679,6 +682,82 @@ namespace Empostor.Server.Http
                 regionName = _hplpStore.RegionName,
                 publicUrl = _hplpStore.PublicUrl,
             });
+        }
+
+        [HttpGet("/api/admin/player/logs/clients")]
+        public IActionResult GetPlayerLogClients()
+        {
+            if (!IsAuthenticated()) return Unauthorized();
+            if (_playerLogs == null) return Ok(Array.Empty<object>());
+
+            var ids = _playerLogs.GetLoggedClientIds();
+            var result = ids.Select(id => new
+            {
+                id,
+                name = _playerLogs.GetLatestName(id) ?? $"Player#{id}",
+                friendCode = _playerLogs.GetLatestFriendCode(id) ?? "—",
+            }).ToList();
+            return Ok(result);
+        }
+
+        [HttpGet("/api/admin/player/logs")]
+        public IActionResult GetPlayerLogs([FromQuery] int? clientId, [FromQuery] int page = 1, [FromQuery] int pageSize = 100)
+        {
+            if (!IsAuthenticated()) return Unauthorized();
+            if (_playerLogs == null) return Ok(new { page = 1, pageSize = 0, total = 0, totalPages = 0, entries = Array.Empty<object>() });
+
+            pageSize = Math.Clamp(pageSize, 1, 500);
+            var total = clientId.HasValue ? _playerLogs.GetCountByClient(clientId.Value) : _playerLogs.GetCount();
+            var totalPages = (int)Math.Ceiling((double)total / pageSize);
+            var entries = clientId.HasValue
+                ? _playerLogs.GetPageByClient(clientId.Value, page, pageSize)
+                : _playerLogs.GetPage(page, pageSize);
+
+            return Ok(new
+            {
+                page,
+                pageSize,
+                total,
+                totalPages,
+                entries = entries.Select(e => new
+                {
+                    time = e.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"),
+                    type = e.Type,
+                    playerName = e.PlayerName ?? "—",
+                    friendCode = e.FriendCode ?? "—",
+                    gameCode = e.GameCode ?? "—",
+                    detail = e.Detail ?? "",
+                }).ToList(),
+            });
+        }
+
+        [HttpGet("/api/admin/player/logs/export")]
+        public IActionResult ExportPlayerLogs([FromQuery] int? clientId)
+        {
+            if (!IsAuthenticated()) return Unauthorized();
+            if (_playerLogs == null) return File(Array.Empty<byte>(), "application/json", "player_logs.json");
+
+            var bytes = clientId.HasValue ? _playerLogs.ExportJson(clientId.Value) : _playerLogs.ExportJson();
+            return File(bytes, "application/json", "player_logs.json");
+        }
+
+        [HttpPost("/api/admin/player/logs/clear")]
+        public IActionResult ClearPlayerLogs([FromQuery] string? olderThan)
+        {
+            if (!IsAuthenticated()) return Unauthorized();
+            if (_playerLogs == null) return Ok(new { cleared = true });
+
+            DateTime? cutoff = olderThan?.ToLowerInvariant() switch
+            {
+                "1h" => DateTime.UtcNow.AddHours(-1),
+                "24h" => DateTime.UtcNow.AddDays(-1),
+                "7d" => DateTime.UtcNow.AddDays(-7),
+                "30d" => DateTime.UtcNow.AddDays(-30),
+                _ => null,
+            };
+
+            _playerLogs.Clear(cutoff);
+            return Ok(new { cleared = true });
         }
 
         private IGame? FindGame(string code)
