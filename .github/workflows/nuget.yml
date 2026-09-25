@@ -21,16 +21,22 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # Version scheme mirrors build.cake: <VersionPrefix>-ci.<run_number + 500>.
-      # If that exact version already exists on nuget.org (workflow re-run),
-      # publishing is skipped by --skip-duplicate.
+      # Version scheme mirrors build.cake/nightly: <VersionPrefix>-ci.<CI run_number + 500>.
+      # The floor (max already-published ci.N + 1) keeps versions monotonic.
       - name: Resolve version
         id: ver
         run: |
           set -euo pipefail
           PROJ=src/Empostor.Api/Empostor.Api.csproj
           BASE=$(sed -n 's/.*<VersionPrefix>\([^<]*\)<\/VersionPrefix>.*/\1/p' "$PROJ" | head -1)
-          N=$(( ${{ github.run_number }} + 500 ))
+          CI_RUN=$(curl -sf -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?per_page=1" \
+            | jq -r '.workflow_runs[0].run_number')
+          N=$(( CI_RUN + 500 ))
+          MAXN=$(curl -sf "https://api.nuget.org/v3-flatcontainer/empostor.api/index.json" \
+            | jq -r '.versions[]' | grep -oE 'ci\.[0-9]+$' | grep -oE '[0-9]+$' | sort -n | tail -1 || true)
+          MAXN=${MAXN:-0}
+          if [ "$N" -le "$MAXN" ]; then N=$((MAXN + 1)); fi
           echo "suffix=ci.${N}" >> "$GITHUB_OUTPUT"
           echo "version=${BASE}-ci.${N}" >> "$GITHUB_OUTPUT"
           echo "Publishing version: ${BASE}-ci.${N}"
