@@ -11,7 +11,7 @@ namespace Empostor.Server.Service.Shared
 {
     public class IpGeolocationService
     {
-        private const string ApiUrl = "http://ip-api.com/json/{0}?lang=zh-CN&fields=status,country,regionName,city";
+        private const string ApiUrl = "http://ip-api.com/json/{0}?lang=en&fields=status,country,regionName,city";
         private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);
 
         private readonly ConcurrentDictionary<IPAddress, (string Location, DateTime Expiry)> _cache = new();
