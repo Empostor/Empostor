@@ -1,0 +1,112 @@
+  正在确定要还原的项目…
+  已还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Server\Empostor.Server.csproj (用时 584 毫秒)。
+  已还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Api.Innersloth.Generator\Empostor.Api.Innersloth.Generator.csproj (用时 487 毫秒)。
+  已还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Api\Empostor.Api.csproj (用时 487 毫秒)。
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FixedCode\Empostor.Plugins.FixedCode.csproj (用时 2.09 秒)。
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.FriendCodeValidator\Empostor.Plugins.FriendCodeValidator.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerChannel\Empostor.Plugins.PlayerChannel.csproj (用时 453 毫秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Welcome\Empostor.Plugins.Welcome.csproj (用时 453 毫秒)。
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj : error NU1102: 找不到版本为 (>= 1.0.2) 的包 Empostor.Hazel [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj : error NU1102:   - 在 nuget.org 中找到 1 个版本[ 最接近版本: 1.0.2 ] [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj : error NU1102:   - 在 Microsoft Visual Studio Offline Packages 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj : error NU1102:   - 在 BepInEx 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj : error NU1102:   - 在 Samboy063 中找到 0 个版本 [E:\WindowsFile\Empostor\Empostor\src\Empostor.sln]
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Code\Empostor.Plugin.Code.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Narrator\Empostor.Plugin.Narrator.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Message\Empostor.Plugins.Message.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Privacy\Empostor.Plugins.Privacy.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Example\Empostor.Plugins.Example.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.MapVote\Empostor.Plugins.MapVote.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Monitor\Empostor.Plugins.Monitor.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.Titles\Empostor.Plugins.Titles.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.PlayerStats\Empostor.Plugins.PlayerStats.csproj (用时 510 毫秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.DiscordWebhook\Empostor.Plugins.DiscordWebhook.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugin.Chat\Empostor.Plugin.Chat.csproj (用时 2.09 秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.QqVerify\Empostor.Plugins.QqVerify.csproj (用时 10 毫秒)。
+  未能还原 E:\WindowsFile\Empostor\Empostor\src\Empostor.Plugins.ChatFilter\Empostor.Plugins.ChatFilter.csproj (用时 8 毫秒)。
