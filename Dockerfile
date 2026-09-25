@@ -26,8 +26,6 @@ COPY src/Empostor.Server/Empostor.Server.csproj ./src/Empostor.Server/
 COPY src/Empostor.Api/Empostor.Api.csproj ./src/Empostor.Api/
 COPY src/Empostor.Api.Innersloth.Generator/Empostor.Api.Innersloth.Generator.csproj ./src/Empostor.Api.Innersloth.Generator/
 COPY src/Empostor.Plugins.PlayerLog/Empostor.Plugins.PlayerLog.csproj ./src/Empostor.Plugins.PlayerLog/
-COPY src/NextFast.Hazel-New/Next.Hazel/Next.Hazel.csproj ./src/NextFast.Hazel-New/Next.Hazel/
-COPY src/NextFast.Hazel-New/Next.Hazel.Abstractions/Next.Hazel.Abstractions.csproj ./src/NextFast.Hazel-New/Next.Hazel.Abstractions/
 COPY src/Directory.Build.props ./src/
 
 RUN case "$TARGETARCH" in \
