@@ -238,7 +238,7 @@ namespace Empostor.Server.Net
                 // Malformed / unauthenticated UDP handshake. Dispose the
                 // underlying connection so an attacker's socket is closed and
                 // removed from the listener — never leave it half-initialised.
-                _logger.LogDebug(ex, "Rejecting invalid UDP handshake on port {Port}", port);
+                _logger.LogWarning(ex, "Rejecting invalid UDP handshake on port {Port}", port);
                 connection?.DisposeInnerConnection();
                 e.Connection.Dispose();
             }

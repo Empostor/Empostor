@@ -1150,6 +1150,8 @@ internal static class AdminTemplateDefaults
                         <tr><td colspan="5" class="empty">Loading...</td></tr>
                     </tbody>
                 </table>
+                <div id="pl-pager" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+                </div>
             </div>
             <div id="p-hp" class="pnl">
                 <div class="form">
@@ -1373,25 +1375,27 @@ internal static class AdminTemplateDefaults
             </div>${!data.upToDate ? '<p style="font-size:12px;color:var(--y);margin-top:10px">' + _('updates.update_hint', 'A new version is available. Update manually.') + '</p>' : ''}`;
         }
 
-        async function fPlayerLogs() {
+        let plPage = 1;
+        const plPageSize = 100;
+
+        async function fPlayerLogs(page) {
+            if (page !== undefined) plPage = page;
             const sel = document.getElementById('pl-client');
             const curVal = sel.value;
             const typeSel = document.getElementById('pl-type');
             const curType = typeSel.value;
             const tb = document.getElementById('pl-t');
 
-            // populate client list if empty
             if (!sel.hasAttribute('data-loaded')) {
                 try {
                     const { data: cls } = await api('GET', '/api/admin/player/logs/clients');
                     sel.innerHTML = '<option value="" data-i18n="player_logs.select_client">' + _('player_logs.select_client', 'Select a player...') + '</option>';
-                    cls.forEach(c => { sel.innerHTML += `<option value="${c.clientId}">#${c.clientId} ${e(c.name)} (${e(c.friendCode)})</option>`; });
+                    cls.forEach(c => { sel.innerHTML += `<option value="${c.id}">#${c.id} ${e(c.name)} (${e(c.friendCode)})</option>`; });
                     sel.value = curVal;
                     sel.setAttribute('data-loaded', '1');
                 } catch { }
             }
 
-            // populate type filter
             if (!typeSel.hasAttribute('data-loaded')) {
                 const types = ['Chat','Report','Murder','Exile','Vote','Task','Vent','Meeting','Connect','Game','Join','Leave'];
                 types.forEach(t => { typeSel.innerHTML += `<option value="${t}">${t}</option>`; });
@@ -1399,22 +1403,48 @@ internal static class AdminTemplateDefaults
                 typeSel.setAttribute('data-loaded', '1');
             }
 
-            const url = sel.value ? `/api/admin/player/logs?clientId=${sel.value}` : '/api/admin/player/logs';
-            const { data: logs } = await api('GET', url);
-            let items = logs;
+            let url = sel.value
+                ? `/api/admin/player/logs?clientId=${sel.value}&page=${plPage}&pageSize=${plPageSize}`
+                : `/api/admin/player/logs?page=${plPage}&pageSize=${plPageSize}`;
+            const { data } = await api('GET', url);
+            let items = data.entries || [];
             if (curType) items = items.filter(l => l.type === curType);
+
             if (!items.length) {
                 tb.innerHTML = '<tr><td colspan="5" class="empty">' + _('player_logs.no_logs', 'No logs.') + '</td></tr>';
+                document.getElementById('pl-pager').innerHTML = '';
                 return;
             }
+
             const typeColor = { Chat: 'var(--a)', Report: 'var(--r)', Murder: 'var(--r)', Exile: 'var(--o)', Vote: 'var(--y)', Task: 'var(--g)', Vent: 'var(--p)', Meeting: 'var(--m)', Connect: 'var(--g)', Game: 'var(--m)', Join: 'var(--g)', Leave: 'var(--o)' };
             tb.innerHTML = items.map(l => `<tr>
                 <td style="font-size:11px;color:var(--m);white-space:nowrap">${e(l.time)}</td>
                 <td><span style="color:${typeColor[l.type] ?? 'var(--t)'};font-weight:600;font-size:12px">${e(l.type)}</span></td>
-                <td>${l.clientId ? '<b>' + e(l.playerName) + '</b><br><span class="fc">' + e(l.friendCode) + '</span>' : '—'}</td>
+                <td><b>${e(l.playerName)}</b><br><span class="fc">${e(l.friendCode)}</span></td>
                 <td>${l.gameCode && l.gameCode !== '—' ? '<span class="code" style="font-size:11px">' + e(l.gameCode) + '</span>' : '—'}</td>
                 <td style="font-size:12px">${e(l.detail)}</td>
             </tr>`).join('');
+
+            renderPlPager(data.totalPages, data.total);
+        }
+
+        function renderPlPager(totalPages, total) {
+            const pg = document.getElementById('pl-pager');
+            if (totalPages <= 1) { pg.innerHTML = ''; return; }
+            let h = `<span style="font-size:12px;color:var(--m)">${total} 条</span>`;
+            if (plPage > 1) h += `<button class="bsm" onclick="fPlayerLogs(${plPage - 1})">‹</button>`;
+            const range = 5;
+            let start = Math.max(1, plPage - range);
+            let end = Math.min(totalPages, plPage + range);
+            if (start > 1) h += `<button class="bsm" onclick="fPlayerLogs(1)">1</button>`;
+            if (start > 2) h += `<span style="color:var(--m)">…</span>`;
+            for (let i = start; i <= end; i++) {
+                h += `<button class="bsm" style="${i === plPage ? 'background:var(--p);color:#fff' : ''}" onclick="fPlayerLogs(${i})">${i}</button>`;
+            }
+            if (end < totalPages - 1) h += `<span style="color:var(--m)">…</span>`;
+            if (end < totalPages) h += `<button class="bsm" onclick="fPlayerLogs(${totalPages})">${totalPages}</button>`;
+            if (plPage < totalPages) h += `<button class="bsm" onclick="fPlayerLogs(${plPage + 1})">›</button>`;
+            pg.innerHTML = h;
         }
 
         function exportLogs() {

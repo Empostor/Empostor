@@ -474,6 +474,12 @@
       "empostor.api.innersloth.generator": {
         "type": "Project"
       },
+      "empostor.plugins.playerlog": {
+        "type": "Project",
+        "dependencies": {
+          "Empostor.Api": "[2.0.0-dev, )"
+        }
+      },
       "NextFast.Hazel": {
         "type": "Project",
         "dependencies": {

@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Empostor.Api.Innersloth.Generator\Empostor.Api.Innersloth.Generator.csproj" />
     <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
+    <ProjectReference Include="..\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj" />
     <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel.Abstractions\Next.Hazel.Abstractions.csproj" />
     <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel\Next.Hazel.csproj" />
   </ItemGroup>

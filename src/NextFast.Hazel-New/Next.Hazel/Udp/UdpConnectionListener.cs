@@ -179,7 +179,11 @@ public class UdpConnectionListener : NetworkConnectionListener
             }
 
             // Check for malformed connection attempts
-            if (data.Buffer[0] != (byte)UdpSendOption.Hello) return;
+            if (data.Buffer[0] != (byte)UdpSendOption.Hello)
+            {
+                Logger.Debug("Rejected non-Hello packet from {0} (first byte: 0x{1:X2})", data.RemoteEndPoint, data.Buffer[0]);
+                return;
+            }
 
             // Check rateLimit.
             if (!_connectionRateLimit.IsAllowed(data.RemoteEndPoint.Address))
