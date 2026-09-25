@@ -18,10 +18,9 @@
     <ProjectReference Include="..\Empostor.Api.Innersloth.Generator\Empostor.Api.Innersloth.Generator.csproj" />
     <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
     <ProjectReference Include="..\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj" />
-    <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel.Abstractions\Next.Hazel.Abstractions.csproj" />
-    <ProjectReference Include="..\NextFast.Hazel-New\Next.Hazel\Next.Hazel.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Empostor.Hazel" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.1" />

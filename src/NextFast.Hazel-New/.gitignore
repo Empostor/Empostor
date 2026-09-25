@@ -1,7 +1,0 @@
-﻿/.vscode
-/build
-/.vs
-/src/Empostor.Plugins.Debugger/Properties/launchSettings.json
-/tools
-
-.local/

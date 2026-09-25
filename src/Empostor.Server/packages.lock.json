@@ -2,6 +2,19 @@
   "version": 1,
   "dependencies": {
     "net8.0": {
+      "Empostor.Hazel": {
+        "type": "Direct",
+        "requested": "[1.0.2, )",
+        "resolved": "1.0.2",
+        "contentHash": "cblWCgvLcQ2xK6ztV04RVrghVEnJpCWe4N6G3LCNaJhuUq367a1/bbtQxUWAflqvgSvGwY3g3SClhh9eWTCBDA==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.6.1",
+          "Empostor.Hazel.Abstractions": "1.0.2",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.6",
+          "Microsoft.Extensions.ObjectPool": "8.0.1",
+          "Serilog": "4.3.1"
+        }
+      },
       "Microsoft.Extensions.FileSystemGlobbing": {
         "type": "Direct",
         "requested": "[8.0.0, )",
@@ -120,6 +133,11 @@
         "type": "Transitive",
         "resolved": "2.6.1",
         "contentHash": "vZsG2YILhthgRqO+ZVgRff4ZFKKTl0v7kqaVBLCtRvpREhfBP33pcWrdA3PRYgWuFL1RxiUFvjMUHTdBZlJcoA=="
+      },
+      "Empostor.Hazel.Abstractions": {
+        "type": "Transitive",
+        "resolved": "1.0.2",
+        "contentHash": "uJqGMASOGj+ELffmIMqubyvJ/FHjOXA1RtQdS38s1LRhP+Eu4zJMTTndr12+Q3vS0kHggFFyuExFmNxWyzWmig=="
       },
       "Microsoft.AspNetCore.Http.Abstractions": {
         "type": "Transitive",
@@ -426,8 +444,8 @@
       },
       "Serilog": {
         "type": "Transitive",
-        "resolved": "4.3.1-dev-02373",
-        "contentHash": "f0HNPaleOox5++8zqxAdi9afnUUkoznLOmd0ur/UnLbzl8bIaPyyBGOpbIJmC1kz2vHfkQ0fXh6KXMdlz7bcLQ=="
+        "resolved": "4.3.1",
+        "contentHash": "savYe7h5yRlkqBVOwP8cIRDOdqKiPmYCU4W87JH38sBmcKD5EBoXvQIw6bNEvZ/pTe1gsiye3VFCzBsoppGkXQ=="
       },
       "Serilog.Extensions.Logging": {
         "type": "Transitive",
@@ -464,11 +482,10 @@
       "empostor.api": {
         "type": "Project",
         "dependencies": {
+          "Empostor.Hazel": "[1.0.2, )",
           "Microsoft.AspNetCore.Http.Abstractions": "[2.2.0, )",
           "Microsoft.Extensions.Hosting.Abstractions": "[8.0.0, )",
-          "Microsoft.Extensions.Logging.Abstractions": "[8.0.0, )",
-          "NextFast.Hazel": "[1.0.2-dev, )",
-          "NextFast.Hazel.Abstractions": "[1.0.2-dev, )"
+          "Microsoft.Extensions.Logging.Abstractions": "[8.0.0, )"
         }
       },
       "empostor.api.innersloth.generator": {
@@ -479,19 +496,6 @@
         "dependencies": {
           "Empostor.Api": "[2.0.0-dev, )"
         }
-      },
-      "NextFast.Hazel": {
-        "type": "Project",
-        "dependencies": {
-          "BouncyCastle.Cryptography": "[2.6.1, )",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "[9.0.6, )",
-          "Microsoft.Extensions.ObjectPool": "[8.0.1, )",
-          "NextFast.Hazel.Abstractions": "[1.0.2-dev, )",
-          "Serilog": "[4.3.1-dev-02373, )"
-        }
-      },
-      "NextFast.Hazel.Abstractions": {
-        "type": "Project"
       }
     },
     "net8.0/linux-arm": {

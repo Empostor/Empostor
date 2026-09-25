@@ -1,0 +1,58 @@
+name: nuget
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/Empostor.Api/**"
+      - ".github/workflows/nuget.yml"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Version scheme mirrors build.cake: <VersionPrefix>-ci.<run_number + 500>.
+      # If that exact version already exists on nuget.org (workflow re-run),
+      # publishing is skipped by --skip-duplicate.
+      - name: Resolve version
+        id: ver
+        run: |
+          set -euo pipefail
+          PROJ=src/Empostor.Api/Empostor.Api.csproj
+          BASE=$(sed -n 's/.*<VersionPrefix>\([^<]*\)<\/VersionPrefix>.*/\1/p' "$PROJ" | head -1)
+          N=$(( ${{ github.run_number }} + 500 ))
+          echo "suffix=ci.${N}" >> "$GITHUB_OUTPUT"
+          echo "version=${BASE}-ci.${N}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: ${BASE}-ci.${N}"
+
+      - name: Pack
+        run: dotnet pack src/Empostor.Api/Empostor.Api.csproj -c Release -p:VersionSuffix=${{ steps.ver.outputs.suffix }} -p:GeneratePackageOnBuild=false -o artifacts --nologo
+
+      - name: Push to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          ls -la artifacts
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::NUGET_API_KEY secret is not set; skipping push."
+            exit 0
+          fi
+          dotnet nuget push "artifacts/Empostor.Api.*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+          dotnet nuget push "artifacts/Empostor.Api.*.snupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate || true
