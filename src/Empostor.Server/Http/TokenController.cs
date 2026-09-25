@@ -221,6 +221,16 @@ public sealed class TokenController : ControllerBase
             friendCode = await FetchFromUmeAsync(eosToken, productUserId);
         }
 
+        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Both)
+        {
+            _logger.LogDebug("TokenController Both mode: trying Ume first, then Innersloth");
+            friendCode = await FetchFromUmeAsync(eosToken, productUserId);
+            if (string.IsNullOrEmpty(friendCode))
+            {
+                friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
+            }
+        }
+
         if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Innersloth)
         {
             friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);

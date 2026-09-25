@@ -43,7 +43,7 @@
     "GameRecorderPath": ""
   },
   "AuthApi": {
-    "Mode": "Ume",
+    "Mode": "Both",
     "UmeApiBaseUrl": "https://auverify.hayashiume.top",
     "UmeApiKey": "sk-empostor-globalapikey"
   },

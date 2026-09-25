@@ -3,6 +3,7 @@ namespace Empostor.Api.Config;
 public enum AuthApiMode
 {
     Innersloth,
+    Both,
     Ume,
 }
 
