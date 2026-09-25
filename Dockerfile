@@ -76,11 +76,14 @@ RUN mkdir -p /app/plugins /app/libraries /app/Languages /app/Log /app/Data /app/
 ENV ASPNETCORE_URLS=http://0.0.0.0:80
 ENV EMPOSTOR_Server__PublicIp=0.0.0.0
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+ENV DOTNET_RUNNING_IN_CONTAINER=1
 
 EXPOSE 80/tcp
 EXPOSE 22023/tcp
-# Delta UDP port pool (no static UDP port when delta mode is enabled).
-EXPOSE 22024-22099/udp
+# Game / matchmaker UDP (Server.ListenPort) — always bound, even in delta mode.
+EXPOSE 22023/udp
+# Delta UDP port pool (Server.DeltaPortStart/End). Keep in sync with config.json.
+EXPOSE 22024-42024/udp
 
 VOLUME ["/app/config", "/app/plugins", "/app/libraries", "/app/Languages", "/app/Log", "/app/Data", "/app/marketplace"]
 

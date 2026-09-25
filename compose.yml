@@ -7,18 +7,24 @@ services:
     restart: unless-stopped
 
     ports:
-      # HTTP API / admin panel (TCP)
+      # HTTP API / Admin panel (TCP)
       - "22023:22023/tcp"
-      # Delta UDP port pool. With DeltaPortStart/End enabled, the server does
-      # NOT bind a static UDP port at startup — each player gets a unique port
-      # from this range, and when only one port is left it is shared by all
-      # new players (IP-based matching). Adjust to match config.json.
+      # Game / Matchmaker UDP — REQUIRED. The matchmaker always binds this UDP
+      # port (Server.ListenPort) so players can connect; without it the server
+      # is unreachable even in delta mode.
+      - "22023:22023/udp"
+      # Delta UDP port pool. With DeltaPortStart/End enabled, each player is
+      # assigned a unique UDP port from this range (Server.DeltaPortStart/End).
+      # Must stay in sync with config.json.
       - "22024-42024:22024-42024/udp"
       # Uncomment to expose admin HTTP panel:
       # - "80:80/tcp"
 
     volumes:
-      # Server config (can be read-only if you only edit via file)
+      # Server config. NOTE: if ./config.json does NOT exist on the host, Docker
+      # creates an EMPTY DIRECTORY at that path and mounts it over the baked-in
+      # /app/config.json, which breaks startup. Create the file first (or remove
+      # this line to use the image's default config) before running.
       - ./config.json:/app/config.json:ro
       # Writable runtime data
       - empostor_plugins:/app/plugins
@@ -31,8 +37,12 @@ services:
       - ./discord_webhook.json:/app/discord_webhook.json
 
     environment:
+      - DOTNET_RUNNING_IN_CONTAINER=1
       - ASPNETCORE_URLS=http://0.0.0.0:80
+      # PublicIp MUST be your real public IP / domain, or remote players can't
+      # connect. 0.0.0.0 / 127.0.0.1 will NOT work for anyone but localhost.
       - EMPOSTOR_Server__PublicIp=0.0.0.0
+      - EMPOSTOR_Server__ListenIp=0.0.0.0
 
 volumes:
   empostor_plugins:

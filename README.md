@@ -26,7 +26,7 @@ Download the build you'd like from the [releases](https://github.com/Empostor/Em
 
 Unzip the file and go to config.json. To make your server playable for other devices, replace the "PublicIp" field with your actual public IP address.
 
-It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/Http-server#use-a-reverse-proxy) (for HTTPS connections).
+It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/get-started/reverse-proxy#use-a-reverse-proxy) (for HTTPS connections).
 
 ## Client Setup
 
