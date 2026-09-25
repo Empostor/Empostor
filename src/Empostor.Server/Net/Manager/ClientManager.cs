@@ -2,8 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
@@ -34,8 +32,6 @@ namespace Empostor.Server.Net.Manager
         private readonly IClientFactory _clientFactory;
         private readonly AuthCacheService _authCache;
         private readonly PlayerConnectStore _playerConnectStore;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly AuthApiConfig _authApiConfig;
         private readonly PortPoolService _portPool;
         private readonly IpGeolocationService _ipGeo;
         private readonly ClientIdStore _clientIdStore;
@@ -49,8 +45,6 @@ namespace Empostor.Server.Net.Manager
             IOptions<CompatibilityConfig> compatibilityConfig,
             AuthCacheService authCache,
             PlayerConnectStore playerConnectStore,
-            IHttpClientFactory httpClientFactory,
-            IOptions<AuthApiConfig> authApiConfig,
             PortPoolService portPool,
             IpGeolocationService ipGeo,
             ClientIdStore clientIdStore)
@@ -63,8 +57,6 @@ namespace Empostor.Server.Net.Manager
             _compatibilityConfig = compatibilityConfig.Value;
             _authCache = authCache;
             _playerConnectStore = playerConnectStore;
-            _httpClientFactory = httpClientFactory;
-            _authApiConfig = authApiConfig.Value;
             _portPool = portPool;
             _ipGeo = ipGeo;
             _clientIdStore = clientIdStore;
@@ -187,27 +179,6 @@ namespace Empostor.Server.Net.Manager
 
                 friendCode = authInfo.FriendCode;
 
-                if (!string.IsNullOrEmpty(authInfo.VerifyCode) && !authInfo.FriendCodeConfirmed)
-                {
-                    var nikoResult = await QueryNikoVerifyAsync(authInfo.VerifyCode);
-                    if (nikoResult != null)
-                    {
-                        if (!string.IsNullOrEmpty(nikoResult.Value.Puid)
-                            && string.Equals(nikoResult.Value.Puid, authInfo.ProductUserId, StringComparison.OrdinalIgnoreCase))
-                        {
-                            friendCode = nikoResult.Value.FriendCode;
-                            authInfo.FriendCode = friendCode;
-                            authInfo.FriendCodeConfirmed = true;
-                        }
-                        else
-                        {
-                            _logger.LogWarning(
-                                "Niko PUID mismatch for {Name}: expected {Expected} got {Got}",
-                                name, authInfo.ProductUserId, nikoResult.Value.Puid);
-                        }
-                    }
-                }
-
                 _logger.LogInformation(
                     "#{Id} {Name} │ port {Port} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
                     id, name, deltaPort, locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
@@ -251,70 +222,6 @@ namespace Empostor.Server.Net.Manager
             => client.Id != 0
                && _clients.TryGetValue(client.Id, out var c)
                && ReferenceEquals(client, c);
-
-        private async Task<(string FriendCode, string? Puid)?> QueryNikoVerifyAsync(string verifyCode)
-        {
-            var baseUrl = _authApiConfig.NikoApiBaseUrl.TrimEnd('/');
-            var apiUrl = $"{baseUrl}/api/verify";
-            var queryUrl = $"{apiUrl}?apikey={Uri.EscapeDataString(_authApiConfig.NikoApiKey)}&verifycode={Uri.EscapeDataString(verifyCode)}";
-
-            try
-            {
-                using var client = _httpClientFactory.CreateClient("niko");
-                var resp = await client.GetAsync(queryUrl);
-                if (!resp.IsSuccessStatusCode)
-                {
-                    return null;
-                }
-
-                var json = await resp.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-
-                var status = root.TryGetProperty("VerifyStatus", out var s) ? s.GetString() : null;
-                var friendCode = root.TryGetProperty("FriendCode", out var fc) ? fc.GetString() : null;
-                var puid = root.TryGetProperty("Puid", out var p) ? p.GetString() : null;
-
-                if (string.IsNullOrEmpty(friendCode)
-                    || (status != "HttpPending" && status != "Verified"))
-                {
-                    _logger.LogDebug("Niko GET status={Status} for VerifyCode={Code}", status, verifyCode);
-                    return null;
-                }
-
-                _logger.LogInformation(
-                    "Niko GET success: FC={FC} PUID={Puid} Status={Status}",
-                    friendCode, puid, status);
-
-                _ = DeleteNikoVerifyAsync(apiUrl, verifyCode);
-
-                return (friendCode, puid);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Niko GET failed for VerifyCode={Code}", verifyCode);
-                return null;
-            }
-        }
-
-        private async Task DeleteNikoVerifyAsync(string apiUrl, string verifyCode)
-        {
-            try
-            {
-                using var client = _httpClientFactory.CreateClient("niko");
-                var body = JsonSerializer.SerializeToUtf8Bytes(new { apikey = _authApiConfig.NikoApiKey, verifycode = verifyCode });
-                var req = new HttpRequestMessage(HttpMethod.Delete, apiUrl)
-                {
-                    Content = new ByteArrayContent(body),
-                };
-                req.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
-                await client.SendAsync(req);
-            }
-            catch
-            {
-                // Best-effort cleanup
-            }
-        }
 
         private static string NormalizeIp(IPAddress? addr)
         {

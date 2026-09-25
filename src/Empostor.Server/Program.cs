@@ -140,17 +140,6 @@ namespace Empostor.Server
                             "UnityPlayer/2022.3.44f1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)");
                         client.DefaultRequestHeaders.Add("X-Unity-Version", "2022.3.44f1");
                     });
-                    services.AddHttpClient("niko", client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(15);
-                        client.DefaultRequestHeaders.Add("User-Agent",
-                            "UnityPlayer/2022.3.44f1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)");
-                        client.DefaultRequestHeaders.Add("X-Unity-Version", "2022.3.44f1");
-                    });
-                    services.AddHttpClient("relay", client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(15);
-                    });
                     services.AddHttpClient("ume", client =>
                     {
                         client.Timeout = TimeSpan.FromSeconds(15);

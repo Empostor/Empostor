@@ -35,8 +35,7 @@ public sealed class AuthCacheService : IDisposable
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp,
-        string? verifyCode = null, bool friendCodeConfirmed = false)
+    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp)
     {
         if (string.IsNullOrEmpty(productUserId) || string.IsNullOrEmpty(matchmakerToken))
         {
@@ -50,8 +49,6 @@ public sealed class AuthCacheService : IDisposable
             FriendCode = friendCode ?? string.Empty,
             ClientIp = clientIp != null ? NormalizeIp(clientIp) : null,
             CreatedAt = DateTime.UtcNow,
-            VerifyCode = verifyCode,
-            FriendCodeConfirmed = friendCodeConfirmed,
         };
 
         _byToken[matchmakerToken] = info;
@@ -112,18 +109,6 @@ public sealed class AuthCacheService : IDisposable
     public (int TokenCount, int PortCount) GetStats()
         => (_byToken.Count, _byPort.Count);
 
-    public bool UpdateFriendCode(string matchmakerToken, string friendCode)
-    {
-        if (!_byToken.TryGetValue(matchmakerToken, out var info) || Expired(info))
-        {
-            return false;
-        }
-
-        info.FriendCode = friendCode;
-        info.FriendCodeConfirmed = true;
-        return true;
-    }
-
     private void Cleanup()
     {
         // Clean token-based entries
@@ -182,8 +167,4 @@ public sealed class UserAuthInfo
     public string? ClientIp { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public string? VerifyCode { get; set; }
-
-    public bool FriendCodeConfirmed { get; set; }
 }
