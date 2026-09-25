@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - "src/Empostor.Api/**"
-      - ".github/workflows/nuget.yml"
   workflow_dispatch:
 
 jobs:
@@ -24,21 +23,30 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # Package version = <VersionPrefix> in src/Empostor.Api/Empostor.Api.csproj.
-      # Bump it manually to release a new version; the -dev suffix is cleared
-      # so the package is published as a stable version. If the version
-      # already exists on nuget.org, push is skipped by --skip-duplicate.
-      - name: Read project version
+      # Package version = <VersionPrefix>-ci.<CI run_number + 500>, mirroring
+      # the nightly build numbering. The floor (max already-published ci.N + 1)
+      # keeps versions monotonic; push is skipped by --skip-duplicate if the
+      # exact version already exists.
+      - name: Resolve version
         id: ver
         run: |
           set -euo pipefail
           PROJ=src/Empostor.Api/Empostor.Api.csproj
           BASE=$(sed -n 's/.*<VersionPrefix>\([^<]*\)<\/VersionPrefix>.*/\1/p' "$PROJ" | head -1)
-          echo "version=${BASE}" >> "$GITHUB_OUTPUT"
-          echo "Publishing version: ${BASE}"
+          CI_RUN=$(curl -sf -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?per_page=1" \
+            | jq -r '.workflow_runs[0].run_number')
+          N=$(( CI_RUN + 500 ))
+          MAXN=$(curl -sf "https://api.nuget.org/v3-flatcontainer/empostor.api/index.json" \
+            | jq -r '.versions[]' | grep -oE 'ci\.[0-9]+$' | grep -oE '[0-9]+$' | sort -n | tail -1 || true)
+          MAXN=${MAXN:-0}
+          if [ "$N" -le "$MAXN" ]; then N=$((MAXN + 1)); fi
+          echo "suffix=ci.${N}" >> "$GITHUB_OUTPUT"
+          echo "version=${BASE}-ci.${N}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: ${BASE}-ci.${N}"
 
       - name: Pack
-        run: dotnet pack src/Empostor.Api/Empostor.Api.csproj -c Release -p:VersionSuffix= -p:GeneratePackageOnBuild=false -o artifacts --nologo
+        run: dotnet pack src/Empostor.Api/Empostor.Api.csproj -c Release -p:VersionSuffix=${{ steps.ver.outputs.suffix }} -p:GeneratePackageOnBuild=false -o artifacts --nologo
 
       # Trusted publishing: exchanges the GitHub OIDC token for a short-lived
       # nuget.org API key tied to the policy (no secret needed).
