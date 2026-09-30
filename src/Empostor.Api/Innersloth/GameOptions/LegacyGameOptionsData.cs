@@ -53,12 +53,12 @@ public class LegacyGameOptionsData : IGameOptions
     public float CrewLightMod { get; set; } = 1f;
 
     /// <summary>
-    ///     Gets or sets the Light modifier for the players that are Empostors as a multiplier value.
+    ///     Gets or sets the Light modifier for the players that are Impostors as a multiplier value.
     /// </summary>
     public float ImpostorLightMod { get; set; } = 1f;
 
     /// <summary>
-    ///     Gets or sets the Empostor cooldown to kill in seconds.
+    ///     Gets or sets the Impostor cooldown to kill in seconds.
     /// </summary>
     public float KillCooldown { get; set; } = 15f;
 
@@ -115,7 +115,7 @@ public class LegacyGameOptionsData : IGameOptions
     /// <summary>
     ///     Gets or sets a value indicating whether an ejected player is an impostor or not.
     /// </summary>
-    public bool ConfirmEmpostor { get; set; } = true;
+    public bool ConfirmImpostor { get; set; } = true;
 
     /// <summary>
     ///     Gets or sets a value indicating whether players are able to see tasks being performed by other players.
@@ -186,7 +186,7 @@ public class LegacyGameOptionsData : IGameOptions
 
         if (Version >= 3)
         {
-            ConfirmEmpostor = reader.ReadBoolean();
+            ConfirmImpostor = reader.ReadBoolean();
             VisualTasks = reader.ReadBoolean();
         }
 
@@ -243,7 +243,7 @@ public class LegacyGameOptionsData : IGameOptions
 
         if (Version >= 3)
         {
-            writer.Write((bool)ConfirmEmpostor);
+            writer.Write((bool)ConfirmImpostor);
             writer.Write((bool)VisualTasks);
         }
 

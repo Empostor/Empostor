@@ -16,7 +16,7 @@ public class LegacyRoleOptionsData
 
     public byte GuardianAngelCooldown { get; set; } = 60;
 
-    public bool EmpostorsCanSeeProtect { get; set; }
+    public bool ImpostorsCanSeeProtect { get; set; }
 
     public byte ProtectionDurationSeconds { get; set; } = 10;
 
@@ -46,7 +46,7 @@ public class LegacyRoleOptionsData
         roleOptionsData.EngineerInVentMaxTime = reader.ReadByte();
         roleOptionsData.ScientistBatteryCharge = reader.ReadByte();
         roleOptionsData.ProtectionDurationSeconds = reader.ReadByte();
-        roleOptionsData.EmpostorsCanSeeProtect = reader.ReadBoolean();
+        roleOptionsData.ImpostorsCanSeeProtect = reader.ReadBoolean();
         return roleOptionsData;
     }
 
@@ -68,6 +68,6 @@ public class LegacyRoleOptionsData
         writer.Write(EngineerInVentMaxTime);
         writer.Write(ScientistBatteryCharge);
         writer.Write(ProtectionDurationSeconds);
-        writer.Write(EmpostorsCanSeeProtect);
+        writer.Write(ImpostorsCanSeeProtect);
     }
 }

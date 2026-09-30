@@ -11,7 +11,7 @@ public class NoisemakerRoleOptions : IRoleOptions
 
     public RoleTypes Type => RoleTypes.Noisemaker;
 
-    public bool EmpostorAlert { get; set; } = true;
+    public bool ImpostorAlert { get; set; } = true;
 
     public byte AlertDuration { get; set; } = 10;
 
@@ -20,7 +20,7 @@ public class NoisemakerRoleOptions : IRoleOptions
         var options = new NoisemakerRoleOptions(version);
 
         options.AlertDuration = reader.ReadByte();
-        options.EmpostorAlert = reader.ReadBoolean();
+        options.ImpostorAlert = reader.ReadBoolean();
 
         return options;
     }
@@ -28,6 +28,6 @@ public class NoisemakerRoleOptions : IRoleOptions
     public void Serialize(IMessageWriter writer)
     {
         writer.Write(AlertDuration);
-        writer.Write(EmpostorAlert);
+        writer.Write(ImpostorAlert);
     }
 }

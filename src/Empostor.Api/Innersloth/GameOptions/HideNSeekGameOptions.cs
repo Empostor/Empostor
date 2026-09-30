@@ -2,7 +2,7 @@ namespace Empostor.Api.Innersloth.GameOptions;
 
 public class HideNSeekGameOptions : IGameOptions
 {
-    public const int LatestVersion = 11;
+    public const int LatestVersion = 12;
 
     public HideNSeekGameOptions(byte version = LatestVersion)
     {
@@ -48,7 +48,7 @@ public class HideNSeekGameOptions : IGameOptions
     public float CrewLightMod { get; set; } = 1f;
 
     /// <summary>
-    ///     Gets or sets the Light modifier for the players that are Empostors as a multiplier value.
+    ///     Gets or sets the Light modifier for the players that are Impostors as a multiplier value.
     /// </summary>
     public float ImpostorLightMod { get; set; } = 1f;
 
@@ -75,7 +75,7 @@ public class HideNSeekGameOptions : IGameOptions
 
     public float CrewmateFlashlightSize { get; set; } = 0.35f;
 
-    public float EmpostorFlashlightSize { get; set; } = 0.25f;
+    public float ImpostorFlashlightSize { get; set; } = 0.25f;
 
     public bool UseFlashlight { get; set; } = true;
 
@@ -132,7 +132,7 @@ public class HideNSeekGameOptions : IGameOptions
         CrewmateVentUses = reader.ReadInt32();
         HidingTime = reader.ReadSingle();
         CrewmateFlashlightSize = reader.ReadSingle();
-        EmpostorFlashlightSize = reader.ReadSingle();
+        ImpostorFlashlightSize = reader.ReadSingle();
         UseFlashlight = reader.ReadBoolean();
         FinalHideSeekMap = reader.ReadBoolean();
         FinalHideTime = reader.ReadSingle();
@@ -171,7 +171,7 @@ public class HideNSeekGameOptions : IGameOptions
         writer.Write(CrewmateVentUses);
         writer.Write(HidingTime);
         writer.Write(CrewmateFlashlightSize);
-        writer.Write(EmpostorFlashlightSize);
+        writer.Write(ImpostorFlashlightSize);
         writer.Write(UseFlashlight);
         writer.Write(FinalHideSeekMap);
         writer.Write(FinalHideTime);

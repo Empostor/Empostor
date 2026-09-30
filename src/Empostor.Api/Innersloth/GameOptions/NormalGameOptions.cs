@@ -4,7 +4,7 @@ namespace Empostor.Api.Innersloth.GameOptions;
 
 public class NormalGameOptions : IGameOptions
 {
-    public const int LatestVersion = 11;
+    public const int LatestVersion = 12;
 
     public NormalGameOptions(byte version = LatestVersion)
     {
@@ -51,12 +51,12 @@ public class NormalGameOptions : IGameOptions
     public float CrewLightMod { get; set; } = 1f;
 
     /// <summary>
-    ///     Gets or sets the Light modifier for the players that are Empostors as a multiplier value.
+    ///     Gets or sets the Light modifier for the players that are Impostors as a multiplier value.
     /// </summary>
     public float ImpostorLightMod { get; set; } = 1f;
 
     /// <summary>
-    ///     Gets or sets the Empostor cooldown to kill in seconds.
+    ///     Gets or sets the Impostor cooldown to kill in seconds.
     /// </summary>
     public float KillCooldown { get; set; } = 15f;
 
@@ -108,7 +108,7 @@ public class NormalGameOptions : IGameOptions
     /// <summary>
     ///     Gets or sets a value indicating whether an ejected player is an impostor or not.
     /// </summary>
-    public bool ConfirmEmpostor { get; set; } = true;
+    public bool ConfirmImpostor { get; set; } = true;
 
     /// <summary>
     ///     Gets or sets a value indicating whether players are able to see tasks being performed by other players.
@@ -178,7 +178,7 @@ public class NormalGameOptions : IGameOptions
         IsDefaults = reader.ReadBoolean();
 
         EmergencyCooldown = reader.ReadByte();
-        ConfirmEmpostor = reader.ReadBoolean();
+        ConfirmImpostor = reader.ReadBoolean();
         VisualTasks = reader.ReadBoolean();
         AnonymousVotes = reader.ReadBoolean();
         TaskBarUpdate = (TaskBarUpdate)reader.ReadByte();
@@ -222,7 +222,7 @@ public class NormalGameOptions : IGameOptions
         writer.Write(IsDefaults);
 
         writer.Write((byte)EmergencyCooldown);
-        writer.Write(ConfirmEmpostor);
+        writer.Write(ConfirmImpostor);
         writer.Write(VisualTasks);
         writer.Write(AnonymousVotes);
         writer.Write((byte)TaskBarUpdate);

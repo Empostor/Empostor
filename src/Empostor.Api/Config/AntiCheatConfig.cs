@@ -20,6 +20,8 @@ namespace Empostor.Api.Config
 
         public bool EnableNameLimitChecks { get; set; } = true;
 
+        public bool EnableItemLimitChecks { get; set; } = true;
+
         public bool EnableOwnershipChecks { get; set; } = true;
 
         public bool EnableRoleChecks { get; set; } = true;
