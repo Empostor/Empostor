@@ -37,5 +37,6 @@
   "ban.notice.reason": "Dahilan: {0}",
   "ban.notice.unban": "Oras ng pag-unban: {0}",
   "ban.notice.unban_permanent": "Oras ng pag-unban: Permanente",
-  "ban.notice.contact": "Kung may tanong, makipag-ugnayan sa administrator."
+  "ban.notice.contact": "Kung may tanong, makipag-ugnayan sa administrator.",
+  "ratelimit.too_frequent": "Masyaraming request, subukan muli sa {0} minuto."
 }

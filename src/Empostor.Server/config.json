@@ -27,7 +27,10 @@
     "EnableTargetChecks": true,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
-    "PacketSizeLimit": 1203
+    "PacketSizeLimit": 1203,
+    "EnableIpRateLimit": true,
+    "IpRateLimitRequests": 30,
+    "IpRateLimitWindowMinutes": 5
   },
   "Timeout": {
     "SpawnTimeout": 5000,

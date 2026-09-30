@@ -39,5 +39,6 @@
   "ban.notice.reason": "Grund: {0}",
   "ban.notice.unban": "Entbannungszeit: {0}",
   "ban.notice.unban_permanent": "Entbannungszeit: Dauerhaft",
-  "ban.notice.contact": "Bei Fragen wende dich an den Administrator."
+  "ban.notice.contact": "Bei Fragen wende dich an den Administrator.",
+  "ratelimit.too_frequent": "Zu viele Anfragen, bitte versuche es in {0} Minute(n) erneut."
 }

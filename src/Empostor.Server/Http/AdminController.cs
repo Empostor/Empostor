@@ -827,30 +827,11 @@ namespace Empostor.Server.Http
 
         private IPAddress? GetClientIp()
         {
-            // Check reverse-proxy headers first so we get the real client IP,
+            // CDN / reverse proxy headers first so we get the real client IP,
             // not the CDN/nginx IP. Using Connection.RemoteIpAddress directly
             // would rate-limit or ban the proxy instead of the actual user.
-            var xRealIp = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(xRealIp) && IPAddress.TryParse(xRealIp, out var realIp))
-            {
-                return Normalize(realIp);
-            }
-
-            var xForwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(xForwardedFor))
-            {
-                var first = xForwardedFor.Split(',')[0].Trim();
-                if (IPAddress.TryParse(first, out var fwdIp))
-                {
-                    return Normalize(fwdIp);
-                }
-            }
-
-            return Normalize(HttpContext.Connection.RemoteIpAddress);
+            return RealIpResolver.Resolve(HttpContext);
         }
-
-        private static IPAddress? Normalize(IPAddress? ip)
-            => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4() : ip;
 
         private static object Err(string msg) => new { error = msg };
 

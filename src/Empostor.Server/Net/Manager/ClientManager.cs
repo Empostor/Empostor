@@ -6,10 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Api.Events.Managers;
+using Empostor.Api.Languages;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
 using Empostor.Api.Service;
 using Empostor.Server.Events.Client;
+using Empostor.Server.Http;
 using Empostor.Server.Net.Factories;
 using Empostor.Server.Service;
 using Empostor.Server.Service.Shared;
@@ -35,6 +37,8 @@ namespace Empostor.Server.Net.Manager
         private readonly PortPoolService _portPool;
         private readonly IpGeolocationService _ipGeo;
         private readonly ClientIdStore _clientIdStore;
+        private readonly IpRateLimitService _rateLimit;
+        private readonly LanguageService _language;
         private int _idLast;
 
         public ClientManager(
@@ -47,7 +51,9 @@ namespace Empostor.Server.Net.Manager
             PlayerConnectStore playerConnectStore,
             PortPoolService portPool,
             IpGeolocationService ipGeo,
-            ClientIdStore clientIdStore)
+            ClientIdStore clientIdStore,
+            IpRateLimitService rateLimit,
+            LanguageService language)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -60,6 +66,8 @@ namespace Empostor.Server.Net.Manager
             _portPool = portPool;
             _ipGeo = ipGeo;
             _clientIdStore = clientIdStore;
+            _rateLimit = rateLimit;
+            _language = language;
             _idLast = checked((int)_clientIdStore.GetLastId());
 
             if (_compatibilityConfig.AllowFutureGameVersions)
@@ -163,7 +171,15 @@ namespace Empostor.Server.Net.Manager
                 {
                     // Dynamic delta mode: an active port that has no auth info
                     // bound to it is an unauthenticated UDP connection — reject
-                    // it instead of admitting an anonymous client.
+                    // it instead of admitting an anonymous client. An IP that is
+                    // over the request quota gets the localized hint, everyone
+                    // else the plain authentication notice.
+                    if (IsRateLimited(null, clientIp, out var retryNoAuth))
+                    {
+                        await RejectRateLimitedAsync(connection, 0, language, retryNoAuth, NormalizeIp(clientIp));
+                        return;
+                    }
+
                     _logger.LogWarning(
                         "#{Id} {Name} │ port {Port} has no auth info │ {Ip} │ rejecting unauthenticated UDP connection",
                         id, name, deltaPort, NormalizeIp(clientIp));
@@ -172,6 +188,13 @@ namespace Empostor.Server.Net.Manager
                 }
 
                 // Port matched — cancel the allocation timeout
+                var limited = IsRateLimited(authInfo.ClientIp, clientIp, out var retryAfter);
+                if (limited)
+                {
+                    await RejectRateLimitedAsync(connection, deltaPort, language, retryAfter, NormalizeIp(clientIp));
+                    return;
+                }
+
                 _portPool.ConfirmPort(deltaPort);
                 // Mark the auth-cache entry as active so the inactivity
                 // timer never clears the port while the player is connected.
@@ -186,6 +209,12 @@ namespace Empostor.Server.Net.Manager
             else
             {
                 // Fixed-port mode: no auth binding, no PUID/FriendCode.
+                if (IsRateLimited(null, clientIp, out var retryAfter))
+                {
+                    await RejectRateLimitedAsync(connection, 0, language, retryAfter, NormalizeIp(clientIp));
+                    return;
+                }
+
                 _logger.LogInformation(
                     "#{Id} {Name} │ fixed port │ {Location} │ {Lang} │ {Platform}{Reactor}",
                     id, name, locationStr, lang, platformStr, reactorStr);
@@ -222,6 +251,58 @@ namespace Empostor.Server.Net.Manager
             => client.Id != 0
                && _clients.TryGetValue(client.Id, out var c)
                && ReferenceEquals(client, c);
+
+        // True when the IP already used up its TCP (HTTP) request quota. The
+        // IP of the HTTP handshake is preferred: behind a CDN that is the real
+        // player IP, while the UDP source address may be a proxy node.
+        private bool IsRateLimited(string? httpIp, IPAddress? udpIp, out TimeSpan retryAfter)
+        {
+            retryAfter = TimeSpan.Zero;
+
+            IPAddress? ip = null;
+            if (!string.IsNullOrEmpty(httpIp) && IPAddress.TryParse(httpIp, out var parsed))
+            {
+                ip = parsed;
+            }
+
+            ip ??= udpIp;
+            if (ip == null)
+            {
+                return false;
+            }
+
+            return _rateLimit.IsLimited(ip, out retryAfter);
+        }
+
+        // Over-quota players get a localized dialog instead of a black screen:
+        // the HTTP layer deliberately lets the join request through so the
+        // client reaches this point and can display the message.
+        private async ValueTask RejectRateLimitedAsync(
+            IHazelConnection connection,
+            int deltaPort,
+            Language language,
+            TimeSpan retryAfter,
+            string ip)
+        {
+            var minutes = IpRateLimitService.MinutesUntilRetry(retryAfter);
+            var message = _language
+                .Get(IpRateLimitService.MessageKey, language)
+                .Format(minutes)
+                .Get();
+
+            _logger.LogWarning(
+                "IpRateLimit rejecting game connection from {Ip} │ retry in {Minutes}m",
+                ip, minutes);
+
+            await connection.CustomDisconnectAsync(DisconnectReason.Custom, message);
+
+            if (deltaPort > 0)
+            {
+                // The port was never confirmed, release it right away instead
+                // of waiting for the 5-minute allocation timeout.
+                _portPool.ReturnPort(deltaPort);
+            }
+        }
 
         private static string NormalizeIp(IPAddress? addr)
         {

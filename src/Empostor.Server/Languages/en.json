@@ -70,5 +70,6 @@
   "ban.notice.reason": "Reason: {0}",
   "ban.notice.unban": "Unban time: {0}",
   "ban.notice.unban_permanent": "Unban time: Permanent",
-  "ban.notice.contact": "If you have any questions, please contact the administrator."
+  "ban.notice.contact": "If you have any questions, please contact the administrator.",
+  "ratelimit.too_frequent": "Too many requests, please try again in {0} minute(s)."
 }

@@ -33,5 +33,11 @@ namespace Empostor.Api.Config
         public bool EnablePacketSizeChecks { get; set; } = true;
 
         public int PacketSizeLimit { get; set; } = 1203;
+
+        public bool EnableIpRateLimit { get; set; } = true;
+
+        public int IpRateLimitRequests { get; set; } = 30;
+
+        public int IpRateLimitWindowMinutes { get; set; } = 5;
     }
 }
