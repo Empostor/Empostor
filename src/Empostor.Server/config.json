@@ -28,7 +28,7 @@
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
     "PacketSizeLimit": 1203,
-    "EnableItemLimitChecks ":  true
+    "EnableItemLimitChecks":  true
   },
   "Timeout": {
     "SpawnTimeout": 5000,
