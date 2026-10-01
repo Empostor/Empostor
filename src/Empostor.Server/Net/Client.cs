@@ -81,17 +81,17 @@ namespace Empostor.Server.Net
                 CheatCategory.ProtocolExtension => _antiCheatConfig.ForbidProtocolExtensions,
                 CheatCategory.GameFlow => _antiCheatConfig.EnableGameFlowChecks,
                 CheatCategory.InvalidObject => _antiCheatConfig.EnableInvalidObjectChecks,
-                CheatCategory.PacketSize => _antiCheatConfig.EnablePacketSizeChecks,
                 CheatCategory.MustBeHost => _antiCheatConfig.EnableMustBeHostChecks,
                 CheatCategory.ColorLimits => _antiCheatConfig.EnableColorLimitChecks,
                 CheatCategory.NameLimits => _antiCheatConfig.EnableNameLimitChecks,
                 CheatCategory.Ownership => _antiCheatConfig.EnableOwnershipChecks,
                 CheatCategory.Role => _antiCheatConfig.EnableRoleChecks,
                 CheatCategory.Target => _antiCheatConfig.EnableTargetChecks,
+                CheatCategory.PacketSize => _antiCheatConfig.EnablePacketSizeChecks,
+                CheatCategory.ItemLimits => _antiCheatConfig.EnableItemLimitChecks,
                 CheatCategory.Other => true,
                 _ => LogUnknownCategory(category),
             };
-
             if (!isCategoryEnabled)
             {
                 return false;
@@ -308,7 +308,7 @@ namespace Empostor.Server.Net
                         _logger.LogWarning("gcm2 {0} {1}", code, game.Code.Value);
                         return;
                     }
-                    
+
                     // We're limiting this to hosts right now. If you have a use case for this for
                     // players to use this feature, we're open to changing this.
                     if (game.HostId != Id)
