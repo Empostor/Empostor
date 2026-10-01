@@ -50,11 +50,5 @@
   "Admin": {
     "Password": "",
     "MarketplaceUrl": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/plugins.json"
-  },
-  "HPLP": {
-    "Enabled": false,
-    "RegionId": "default",
-    "RegionName": "Empostor Server",
-    "PublicUrl": ""
   }
 }

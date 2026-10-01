@@ -1,0 +1,38 @@
+{
+  "Id": "tokyo-night",
+  "Name": "Tokyo Night",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#F6F7FB",
+    "--s": "#EDEFF7",
+    "--b": "#DCE0EC",
+    "--t": "#1A1B26",
+    "--m": "#565A6E",
+    "--a": "#2E5FA3",
+    "--g": "#3D7A33",
+    "--y": "#8F5E15",
+    "--r": "#8C4351",
+    "--p": "#5A4A78",
+    "--o": "#965027",
+    "--field": "#FFFFFF",
+    "--hover": "rgba(26,27,38,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#1A1B26",
+    "--s": "#24283B",
+    "--b": "#343B58",
+    "--t": "#C0CAF5",
+    "--m": "#7C86B0",
+    "--a": "#7AA2F7",
+    "--g": "#9ECE6A",
+    "--y": "#E0AF68",
+    "--r": "#F7768E",
+    "--p": "#BB9AF7",
+    "--o": "#FF9E64",
+    "--field": "#16161E",
+    "--hover": "rgba(192,202,245,.06)",
+    "--on-a": "#1A1B26"
+  },
+  "CustomCss": "body{letter-spacing:.1px}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b);letter-spacing:.6px}\n.form,.sc,.ig,table{border-radius:10px}\n.sc{background:linear-gradient(160deg,var(--s),transparent)}\n.ni{border-radius:8px;transition:background .18s ease,color .18s ease}\n.ni:hover{background:var(--hover);transform:translateX(2px)}\n.ni.active{background:rgba(122,162,247,.12)}\n.form:hover{border-color:var(--a)}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:8px;font-weight:600;transition:transform .12s ease,box-shadow .12s ease}\nbutton.bp:hover,button.bd:hover,button.bw:hover{transform:translateY(-1px)}\nbutton.bp{box-shadow:0 1px 3px rgba(122,162,247,.3)}\ninput,select,textarea{border-radius:8px}\ninput:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(122,162,247,.2)}\n.code{text-shadow:0 0 8px rgba(122,162,247,.35)}\n.pnl.active{animation:tnIn .25s ease}\n@keyframes tnIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}"
+}

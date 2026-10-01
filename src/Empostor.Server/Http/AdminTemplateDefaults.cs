@@ -854,7 +854,6 @@ internal static class AdminTemplateDefaults
             <div class="ni active" onclick="nav('ov')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="nav.overview">Overview</span></div>
             <div class="ni" onclick="nav('gm')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M14 12h4M12 10v4"/></svg><span data-i18n="nav.games">Games</span></div>
             <div class="ni" onclick="nav('cl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M1 20v-2a4 4 0 014-4h8a4 4 0 014 4v2"/><circle cx="17" cy="7" r="4"/><path d="M23 20v-2a4 4 0 00-3-3.87"/></svg><span data-i18n="nav.clients">Clients</span></div>
-            <div class="ni" onclick="nav('pl')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span data-i18n="nav.player_logs">Player Logs</span></div>
             <div class="ni" onclick="nav('hp')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span data-i18n="nav.hplp">HPLP</span></div>
             <div class="nsep"></div>
             <div class="nlbl" data-i18n="nav.actions">Actions</div>
@@ -1074,7 +1073,10 @@ internal static class AdminTemplateDefaults
             </div>
             <div id="p-mk" class="pnl">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.5 5.5h-13A2.5 2.5 0 003 8v8a2.5 2.5 0 002.5 2.5h13A2.5 2.5 0 0021 16V8a2.5 2.5 0 00-2.5-2.5z"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg><span data-i18n="marketplace.title">Plugin Marketplace</span></h2><button class="bp bsm" onclick="fMarket()"><span data-i18n="marketplace.refresh">Refresh</span></button>
+                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.5 5.5h-13A2.5 2.5 0 003 8v8a2.5 2.5 0 002.5 2.5h13A2.5 2.5 0 0021 16V8a2.5 2.5 0 00-2.5-2.5z"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg><span data-i18n="marketplace.title">Marketplace</span></h2><div class="row" style="gap:6px;flex:0 0 auto">
+                        <button class="bp bsm" id="mk-tab-plugins" onclick="mkTab('plugins')"><span data-i18n="marketplace.tab_plugins">Plugins</span></button>
+                        <button class="bsm" id="mk-tab-themes" onclick="mkTab('themes')"><span data-i18n="marketplace.tab_themes">Themes</span></button>
+                    </div><span class="sp"></span><button class="bp bsm" onclick="fMarket()"><span data-i18n="marketplace.refresh">Refresh</span></button>
                 </div>
                 <div id="mk-list">
                     <div class="empty">Loading...</div>
@@ -1083,10 +1085,26 @@ internal static class AdminTemplateDefaults
             <div id="p-ud" class="pnl">
                 <div class="form" style="max-width:480px">
                     <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg><span data-i18n="updates.title">Server Update Check</span></h3>
+                    <div class="field">
+                        <label data-i18n="updates.channel">Release Channel</label>
+                        <select id="ud-ch" onchange="onChannelChange()">
+                            <option value="stable" data-i18n="updates.channel_stable">Stable release</option>
+                            <option value="nightly" data-i18n="updates.channel_nightly">Nightly build</option>
+                            <option value="tag" data-i18n="updates.channel_tag">Specific version</option>
+                        </select>
+                    </div>
+                    <div class="field" id="ud-tag-field" style="display:none">
+                        <label data-i18n="updates.select_version">Version</label>
+                        <select id="ud-tag" onchange="fUpdate()"></select>
+                    </div>
                     <div id="ud-box">
                         <div class="empty" data-i18n="updates.click_check">Click Check to query GitHub.</div>
                     </div>
-                    <button class="bp" style="margin-top:12px" onclick="fUpdate()"><span data-i18n="updates.check">Check for Updates</span></button>
+                    <div class="row" style="margin-top:12px">
+                        <button class="bp" onclick="fUpdate()"><span data-i18n="updates.check">Check for Updates</span></button>
+                        <button class="bw" id="ud-dl" style="display:none" onclick="fDownload()"><span data-i18n="updates.download">Download package</span></button>
+                    </div>
+                    <div id="ud-dl-result" class="msg"></div>
                 </div>
             </div>
             <div id="p-rp" class="pnl">
@@ -1115,43 +1133,6 @@ internal static class AdminTemplateDefaults
             <div id="p-si" class="pnl">
                 <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-i18n="serverinfo.title">Server Info</span></h2>
                 <div class="ig" id="si-d"></div>
-            </div>
-            <div id="p-pl" class="pnl">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-                    <h2 style="margin:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span data-i18n="player_logs.title">Player Logs</span></h2>
-                    <select id="pl-client" onchange="document.getElementById('pl-type').value='';fPlayerLogs()" style="width:auto;min-width:180px">
-                        <option value="" data-i18n="player_logs.select_client">Select a player...</option>
-                    </select>
-                    <select id="pl-type" onchange="fPlayerLogs()" style="width:auto">
-                        <option value="" data-i18n="player_logs.all_types">All types</option>
-                    </select>
-                    <button class="bp bsm" onclick="fPlayerLogs()"><span data-i18n="player_logs.refresh">Refresh</span></button>
-                    <button class="bsm" style="background:rgba(188,140,255,.12);color:var(--p);border:1px solid rgba(188,140,255,.25)" onclick="exportLogs()"><span data-i18n="player_logs.export">Export JSON</span></button>
-                    <select id="pl-clear-range" style="width:auto;min-width:160px">
-                        <option value="all" data-i18n="player_logs.clear_all">All logs</option>
-                        <option value="1h" data-i18n="player_logs.clear_1h">Older than 1 hour</option>
-                        <option value="24h" data-i18n="player_logs.clear_24h">Older than 24 hours</option>
-                        <option value="7d" data-i18n="player_logs.clear_7d">Older than 7 days</option>
-                        <option value="30d" data-i18n="player_logs.clear_30d">Older than 30 days</option>
-                    </select>
-                    <button class="bd bsm" onclick="clearLogs()"><span data-i18n="player_logs.clear">Clear Logs</span></button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th data-i18n="table.time">Time</th>
-                            <th data-i18n="table.type">Type</th>
-                            <th data-i18n="table.player">Player</th>
-                            <th data-i18n="table.game">Game</th>
-                            <th data-i18n="table.detail">Detail</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pl-t">
-                        <tr><td colspan="5" class="empty">Loading...</td></tr>
-                    </tbody>
-                </table>
-                <div id="pl-pager" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap">
-                </div>
             </div>
             <div id="p-hp" class="pnl">
                 <div class="form">
@@ -1200,7 +1181,9 @@ internal static class AdminTemplateDefaults
             event.currentTarget.classList.add('active');
             document.querySelectorAll('.pnl').forEach(e => e.classList.remove('active'));
             document.getElementById('p-' + id).classList.add('active');
-            cur = id; refreshTab();
+            cur = id;
+            if (id === 'mk') { fMarket(); }
+            refreshTab();
         }
         async function api(m, p, b) {
             const o = { method: m, headers: { 'Content-Type': 'application/json' } };
@@ -1218,6 +1201,82 @@ internal static class AdminTemplateDefaults
         function e(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         function sc(s) { return { Started: 'bs', NotStarted: 'bn', Starting: 'by', Ended: 'be' }[s] || 'bn'; }
 
+        // ---- Preserve interaction state (text selection, resized controls) across refreshes ----
+        function nodePath(root, node) {
+            const path = [];
+            let n = node;
+            while (n && n !== root) {
+                const p = n.parentNode;
+                if (!p) return null;
+                path.unshift(Array.prototype.indexOf.call(p.childNodes, n));
+                n = p;
+            }
+            return n === root ? path : null;
+        }
+        function nodeAt(root, path) {
+            let n = root;
+            for (let i = 0; i < path.length && n; i++) n = n.childNodes[path[i]];
+            return n;
+        }
+        function captureUI(root) {
+            const snap = { fields: [], ranges: [], scroll: root.scrollTop };
+            root.querySelectorAll('input,textarea,select').forEach(el => {
+                snap.fields.push({
+                    w: el.style.width, h: el.style.height,
+                    ss: el.selectionStart, se: el.selectionEnd
+                });
+            });
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed) {
+                for (let i = 0; i < sel.rangeCount; i++) {
+                    const r = sel.getRangeAt(i);
+                    if (!root.contains(r.startContainer) || !root.contains(r.endContainer)) continue;
+                    const sp = nodePath(root, r.startContainer), ep = nodePath(root, r.endContainer);
+                    if (sp && ep) snap.ranges.push({ sp, so: r.startOffset, ep, eo: r.endOffset });
+                }
+            }
+            return snap;
+        }
+        function restoreUI(root, snap) {
+            if (!snap) return;
+            const els = root.querySelectorAll('input,textarea,select');
+            if (els.length === snap.fields.length) {
+                snap.fields.forEach((f, i) => {
+                    const el = els[i];
+                    if (f.w) el.style.width = f.w;
+                    if (f.h) el.style.height = f.h;
+                    if (el === document.activeElement && el.setSelectionRange
+                        && typeof f.ss === 'number' && f.ss >= 0 && f.ss !== f.se) {
+                        try { el.setSelectionRange(f.ss, f.se); } catch (err) { }
+                    }
+                });
+            }
+            if (snap.scroll) root.scrollTop = snap.scroll;
+            if (snap.ranges.length) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                snap.ranges.forEach(rg => {
+                    const s = nodeAt(root, rg.sp), en = nodeAt(root, rg.ep);
+                    if (!s || !en) return;
+                    try {
+                        const r = document.createRange();
+                        r.setStart(s, rg.so);
+                        r.setEnd(en, rg.eo);
+                        sel.addRange(r);
+                    } catch (err) { }
+                });
+            }
+        }
+        // Re-render only when the markup really changed: an unchanged 1s refresh must
+        // not touch the DOM, otherwise selections and resized controls get reset.
+        function setHTML(el, html) {
+            if (!el || el._wbHtml === html) return;
+            const snap = captureUI(el);
+            el._wbHtml = html;
+            el.innerHTML = html;
+            restoreUI(el, snap);
+        }
+
         async function fetchStatus() {
             try {
                 const { data: d } = await api('GET', '/api/admin/status');
@@ -1230,14 +1289,14 @@ internal static class AdminTemplateDefaults
                 document.getElementById('s5').textContent = d.uptime;
                 document.getElementById('upd').textContent = 'Updated ' + new Date().toLocaleTimeString();
                 document.getElementById('dot').style.background = 'var(--g)';
-                document.getElementById('si-d').innerHTML = [
+                setHTML(document.getElementById('si-d'), [
                     [_('serverinfo.started', 'Started'), d.startTime],
                     [_('serverinfo.uptime', 'Uptime'), d.uptime],
                     [_('serverinfo.pid', 'PID'), d.pid],
                     [_('serverinfo.runtime', 'Runtime'), d.runtime],
                     [_('serverinfo.os', 'OS'), d.os],
                     [_('status.bans', 'Bans'), d.bannedIps + ' IPs, ' + d.bannedFriendCodes + ' FCs']
-                ].map(([k, v]) => `<div class="ik">${e(k)}</div><div class="iv">${e(v)}</div>`).join('');
+                ].map(([k, v]) => `<div class="ik">${e(k)}</div><div class="iv">${e(v)}</div>`).join(''));
             } catch { document.getElementById('dot').style.background = 'var(--r)'; }
         }
 
@@ -1246,42 +1305,42 @@ internal static class AdminTemplateDefaults
             const { data: gs } = await api('GET', url);
             const tb = document.getElementById(tid);
             if (!gs.length) {
-                tb.innerHTML = `<tr><td colspan="${short ? 6 : 7}" class="empty">${_('games.none', 'No games')}</td></tr>`;
+                setHTML(tb, `<tr><td colspan="${short ? 6 : 7}" class="empty">${_('games.none', 'No games')}</td></tr>`);
                 return;
             }
-            tb.innerHTML = gs.map(g => `<tr><td><span class="code">${e(g.code)}</span></td><td><span class="badge ${sc(g.state)}">${e(g.state)}</span></td><td><span class="badge ${g.isPublic ? 'bpub' : 'bprv'}">${g.isPublic ? _('games.public', 'Public') : _('games.private', 'Private')}</span></td><td>${e(g.map)}</td><td>${g.playerCount}/${g.maxPlayers}</td><td>${e(g.host)}<br><span class="fc">${e(g.hostFc)}</span></td>${short ? '' : '<td><div class="chips">' + g.players.map(p => `<span class="chip${p.isHost ? ' host' : ''}" title="${e(p.friendCode)}\n${e(p.ip)}">${e(p.name)}</span>`).join('') + '</div></td>'}</tr>`).join('');
+            setHTML(tb, gs.map(g => `<tr><td><span class="code">${e(g.code)}</span></td><td><span class="badge ${sc(g.state)}">${e(g.state)}</span></td><td><span class="badge ${g.isPublic ? 'bpub' : 'bprv'}">${g.isPublic ? _('games.public', 'Public') : _('games.private', 'Private')}</span></td><td>${e(g.map)}</td><td>${g.playerCount}/${g.maxPlayers}</td><td>${e(g.host)}<br><span class="fc">${e(g.hostFc)}</span></td>${short ? '' : '<td><div class="chips">' + g.players.map(p => `<span class="chip${p.isHost ? ' host' : ''}" title="${e(p.friendCode)}\n${e(p.ip)}">${e(p.name)}</span>`).join('') + '</div></td>'}</tr>`).join(''));
         }
 
         async function fClients() {
             const { data: cs } = await api('GET', '/api/admin/clients');
             const tb = document.getElementById('cl-t');
             if (!cs.length) {
-                tb.innerHTML = '<tr><td colspan="7" class="empty">' + _('clients.none', 'No clients') + '</td></tr>';
+                setHTML(tb, '<tr><td colspan="7" class="empty">' + _('clients.none', 'No clients') + '</td></tr>');
                 return;
             }
-            tb.innerHTML = cs.map(c => {
+            setHTML(tb, cs.map(c => {
                 let modsHtml = '<span style="color:var(--m)">—</span>';
                 if (c.reactor && c.reactor.mods && c.reactor.mods.length) {
                     modsHtml = `<span style="font-size:11px;color:var(--p)" title="${e(c.reactor.mods.map(m => m.id + ' ' + m.version).join('\n'))}">${c.reactor.mods.length} ${_('clients.mod_count', 'mod(s)')}</span>`;
                 }
                 return `<tr><td style="color:var(--m)">${c.id}</td><td>${e(c.name)}</td><td><span class="fc">${e(c.friendCode)}</span></td><td><span class="ip">${e(c.ip)}</span></td><td>${e(c.gameVersion)}</td><td>${e(c.platform)}</td><td>${modsHtml}</td><td>${c.inGame ? `<span class="code">${e(c.gameCode)}</span>` : '<span style="color:var(--m)">' + _('clients.lobby', 'Lobby') + '</span>'}</td></tr>`;
-            }).join('');
+            }).join(''));
         }
 
         async function fKickList() {
             const { data: cs } = await api('GET', '/api/admin/clients');
             const tb = document.getElementById('ki-t');
             if (!cs.length) {
-                tb.innerHTML = '<tr><td colspan="5" class="empty">' + _('clients.none', 'No clients') + '</td></tr>';
+                setHTML(tb, '<tr><td colspan="5" class="empty">' + _('clients.none', 'No clients') + '</td></tr>');
                 return;
             }
-            tb.innerHTML = cs.map(c => `<tr><td style="color:var(--m)">${c.id}</td><td>${e(c.name)}</td><td><span class="fc">${e(c.friendCode)}</span></td><td>${c.inGame ? `<span class="code">${e(c.gameCode)}</span>` : '—'}</td><td><button class="bw bsm" onclick="qkick(${c.id})">${_('kick.button', 'Kick')}</button></td></tr>`).join('');
+            setHTML(tb, cs.map(c => `<tr><td style="color:var(--m)">${c.id}</td><td>${e(c.name)}</td><td><span class="fc">${e(c.friendCode)}</span></td><td>${c.inGame ? `<span class="code">${e(c.gameCode)}</span>` : '—'}</td><td><button class="bw bsm" onclick="qkick(${c.id})">${_('kick.button', 'Kick')}</button></td></tr>`).join(''));
         }
 
         async function fBans() {
             const { data: d } = await api('GET', '/api/admin/bans');
-            document.getElementById('bl-ip').innerHTML = d.ips.length ? d.ips.map(b => bi(b, 'ip')).join('') : '<div class="empty">' + _('ban.none', 'None') + '</div>';
-            document.getElementById('bl-fc').innerHTML = d.friendCodes.length ? d.friendCodes.map(b => bi(b, 'fc')).join('') : '<div class="empty">' + _('ban.none', 'None') + '</div>';
+            setHTML(document.getElementById('bl-ip'), d.ips.length ? d.ips.map(b => bi(b, 'ip')).join('') : '<div class="empty">' + _('ban.none', 'None') + '</div>');
+            setHTML(document.getElementById('bl-fc'), d.friendCodes.length ? d.friendCodes.map(b => bi(b, 'fc')).join('') : '<div class="empty">' + _('ban.none', 'None') + '</div>');
         }
         function bi(b, t) {
             const until = b.bannedUntil ? new Date(b.bannedUntil).toLocaleString() : _('ban.permanent', 'Permanent');
@@ -1292,13 +1351,89 @@ internal static class AdminTemplateDefaults
             const { data: gs } = await api('GET', '/api/admin/games');
             const tb = document.getElementById('ge-t');
             if (!gs.length) {
-                tb.innerHTML = '<tr><td colspan="4" class="empty">' + _('games.none', 'No games') + '</td></tr>';
+                setHTML(tb, '<tr><td colspan="4" class="empty">' + _('games.none', 'No games') + '</td></tr>');
                 return;
             }
-            tb.innerHTML = gs.map(g => `<tr><td><span class="code">${e(g.code)}</span></td><td><span class="badge ${sc(g.state)}">${e(g.state)}</span></td><td>${g.playerCount}/${g.maxPlayers}</td><td><button class="bd bsm" onclick="qend('${e(g.code)}')">${_('endgame.end', 'End')}</button></td></tr>`).join('');
+            setHTML(tb, gs.map(g => `<tr><td><span class="code">${e(g.code)}</span></td><td><span class="badge ${sc(g.state)}">${e(g.state)}</span></td><td>${g.playerCount}/${g.maxPlayers}</td><td><button class="bd bsm" onclick="qend('${e(g.code)}')">${_('endgame.end', 'End')}</button></td></tr>`).join(''));
         }
 
+        let _mkTab = 'plugins';
+        function mkTab(name) {
+            _mkTab = name;
+            document.getElementById('mk-tab-plugins').classList.toggle('bp', name === 'plugins');
+            document.getElementById('mk-tab-themes').classList.toggle('bp', name === 'themes');
+            fMarket();
+        }
         async function fMarket() {
+            return _mkTab === 'themes' ? fMarketThemes() : fMarketPlugins();
+        }
+
+        // ---- Theme market: every theme the panel can offer, with a palette preview ----
+        async function fMarketThemes() {
+            const el = document.getElementById('mk-list');
+            el.innerHTML = '<div class="empty">' + _('marketplace.loading', 'Loading...') + '</div>';
+            const { ok, data } = await api('GET', '/api/admin/marketplace/themes');
+            if (!ok) { el.innerHTML = `<div class="empty" style="color:var(--r)">${e(data.error ?? 'Error')}</div>`; return; }
+            if (!data.length) { el.innerHTML = '<div class="empty">' + _('marketplace.no_themes', 'No themes.') + '</div>'; return; }
+            const active = document.getElementById('theme-sel').value;
+            el.innerHTML = '<div class="aw-grid">' + data.map(t => {
+                const swatch = themeSwatch(t);
+                const badge = t.installed
+                    ? (t.id === active
+                        ? '<span class="badge bs">' + _('marketplace.active', 'Active') + '</span>'
+                        : '<span class="badge bn">' + _('marketplace.installed', 'Installed') + '</span>')
+                    : '<span class="badge by">' + _('marketplace.remote', 'Not installed') + '</span>';
+                const action = t.installed
+                    ? `<button class="bp bsm" onclick="applyTheme('${e(t.id)}')">${_('marketplace.apply', 'Apply')}</button>`
+                    : `<button class="bw bsm" onclick="installTheme('${e(t.id)}','${e(t.downloadUrl || '')}')">${_('marketplace.install', 'Install')}</button>`;
+                const src = t.source === 'remote'
+                    ? _('marketplace.source_remote', 'remote')
+                    : t.source;
+                return `<div class="form" style="margin:0">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                        <div style="font-weight:600;font-size:14px">${e(t.name)}</div>${badge}
+                    </div>
+                    ${swatch}
+                    <div class="aw-desc">${e(t.description || '')}</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        ${action}
+                        <span style="font-size:11px;color:var(--m);margin-left:auto">${e(src)}${t.author ? ' · ' + e(t.author) : ''}</span>
+                    </div>
+                </div>`;
+            }).join('') + '</div>';
+        }
+
+        function themeSwatch(t) {
+            const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const tokens = (dark && t.darkTokens && Object.keys(t.darkTokens).length) ? t.darkTokens : t.tokens;
+            // "default" ships no tokens of its own; show the built-in palette instead of blanks.
+            const fallback = dark
+                ? { '--bg': '#0d1117', '--s': '#161b22', '--a': '#2f81f7', '--g': '#3fb950', '--t': '#e6edf3' }
+                : { '--bg': '#ffffff', '--s': '#f6f8fa', '--a': '#0969da', '--g': '#1a7f37', '--t': '#1f2328' };
+            const src = (tokens && Object.keys(tokens).length) ? tokens : fallback;
+            const keys = ['--bg', '--s', '--a', '--g', '--t'];
+            return '<div style="display:flex;gap:4px;margin-bottom:10px">' + keys.map(k =>
+                `<span style="flex:1;height:18px;border-radius:4px;border:1px solid var(--b);background:${e(src[k] || 'transparent')}"></span>`
+            ).join('') + '</div>';
+        }
+
+        async function applyTheme(id) {
+            await selectTheme(id);
+            await initThemes();
+            const sel = document.getElementById('theme-sel');
+            if (sel) sel.value = id;
+            if (_mkTab === 'themes') fMarketThemes();
+        }
+
+        async function installTheme(id, url) {
+            if (!url) return;
+            const { ok, data } = await api('POST', '/api/admin/marketplace/themes/install', { id, downloadUrl: url });
+            if (!ok) { alert(data.error ?? 'Error'); return; }
+            await initThemes();
+            fMarketThemes();
+        }
+
+        async function fMarketPlugins() {
             const el = document.getElementById('mk-list');
             el.innerHTML = '<div class="empty">' + _('marketplace.loading', 'Loading...') + '</div>';
             try {
@@ -1360,115 +1495,115 @@ internal static class AdminTemplateDefaults
             }
         }
 
+        let _udReleases = null;
+
+        function udFormatDate(v) {
+            if (!v) return '—';
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? v : d.toLocaleString();
+        }
+
+        async function loadUpdateReleases() {
+            const sel = document.getElementById('ud-tag');
+            if (_udReleases) return _udReleases;
+            sel.innerHTML = '<option value="">' + _('updates.loading_releases', 'Loading releases...') + '</option>';
+            const { ok, data } = await api('GET', '/api/admin/update/releases');
+            if (!ok || !Array.isArray(data)) {
+                sel.innerHTML = '<option value="">' + e((data && data.error) || 'Error') + '</option>';
+                return null;
+            }
+            _udReleases = data;
+            sel.innerHTML = data.map(r => {
+                const mark = r.prerelease ? ' [' + _('updates.prerelease', 'prerelease') + ']' : '';
+                return `<option value="${e(r.tag)}">${e(r.tag)}${mark} — ${e(r.version)}</option>`;
+            }).join('');
+            return data;
+        }
+
+        async function onChannelChange() {
+            const ch = document.getElementById('ud-ch').value;
+            document.getElementById('ud-tag-field').style.display = ch === 'tag' ? '' : 'none';
+            if (ch === 'tag') await loadUpdateReleases();
+            await fUpdate();
+        }
+
         async function fUpdate() {
             const box = document.getElementById('ud-box');
-            box.innerHTML = '<div class="empty">' + _('updates.checking', 'Checking...') + '</div>';
-            const { ok, data } = await api('GET', '/api/admin/update/check');
-            if (!ok) { box.innerHTML = `<div class="empty" style="color:var(--r)">${e(data.error ?? 'Error')}</div>`; return; }
+            const channel = document.getElementById('ud-ch').value;
+            const tag = channel === 'tag' ? document.getElementById('ud-tag').value : '';
+            if (channel === 'tag' && !tag) {
+                setHTML(box, '<div class="empty">' + _('updates.select_version_hint', 'Select a version to check.') + '</div>');
+                return;
+            }
+            setHTML(box, '<div class="empty">' + _('updates.checking', 'Checking...') + '</div>');
+            const q = '/api/admin/update/check?channel=' + encodeURIComponent(channel)
+                + (tag ? '&tag=' + encodeURIComponent(tag) : '');
+            const { ok, data } = await api('GET', q);
+            if (!ok) {
+                setHTML(box, updateErrorHtml(data));
+                document.getElementById('ud-dl').style.display = 'none';
+                return;
+            }
             const badge = data.upToDate
                 ? '<span class="badge bs">' + _('updates.up_to_date', 'Up to date') + '</span>'
                 : '<span class="badge be">' + _('updates.update_available', 'Update available') + '</span>';
-            box.innerHTML = `<div class="ig" style="border-radius:6px;overflow:hidden">
-                <div class="ik">${_('updates.current', 'Current')}</div><div class="iv">${e(data.currentVersion)}</div>
+            const cur = data.currentVersion;
+            const channelLabel = {
+                stable: _('updates.channel_stable', 'Stable release'),
+                nightly: _('updates.channel_nightly', 'Nightly build'),
+                tag: _('updates.channel_tag', 'Specific version')
+            }[data.channel] || data.channel;
+            const pre = data.isPrerelease
+                ? ' <span class="badge by">' + _('updates.prerelease', 'prerelease') + '</span>' : '';
+            const platform = data.platformAsset
+                ? e(data.platform) + ' · ' + e(data.platformAsset)
+                : e(data.platform) + ' — ' + _('updates.no_platform_asset', 'no package published for this platform');
+            const dl = document.getElementById('ud-dl');
+            dl.style.display = data.platformAsset ? '' : 'none';
+            dl.title = data.platformAsset || '';
+            document.getElementById('ud-dl-result').style.display = 'none';
+            setHTML(box, `<div class="ig" style="border-radius:6px;overflow:hidden">
+                <div class="ik">${_('updates.channel', 'Channel')}</div><div class="iv">${e(channelLabel)}${pre}</div>
+                <div class="ik">${_('updates.current', 'Current')}</div><div class="iv">${e(cur)}</div>
                 <div class="ik">${_('updates.latest', 'Latest')}</div><div class="iv">${e(data.latestVersion)} ${badge}</div>
+                <div class="ik">${_('updates.tag', 'Tag')}</div><div class="iv">${e(data.latestTag)}</div>
                 <div class="ik">${_('updates.release', 'Release')}</div><div class="iv"><a href="${e(data.releaseUrl)}" target="_blank" style="color:var(--a)">${e(data.latestName)}</a></div>
-            </div>${!data.upToDate ? '<p style="font-size:12px;color:var(--y);margin-top:10px">' + _('updates.update_hint', 'A new version is available. Update manually.') + '</p>' : ''}`;
+                <div class="ik">${_('updates.published', 'Published')}</div><div class="iv">${e(udFormatDate(data.publishedAt))}</div>
+                <div class="ik">${_('updates.platform', 'Package')}</div><div class="iv">${platform}</div>
+            </div>${!data.upToDate ? '<p style="font-size:12px;color:var(--y);margin-top:10px">' + _('updates.update_hint', 'A new version is available. Update manually.') + '</p>' : ''}`);
         }
 
-        let plPage = 1;
-        const plPageSize = 100;
-
-        async function fPlayerLogs(page) {
-            if (page !== undefined) plPage = page;
-            const sel = document.getElementById('pl-client');
-            const curVal = sel.value;
-            const typeSel = document.getElementById('pl-type');
-            const curType = typeSel.value;
-            const tb = document.getElementById('pl-t');
-
-            if (!sel.hasAttribute('data-loaded')) {
-                try {
-                    const { data: cls } = await api('GET', '/api/admin/player/logs/clients');
-                    sel.innerHTML = '<option value="" data-i18n="player_logs.select_client">' + _('player_logs.select_client', 'Select a player...') + '</option>';
-                    cls.forEach(c => { sel.innerHTML += `<option value="${c.id}">#${c.id} ${e(c.name)} (${e(c.friendCode)})</option>`; });
-                    sel.value = curVal;
-                    sel.setAttribute('data-loaded', '1');
-                } catch { }
-            }
-
-            if (!typeSel.hasAttribute('data-loaded')) {
-                const types = ['Chat','Report','Murder','Exile','Vote','Task','Vent','Meeting','Connect','Game','Join','Leave'];
-                types.forEach(t => { typeSel.innerHTML += `<option value="${t}">${t}</option>`; });
-                typeSel.value = curType;
-                typeSel.setAttribute('data-loaded', '1');
-            }
-
-            let url = sel.value
-                ? `/api/admin/player/logs?clientId=${sel.value}&page=${plPage}&pageSize=${plPageSize}`
-                : `/api/admin/player/logs?page=${plPage}&pageSize=${plPageSize}`;
-            const { data } = await api('GET', url);
-            let items = data.entries || [];
-            if (curType) items = items.filter(l => l.type === curType);
-
-            if (!items.length) {
-                tb.innerHTML = '<tr><td colspan="5" class="empty">' + _('player_logs.no_logs', 'No logs.') + '</td></tr>';
-                document.getElementById('pl-pager').innerHTML = '';
-                return;
-            }
-
-            const typeColor = { Chat: 'var(--a)', Report: 'var(--r)', Murder: 'var(--r)', Exile: 'var(--o)', Vote: 'var(--y)', Task: 'var(--g)', Vent: 'var(--p)', Meeting: 'var(--m)', Connect: 'var(--g)', Game: 'var(--m)', Join: 'var(--g)', Leave: 'var(--o)' };
-            tb.innerHTML = items.map(l => `<tr>
-                <td style="font-size:11px;color:var(--m);white-space:nowrap">${e(l.time)}</td>
-                <td><span style="color:${typeColor[l.type] ?? 'var(--t)'};font-weight:600;font-size:12px">${e(l.type)}</span></td>
-                <td><b>${e(l.playerName)}</b><br><span class="fc">${e(l.friendCode)}</span></td>
-                <td>${l.gameCode && l.gameCode !== '—' ? '<span class="code" style="font-size:11px">' + e(l.gameCode) + '</span>' : '—'}</td>
-                <td style="font-size:12px">${e(l.detail)}</td>
-            </tr>`).join('');
-
-            renderPlPager(data.totalPages, data.total);
+        // Rate limiting is a configuration problem, not a crash: show it in amber with the reset time.
+        function updateErrorHtml(data) {
+            const limited = data && data.rateLimited;
+            const reset = limited && data.resetAt
+                ? '<br>' + _('updates.rate_limit_reset', 'Rate limit resets at ') + e(data.resetAt)
+                : '';
+            const tone = limited ? 'var(--y)' : 'var(--r)';
+            return `<div class="empty" style="color:${tone}">${e((data && data.error) || 'Error')}${reset}</div>`;
         }
 
-        function renderPlPager(totalPages, total) {
-            const pg = document.getElementById('pl-pager');
-            if (totalPages <= 1) { pg.innerHTML = ''; return; }
-            let h = `<span style="font-size:12px;color:var(--m)">${total} 条</span>`;
-            if (plPage > 1) h += `<button class="bsm" onclick="fPlayerLogs(${plPage - 1})">‹</button>`;
-            const range = 5;
-            let start = Math.max(1, plPage - range);
-            let end = Math.min(totalPages, plPage + range);
-            if (start > 1) h += `<button class="bsm" onclick="fPlayerLogs(1)">1</button>`;
-            if (start > 2) h += `<span style="color:var(--m)">…</span>`;
-            for (let i = start; i <= end; i++) {
-                h += `<button class="bsm" style="${i === plPage ? 'background:var(--p);color:#fff' : ''}" onclick="fPlayerLogs(${i})">${i}</button>`;
-            }
-            if (end < totalPages - 1) h += `<span style="color:var(--m)">…</span>`;
-            if (end < totalPages) h += `<button class="bsm" onclick="fPlayerLogs(${totalPages})">${totalPages}</button>`;
-            if (plPage < totalPages) h += `<button class="bsm" onclick="fPlayerLogs(${plPage + 1})">›</button>`;
-            pg.innerHTML = h;
-        }
-
-        function exportLogs() {
-            const sel = document.getElementById('pl-client');
-            const url = sel.value ? `/api/admin/player/logs/export?clientId=${sel.value}` : '/api/admin/player/logs/export';
-            window.open(url, '_blank');
-        }
-
-        async function clearLogs() {
-            const range = document.getElementById('pl-clear-range').value;
-            const msgKey = range === 'all'
-                ? _('player_logs.confirm_clear_all', 'Clear all player logs? This cannot be undone.')
-                : _('player_logs.confirm_clear_range', 'Clear logs older than the selected period? This cannot be undone.');
-            if (!confirm(msgKey)) return;
-            const { ok, data } = await api('POST', `/api/admin/player/logs/clear?olderThan=${encodeURIComponent(range)}`);
-            msg('bi-msg', ok, ok ? _('player_logs.cleared', 'Player logs cleared.') : (data.error ?? 'Error'));
-            if (!ok) return;
-            // Reset the client dropdown cache and table so the cleared state is
-            // reflected immediately (no stale player list / logs remain).
-            const sel = document.getElementById('pl-client');
-            sel.removeAttribute('data-loaded');
-            sel.value = '';
-            document.getElementById('pl-type').value = '';
-            fPlayerLogs();
+        // Downloads into Update/{version}/{asset name} on the server, never touching the running install.
+        async function fDownload() {
+            const btn = document.getElementById('ud-dl');
+            const label = btn.querySelector('span');
+            const result = document.getElementById('ud-dl-result');
+            const channel = document.getElementById('ud-ch').value;
+            const tag = channel === 'tag' ? document.getElementById('ud-tag').value : '';
+            if (channel === 'tag' && !tag) return;
+            const original = label.textContent;
+            btn.disabled = true;
+            label.textContent = _('updates.downloading', 'Downloading...');
+            const { ok, data } = await api('POST', '/api/admin/update/download', { channel, tag });
+            btn.disabled = false;
+            label.textContent = original;
+            result.className = 'msg ' + (ok ? 'ok' : 'err');
+            result.textContent = ok
+                ? (data.alreadyDownloaded
+                    ? _('updates.download_exists', 'Already downloaded: ')
+                    : _('updates.download_saved', 'Saved to ')) + data.relativePath
+                : (data.error ?? 'Error');
+            result.style.display = 'block';
         }
 
         async function fHplp() {
@@ -1509,7 +1644,6 @@ internal static class AdminTemplateDefaults
             if (cur === 'ki') fKickList();
             if (cur === 'bl') fBans();
             if (cur === 'ge') fGamesEnd();
-            if (cur === 'pl') fPlayerLogs();
             if (cur === 'hp') fHplp();
             if (cur.startsWith('ext-')) loadExtension(cur.slice(4));
         }
@@ -1720,8 +1854,8 @@ internal static class AdminTemplateDefaults
             const ae = document.activeElement;
             if (ae && body.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
             const { ok, data } = await api('GET', '/api/admin/ext/' + encodeURIComponent(id));
-            if (!ok) { body.innerHTML = '<div class="empty">' + (data && data.error ? e(data.error) : 'Error') + '</div>'; return; }
-            body.innerHTML = (data.widgets || []).map(renderWidget).join('');
+            if (!ok) { setHTML(body, '<div class="empty">' + (data && data.error ? e(data.error) : 'Error') + '</div>'); return; }
+            setHTML(body, (data.widgets || []).map(renderWidget).join(''));
         }
         function toast(ok, text) {
             let t = document.getElementById('ext-toast');
@@ -1829,6 +1963,7 @@ internal static class AdminTemplateDefaults
                 _themeDefault = data.default || 'default';
                 _modeDefault = data.defaultMode === 'light' ? 'light' : 'dark';
                 const sel = document.getElementById('theme-sel');
+                sel.innerHTML = '';
                 (data.themes || []).forEach(function (t) {
                     const o = document.createElement('option');
                     o.value = t.id;

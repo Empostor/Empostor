@@ -1,0 +1,38 @@
+{
+  "Id": "midnight",
+  "Name": "Midnight OLED",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#F5F7FA",
+    "--s": "#EBEFF5",
+    "--b": "#D9E0EA",
+    "--t": "#0B1220",
+    "--m": "#5A6B85",
+    "--a": "#0A84FF",
+    "--g": "#1FA84F",
+    "--y": "#B57A00",
+    "--r": "#E5484D",
+    "--p": "#8E4EC6",
+    "--o": "#C4601A",
+    "--field": "#FFFFFF",
+    "--hover": "rgba(11,18,32,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#000000",
+    "--s": "#0B0F14",
+    "--b": "#1C232C",
+    "--t": "#FFFFFF",
+    "--m": "#8B98A9",
+    "--a": "#4C9AFF",
+    "--g": "#3DDC84",
+    "--y": "#FFD60A",
+    "--r": "#FF453A",
+    "--p": "#BF5AF2",
+    "--o": "#FF9F0A",
+    "--field": "#080B10",
+    "--hover": "rgba(255,255,255,.05)",
+    "--on-a": "#000000"
+  },
+  "CustomCss": "[data-theme=\"dark\"] body,body{background:var(--bg)}\n[data-theme=\"dark\"] header,[data-theme=\"dark\"] nav{background:#050709}\n[data-theme=\"dark\"] .sc,[data-theme=\"dark\"] .form,[data-theme=\"dark\"] table{border-color:#1C232C}\n[data-theme=\"dark\"] .ni.active{background:rgba(76,154,255,.16)}\n[data-theme=\"dark\"] .code{color:#4C9AFF;text-shadow:0 0 10px rgba(76,154,255,.5)}\n[data-theme=\"dark\"] .dot{box-shadow:0 0 8px var(--g)}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b)}\n.form,.sc,.ig,table{border-radius:8px}\n.ni{border-left-width:3px}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:6px;font-weight:600}\ninput,select,textarea{border-radius:6px}\ninput:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(76,154,255,.22)}"
+}

@@ -1,22 +1,21 @@
 using System;
-using System.IO;
-using System.Text.Json;
 using Empostor.Api.Events.Player;
+using Empostor.Api.Innersloth;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugin.Chat;
 
 public sealed class ChatService
 {
-    private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-
     private readonly ILogger<ChatService> _logger;
     private readonly ChatConfig _config;
+    private readonly ChatStore _store;
 
-    public ChatService(ILogger<ChatService> logger)
+    public ChatService(ILogger<ChatService> logger, ChatStore store)
     {
         _logger = logger;
-        _config = LoadConfig();
+        _config = ChatConfig.Load();
+        _store = store;
     }
 
     public void HandleChatMessage(IPlayerChatEvent e)
@@ -44,6 +43,7 @@ public sealed class ChatService
 
         var isHost = e.ClientPlayer.IsHost;
         var maxLength = isHost ? _config.HostMaxMessageLength : _config.PlayerMaxMessageLength;
+        var blocked = false;
 
         if (e.Message.Length > maxLength)
         {
@@ -53,33 +53,21 @@ public sealed class ChatService
 
             e.PlayerControl.SendChatToPlayerAsync(_config.TooLongMessage, e.PlayerControl);
             e.IsCancelled = true;
+            blocked = true;
         }
-    }
 
-    private static ChatConfig LoadConfig()
-    {
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "boot_chat.json");
-        if (!File.Exists(path))
+        // Feed the admin panel's Chat Monitor. Off by default only if an operator opts out.
+        if (_config.CaptureMessages)
         {
-            var defaults = new ChatConfig();
-            var json = JsonSerializer.Serialize(new { Chat = defaults }, JsonOpts);
-            File.WriteAllText(path, json);
-            return defaults;
+            _store.Add(new ChatEntry(
+                DateTime.UtcNow,
+                e.Game != null ? GameCodeParser.IntToGameName(e.Game.Code) : "—",
+                playerName,
+                e.ClientPlayer.Client.FriendCode,
+                e.ClientPlayer.Client.Id,
+                blocked ? "Blocked" : channelName,
+                e.Message,
+                blocked));
         }
-
-        try
-        {
-            var json = File.ReadAllText(path);
-            var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("Chat", out var chatEl))
-            {
-                var cfg = JsonSerializer.Deserialize<ChatConfig>(chatEl.GetRawText());
-                if (cfg != null)
-                    return cfg;
-            }
-        }
-        catch (JsonException) { }
-
-        return new ChatConfig();
     }
 }

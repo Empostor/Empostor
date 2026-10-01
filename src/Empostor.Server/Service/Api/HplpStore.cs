@@ -3,29 +3,20 @@ using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Service.Api;
 
+/// <summary>
+///     Runtime HPLP settings. <c>Data/HplpData.json</c> is the only source — the admin panel reads
+///     and writes it, and nothing is taken from config.json.
+/// </summary>
 public sealed class HplpStore : JsonDataStore<HplpConfig>
 {
-    public HplpStore(ILogger<HplpStore> logger, IOptions<HplpConfig> config)
+    public HplpStore(ILogger<HplpStore> logger)
         : base(logger, legacyPath: "hplp.json")
     {
         JsonOpts.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-
-        // Try loading from persisted file
         Load();
-
-        // If no persisted data, fall back to config.json defaults
-        if (string.IsNullOrEmpty(RegionId) && string.IsNullOrEmpty(RegionName) && string.IsNullOrEmpty(PublicUrl))
-        {
-            var cfg = config.Value;
-            Enabled = cfg.Enabled;
-            RegionId = cfg.RegionId;
-            RegionName = cfg.RegionName;
-            PublicUrl = cfg.PublicUrl;
-        }
     }
 
     public bool Enabled { get; set; }

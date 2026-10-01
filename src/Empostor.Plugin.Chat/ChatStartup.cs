@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,9 @@ public sealed class ChatStartup : IPluginStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<ChatStore>();
         services.AddSingleton<ChatService>();
         services.AddSingleton<IEventListener, ChatEventListener>();
+        services.AddSingleton<IAdminExtension, ChatAdminExtension>();
     }
 }

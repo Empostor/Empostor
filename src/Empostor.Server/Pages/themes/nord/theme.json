@@ -1,0 +1,38 @@
+{
+  "Id": "nord",
+  "Name": "Nord",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#ECEFF4",
+    "--s": "#E5E9F0",
+    "--b": "#D8DEE9",
+    "--t": "#2E3440",
+    "--m": "#4C566A",
+    "--a": "#5E81AC",
+    "--g": "#4C8C4A",
+    "--y": "#B58A28",
+    "--r": "#BF616A",
+    "--p": "#8F6FA8",
+    "--o": "#D08770",
+    "--field": "#FFFFFF",
+    "--hover": "rgba(46,52,64,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#2E3440",
+    "--s": "#3B4252",
+    "--b": "#4C566A",
+    "--t": "#ECEFF4",
+    "--m": "#97A1B5",
+    "--a": "#88C0D0",
+    "--g": "#A3BE8C",
+    "--y": "#EBCB8B",
+    "--r": "#BF616A",
+    "--p": "#B48EAD",
+    "--o": "#D08770",
+    "--field": "#2B3140",
+    "--hover": "rgba(236,239,244,.06)",
+    "--on-a": "#2E3440"
+  },
+  "CustomCss": "body{letter-spacing:.1px}\nh2{border-bottom:1px solid var(--b);padding-bottom:8px}\n.form,.sc,.ig,table{border-radius:8px}\n.ni{border-radius:0 8px 8px 0}\nbutton.bp,button.bd,button.bw{border-radius:7px;letter-spacing:.2px}\ninput:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(94,129,172,.2)}\n.hdr{background:var(--s)}"
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "a/",
+    "name": "Anthropic",
+    "description": "The theme like anthropic design",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/anthropic.json"
+  },
+  {
+    "id": "nord",
+    "name": "Nord",
+    "description": "Cool polar blues with muted arctic greys. Calm, low-contrast and easy on the eyes.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/nord.json"
+  },
+  {
+    "id": "dracula",
+    "name": "Dracula",
+    "description": "Purple-accented dark palette with rounded cards and soft glow highlights.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/dracula.json"
+  },
+  {
+    "id": "solarized",
+    "name": "Solarized",
+    "description": "Precision-tuned warm beige and deep teal pair with a monospace typeface.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/solarized.json"
+  },
+  {
+    "id": "gruvbox",
+    "name": "Gruvbox",
+    "description": "Retro warm earth tones, chunky two-pixel borders and bold labels.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/gruvbox.json"
+  },
+  {
+    "id": "tokyo-night",
+    "name": "Tokyo Night",
+    "description": "Neon-lit midnight blues with gradient surfaces and a soft accent glow.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/tokyo-night.json"
+  },
+  {
+    "id": "catppuccin",
+    "name": "Catppuccin",
+    "description": "Pastel palette with heavily rounded pill buttons and gentle shadows.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/catppuccin.json"
+  },
+  {
+    "id": "rose-pine",
+    "name": "Rosé Pine",
+    "description": "Dusty rose and iris accents on a warm serif-heavy layout.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/rose-pine.json"
+  },
+  {
+    "id": "midnight",
+    "name": "Midnight OLED",
+    "description": "True-black AMOLED panels with a high-contrast accent for late-night shifts.",
+    "author": "Empostor",
+    "downloadUrl": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes/midnight.json"
+  }
+]

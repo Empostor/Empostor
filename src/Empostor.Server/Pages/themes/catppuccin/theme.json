@@ -1,0 +1,38 @@
+{
+  "Id": "catppuccin",
+  "Name": "Catppuccin",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#EFF1F5",
+    "--s": "#E6E9EF",
+    "--b": "#DCE0E8",
+    "--t": "#4C4F69",
+    "--m": "#6C6F85",
+    "--a": "#1E66F5",
+    "--g": "#40A02B",
+    "--y": "#DF8E1D",
+    "--r": "#D20F39",
+    "--p": "#8839EF",
+    "--o": "#FE640B",
+    "--field": "#FFFFFF",
+    "--hover": "rgba(76,79,105,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#1E1E2E",
+    "--s": "#313244",
+    "--b": "#45475A",
+    "--t": "#CDD6F4",
+    "--m": "#A6ADC8",
+    "--a": "#89B4FA",
+    "--g": "#A6E3A1",
+    "--y": "#F9E2AF",
+    "--r": "#F38BA8",
+    "--p": "#CBA6F7",
+    "--o": "#FAB387",
+    "--field": "#181825",
+    "--hover": "rgba(205,214,244,.06)",
+    "--on-a": "#1E1E2E"
+  },
+  "CustomCss": "body{letter-spacing:.15px}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b)}\n.form,.sc,.ig,table{border-radius:14px}\n.form,.sc{border:1px solid var(--b);box-shadow:0 1px 3px rgba(76,79,105,.05)}\n.form:hover,.sc:hover{border-color:var(--a);box-shadow:0 4px 16px rgba(137,180,250,.14)}\n.badge{border-radius:999px;padding:3px 10px;font-weight:600}\n.chip{border-radius:999px}\n.ni{border-radius:0 12px 12px 0;transition:background .15s ease,color .15s ease}\n.ni:hover{background:var(--hover)}\n.ni.active{background:rgba(137,180,250,.14);font-weight:600}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:999px;font-weight:600;padding-left:18px;padding-right:18px;transition:transform .12s ease,box-shadow .12s ease}\nbutton.bp:hover,button.bd:hover,button.bw:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(76,79,105,.18)}\ninput,select,textarea{border-radius:10px}\ninput:focus,select:focus,textarea:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(137,180,250,.18)}\nth{background:var(--s);font-weight:600}"
+}
