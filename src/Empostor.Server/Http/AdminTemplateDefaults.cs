@@ -1183,6 +1183,12 @@ internal static class AdminTemplateDefaults
             document.getElementById('p-' + id).classList.add('active');
             cur = id;
             if (id === 'mk') { fMarket(); }
+            if (id.startsWith('ext-')) {
+                // Entering a plugin panel always loads it once; the per-second tick in refreshTab
+                // only re-fetches panels that declared AutoRefresh.
+                loadExtension(id.slice(4));
+                return;
+            }
             refreshTab();
         }
         async function api(m, p, b) {
