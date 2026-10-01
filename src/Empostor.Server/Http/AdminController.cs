@@ -205,6 +205,7 @@ namespace Empostor.Server.Http
                 title = e.Title,
                 icon = e.Icon,
                 section = e.Section,
+                autoRefresh = e.AutoRefresh,
             }));
         }
 

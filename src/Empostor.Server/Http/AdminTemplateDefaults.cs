@@ -1645,7 +1645,12 @@ internal static class AdminTemplateDefaults
             if (cur === 'bl') fBans();
             if (cur === 'ge') fGamesEnd();
             if (cur === 'hp') fHplp();
-            if (cur.startsWith('ext-')) loadExtension(cur.slice(4));
+            if (cur.startsWith('ext-')) {
+                // Only panels that declare themselves live are rebuilt each second; static panels
+                // keep their DOM stable so in-progress typing and row editing are never wiped.
+                const extId = cur.slice(4);
+                if (extId !== _extPaused && _extAutoRefresh[extId]) loadExtension(extId);
+            }
         }
 
         async function doBc() {
@@ -1914,12 +1919,13 @@ internal static class AdminTemplateDefaults
                 const box = el.closest('[data-entries]');
                 const row = collectEntryInputs(box, '.ent-new');
                 if (!row) return;
+                _extPaused = null;
                 dispatch(extId, el.getAttribute('data-act'), null, { row: row });
                 return;
             }
-            else if (w === 'ent-edit') { startEntryEdit(el); return; }
-            else if (w === 'ent-save') { saveEntryEdit(el, extId); return; }
-            else if (w === 'ent-cancel') { loadExtension(extId); return; }
+            else if (w === 'ent-edit') { _extPaused = extId; startEntryEdit(el); return; }
+            else if (w === 'ent-save') { saveEntryEdit(el, extId); _extPaused = null; return; }
+            else if (w === 'ent-cancel') { _extPaused = null; loadExtension(extId); return; }
             else if (w === 'toggle') value = el.checked;
             else value = el.value;
             dispatch(extId, el.getAttribute('data-act'), value);
@@ -1974,12 +1980,30 @@ internal static class AdminTemplateDefaults
             tr.querySelectorAll('input.ent-cell').forEach(function (inp) { row[inp.getAttribute('data-key')] = inp.value.trim(); });
             await dispatch(extId, btn.getAttribute('data-act'), btn.getAttribute('data-row'), { row: row });
         }
+        // While an entries widget has focus (search / add / inline edit), pause its 1-second
+        // rebuild so typing is not wiped. Cleared on blur and on save/cancel.
+        let _extPaused = null;
+        const _extAutoRefresh = {};
+        document.addEventListener('focusin', function (ev) {
+            const box = ev.target.closest ? ev.target.closest('[data-entries]') : null;
+            if (!box) return;
+            const holder = box.closest('[data-ext]');
+            if (holder) _extPaused = holder.getAttribute('data-ext');
+        });
+        document.addEventListener('focusout', function (ev) {
+            const el = ev.target;
+            if (!el.classList || !el.closest || !el.closest('[data-entries]')) return;
+            // Inline edit inputs keep the pause until Save/Cancel; search/add release on blur.
+            if (el.classList.contains('ent-cell')) return;
+            _extPaused = null;
+        });
         async function initExtensions() {
             try {
                 const { data } = await api('GET', '/api/admin/ext');
                 const navBox = document.getElementById('plugins-nav');
                 const ct = document.querySelector('ct');
                 (data || []).forEach(function (x) {
+                    _extAutoRefresh[x.id] = x.autoRefresh === true;
                     const ni = document.createElement('div');
                     ni.className = 'ni';
                     ni.innerHTML = iconSvg(x.icon, 16) + '<span>' + e(x.title) + '</span>';

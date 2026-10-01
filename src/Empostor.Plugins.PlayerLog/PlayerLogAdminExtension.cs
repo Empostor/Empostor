@@ -35,6 +35,9 @@ public sealed class PlayerLogAdminExtension : IAdminExtension
 
     public string Section => "Server";
 
+    /// <summary>The chat feed mirrors live server state, so keep the 1-second rebuild.</summary>
+    public bool AutoRefresh => true;
+
     public void Build(AdminPanelBuilder b)
     {
         var players = _store.GetLoggedClientIds();
