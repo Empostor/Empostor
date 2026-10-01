@@ -20,15 +20,16 @@
     "AllowCheatingHosts": "Never",
     "EnableGameFlowChecks": true,
     "EnableMustBeHostChecks": true,
+    "EnableInvalidObjectChecks": true,
     "EnableColorLimitChecks": true,
     "EnableNameLimitChecks": true,
+    "EnableItemLimitChecks": true,
     "EnableOwnershipChecks": true,
     "EnableRoleChecks": true,
     "EnableTargetChecks": true,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
-    "PacketSizeLimit": 1203,
-    "EnableItemLimitChecks":  true
+    "PacketSizeLimit": 1203
   },
   "Timeout": {
     "SpawnTimeout": 5000,

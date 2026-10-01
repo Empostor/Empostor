@@ -1843,6 +1843,26 @@ internal static class AdminTemplateDefaults
                 case 'table': return '<table><thead><tr>' + (w.columns || []).map(function (c) { return '<th>' + e(c) + '</th>'; }).join('') + '</tr></thead><tbody>' + (w.rows || []).map(function (r) { return '<tr>' + (r || []).map(function (c) { return '<td class="' + (c.tone && c.tone !== 'default' ? 'tone-' + c.tone : '') + (c.monospace ? ' mono' : '') + '">' + e(c.text) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
                 case 'chips': return '<div class="aw-chips"><div class="chips-list">' + (w.items || []).map(function (c) { return '<span class="chip">' + e(c.label) + '<button data-act="' + e(w.removeAction) + '" data-w="chip-remove" data-value="' + e(c.value) + '" title="Remove">&times;</button></span>'; }).join('') + '</div><div class="row"><input type="text" data-w="chip-input" placeholder="' + e(w.placeholder || '') + '"><button class="bp bsm" data-act="' + e(w.addAction) + '" data-w="chip-add">' + e(w.addLabel || 'Add') + '</button></div></div>';
                 case 'divider': return '<hr class="aw-divider">';
+                case 'entries': {
+                    const fields = w.fields || [];
+                    const rows = w.rows || [];
+                    const eid = 'ent' + Math.floor(Math.random() * 1e9);
+                    const rowHtml = function (r) {
+                        const id = (fields.length && r[fields[0].key]) || '';
+                        const cells = fields.map(f => `<td data-key="${e(f.key)}" data-val="${e(r[f.key] || '')}"${f.monospace ? ' class="mono"' : ''}>${e(r[f.key] || '')}</td>`).join('');
+                        return `<tr data-ent-row="${e(id)}">${cells}<td class="ent-ops">` +
+                            `<button class="bsm" data-act="${e(w.editAction)}" data-w="ent-edit" data-ent="${eid}" data-row="${e(id)}" title="Edit">&#9998;</button> ` +
+                            `<button class="bd bsm" data-act="${e(w.removeAction)}" data-w="ent-remove" data-ent="${eid}" data-row="${e(id)}" title="Delete">&#10005;</button></td></tr>`;
+                    };
+                    return '<div class="aw-entries" data-entries="' + eid + '">' +
+                        '<div class="row"><input type="text" class="ent-search" placeholder="' + e(w.searchPlaceholder || 'Search...') + '"></div>' +
+                        '<table><thead><tr>' + fields.map(f => `<th>${e(f.label)}</th>`).join('') + '<th></th></tr></thead><tbody>' +
+                        (rows.length ? rows.map(rowHtml).join('') : `<tr><td colspan="${fields.length + 1}" class="empty">${_('entries.empty', 'No entries yet.')}</td></tr>`) +
+                        '</tbody></table>' +
+                        '<div class="row" style="margin-top:8px">' + fields.map(f => `<input type="text" class="ent-new" data-key="${e(f.key)}" placeholder="${e(f.label)}">`).join('') +
+                        `<button class="bp bsm" data-act="${e(w.addAction)}" data-w="ent-add" data-ent="${eid}">${e(w.addLabel || 'Add')}</button></div>` +
+                        '</div>';
+                }
                 default: return '';
             }
         }
@@ -1872,8 +1892,9 @@ internal static class AdminTemplateDefaults
             clearTimeout(t._h);
             t._h = setTimeout(function () { t.style.opacity = '0'; }, 3500);
         }
-        async function dispatch(extId, action, value) {
-            const { ok, data } = await api('POST', '/api/admin/ext/' + encodeURIComponent(extId) + '/' + encodeURIComponent(action), { value: value });
+        async function dispatch(extId, action, value, payload) {
+            const body = payload ? Object.assign({ value: value }, payload) : { value: value };
+            const { ok, data } = await api('POST', '/api/admin/ext/' + encodeURIComponent(extId) + '/' + encodeURIComponent(action), body);
             if (data && data.message) toast(ok, data.message);
             if (ok && data && data.refresh !== false) loadExtension(extId);
             return { ok: ok, data: data };
@@ -1888,6 +1909,17 @@ internal static class AdminTemplateDefaults
             let value;
             if (w === 'chip-remove') value = el.getAttribute('data-value');
             else if (w === 'chip-add') { const inp = el.parentElement.querySelector('[data-w="chip-input"]'); value = inp ? inp.value : ''; }
+            else if (w === 'ent-remove') { dispatch(extId, el.getAttribute('data-act'), el.getAttribute('data-row')); return; }
+            else if (w === 'ent-add') {
+                const box = el.closest('[data-entries]');
+                const row = collectEntryInputs(box, '.ent-new');
+                if (!row) return;
+                dispatch(extId, el.getAttribute('data-act'), null, { row: row });
+                return;
+            }
+            else if (w === 'ent-edit') { startEntryEdit(el); return; }
+            else if (w === 'ent-save') { saveEntryEdit(el, extId); return; }
+            else if (w === 'ent-cancel') { loadExtension(extId); return; }
             else if (w === 'toggle') value = el.checked;
             else value = el.value;
             dispatch(extId, el.getAttribute('data-act'), value);
@@ -1902,6 +1934,46 @@ internal static class AdminTemplateDefaults
             if (!extId) return;
             dispatch(extId, el.getAttribute('data-act'), el.value);
         });
+        document.addEventListener('input', function (ev) {
+            const el = ev.target;
+            if (!el.classList || !el.classList.contains('ent-search')) return;
+            const box = el.closest('[data-entries]');
+            if (!box) return;
+            const q = el.value.trim().toLowerCase();
+            box.querySelectorAll('tbody tr[data-ent-row]').forEach(function (tr) {
+                tr.style.display = tr.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+            });
+        });
+        function collectEntryInputs(scope, selector) {
+            const row = {};
+            let any = false;
+            scope.querySelectorAll(selector).forEach(function (inp) {
+                row[inp.getAttribute('data-key')] = inp.value.trim();
+                if (inp.value.trim()) any = true;
+            });
+            return any ? row : null;
+        }
+        function startEntryEdit(btn) {
+            const tr = btn.closest('tr');
+            if (!tr || tr.getAttribute('data-editing')) return;
+            tr.setAttribute('data-editing', '1');
+            const editAction = btn.getAttribute('data-act');
+            const entId = btn.getAttribute('data-ent');
+            const rowId = btn.getAttribute('data-row');
+            tr.querySelectorAll('td[data-key]').forEach(function (td) {
+                const val = td.getAttribute('data-val') || '';
+                td.innerHTML = '<input type="text" class="ent-cell" data-key="' + td.getAttribute('data-key') + '" value="' + e(val) + '">';
+            });
+            const ops = tr.querySelector('td.ent-ops');
+            ops.innerHTML = '<button class="bp bsm" data-act="' + e(editAction) + '" data-w="ent-save" data-ent="' + e(entId) + '" data-row="' + e(rowId) + '">' + _('entries.save', 'Save') + '</button> ' +
+                '<button class="bsm" data-act="' + e(editAction) + '" data-w="ent-cancel">' + _('entries.cancel', 'Cancel') + '</button>';
+        }
+        async function saveEntryEdit(btn, extId) {
+            const tr = btn.closest('tr');
+            const row = {};
+            tr.querySelectorAll('input.ent-cell').forEach(function (inp) { row[inp.getAttribute('data-key')] = inp.value.trim(); });
+            await dispatch(extId, btn.getAttribute('data-act'), btn.getAttribute('data-row'), { row: row });
+        }
         async function initExtensions() {
             try {
                 const { data } = await api('GET', '/api/admin/ext');

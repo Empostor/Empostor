@@ -1,3 +1,4 @@
+using Empostor.Api.Admin;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,11 +16,11 @@ public sealed class FixedCodeStartup : IPluginStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(_ =>
-            PluginConfigLoader.Load<FixedCodeConfig>(_configPath));
-
+        // Mappings live in Data/FixedCodeStore.json now; the legacy plugin config file is migrated.
+        services.AddSingleton<FixedCodeStore>();
         services.AddSingleton<FixedCodeListener>();
         services.AddSingleton<IEventListener, FixedCodeListener>(
             sp => sp.GetRequiredService<FixedCodeListener>());
+        services.AddSingleton<IAdminExtension, FixedCodeAdminExtension>();
     }
 }

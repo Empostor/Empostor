@@ -13,8 +13,10 @@ public sealed class DiscordWebhookPluginStartup : IPluginStartup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClient();
+        services.AddSingleton<LiveGameTracker>();
         services.AddSingleton<DiscordWebhookStore>();
         services.AddSingleton<IEventListener, DiscordWebhookListener>();
         services.AddSingleton<IAdminExtension, DiscordWebhookAdminExtension>();
+        services.AddHostedService<WebhookOrphanCleanup>();
     }
 }

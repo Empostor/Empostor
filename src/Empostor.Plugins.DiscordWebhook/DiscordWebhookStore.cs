@@ -30,10 +30,19 @@ public sealed class DiscordWebhookStore : JsonDataStore<DiscordWebhookConfig>
 
     public string AdminUrl { get; set; } = string.Empty;
 
+    public bool LiveRoomUpdates { get; set; } = true;
+
+    public bool DeleteOnClose { get; set; } = true;
+
+    public int MinUpdateIntervalSeconds { get; set; } = 3;
+
     public DiscordWebhookConfig Snapshot => new()
     {
         MatchmakerUrl = MatchmakerUrl,
         AdminUrl = AdminUrl,
+        LiveRoomUpdates = LiveRoomUpdates,
+        DeleteOnClose = DeleteOnClose,
+        MinUpdateIntervalSeconds = MinUpdateIntervalSeconds,
     };
 
     protected override DiscordWebhookConfig GetSnapshot() => Snapshot;
@@ -42,6 +51,9 @@ public sealed class DiscordWebhookStore : JsonDataStore<DiscordWebhookConfig>
     {
         MatchmakerUrl = data.MatchmakerUrl;
         AdminUrl = data.AdminUrl;
+        LiveRoomUpdates = data.LiveRoomUpdates;
+        DeleteOnClose = data.DeleteOnClose;
+        MinUpdateIntervalSeconds = data.MinUpdateIntervalSeconds;
     }
 
     public new async ValueTask SaveAsync() => await base.SaveAsync();
