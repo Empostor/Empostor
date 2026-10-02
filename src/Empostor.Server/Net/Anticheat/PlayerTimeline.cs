@@ -20,9 +20,9 @@ namespace Empostor.Server.Net.Anticheat
         /// <summary>Gets or sets the system of the last sabotage this player triggered.</summary>
         public int LastSabotageSystem { get; set; } = -1;
 
-        private RateLimitWindow _rpcWindow;
+        private RateLimitWindow _rpcWindow = new();
 
-        private RateLimitWindow _taskWindow;
+        private RateLimitWindow _taskWindow = new();
 
         public bool CountRpc(double now, int maxPerSecond)
         {
