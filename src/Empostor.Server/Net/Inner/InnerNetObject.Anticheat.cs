@@ -196,6 +196,24 @@ namespace Empostor.Server.Net.Inner
 
         protected async ValueTask<bool> ValidateMeetingTiming(CheatContext context, IClientPlayer sender)
         {
+            if (Game.AntiCheat.InMeeting &&
+                await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.Meeting,
+                    "Client sent a meeting while one is already in progress"))
+            {
+                return false;
+            }
+
+            if (Game.Options.GameMode is GameModes.HideNSeek &&
+                await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.Meeting,
+                    "Client sent a meeting during Hide and Seek"))
+            {
+                return false;
+            }
+
             if (!Game.AntiCheat.ShipLoaded)
             {
                 return await sender.Client.ReportCheatAsync(
@@ -252,6 +270,11 @@ namespace Empostor.Server.Net.Inner
                     return true;
                 }
 
+                if (!await ValidateSabotageInHideNSeek(context, sender, systemType, state))
+                {
+                    return false;
+                }
+
                 if (!await ValidateSystemAmount(context, sender, systemType, state))
                 {
                     return false;
@@ -274,6 +297,25 @@ namespace Empostor.Server.Net.Inner
             {
                 reader.Seek(position);
             }
+        }
+
+        protected async ValueTask<bool> ValidateSabotageInHideNSeek(CheatContext context, IClientPlayer sender, SystemTypes system, byte state)
+        {
+            var startingSabotage = (state & 0x80) != 0 || system == SystemTypes.MushroomMixupSabotage;
+            if (Game.Options.GameMode is not GameModes.HideNSeek || !startingSabotage)
+            {
+                return true;
+            }
+
+            if (await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.Sabotage,
+                    $"Client started a sabotage of {system} during Hide and Seek"))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         protected async ValueTask<bool> ValidateSystemAmount(CheatContext context, IClientPlayer sender, SystemTypes system, byte amount)
