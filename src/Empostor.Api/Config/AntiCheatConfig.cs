@@ -28,6 +28,16 @@ namespace Empostor.Api.Config
 
         public bool EnableTargetChecks { get; set; } = true;
 
+        public bool EnableMurderChecks { get; set; } = true;
+
+        public bool EnableSabotageChecks { get; set; } = true;
+
+        public bool EnableMeetingChecks { get; set; } = true;
+
+        public bool EnableVotingChecks { get; set; } = true;
+
+        public bool EnableVentExploitCheck { get; set; } = false;
+
         public bool ForbidProtocolExtensions { get; set; } = true;
 
         public bool EnablePacketSizeChecks { get; set; } = true;
@@ -38,6 +48,6 @@ namespace Empostor.Api.Config
 
         public int IpRateLimitRequests { get; set; } = 30;
 
-        public int IpRateLimitWindowMinutes { get; set; } = 5;
+        public int IpRateLimitWindowMinutes { get; set; } = 1;
     }
 }

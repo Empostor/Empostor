@@ -27,12 +27,17 @@
     "EnableOwnershipChecks": true,
     "EnableRoleChecks": true,
     "EnableTargetChecks": true,
+    "EnableMurderChecks": true,
+    "EnableSabotageChecks": true,
+    "EnableMeetingChecks": true,
+    "EnableVotingChecks": true,
+    "EnableVentExploitCheck": false,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
     "PacketSizeLimit": 1203,
     "EnableIpRateLimit": true,
     "IpRateLimitRequests": 30,
-    "IpRateLimitWindowMinutes": 5
+    "IpRateLimitWindowMinutes": 1
   },
   "Timeout": {
     "SpawnTimeout": 5000,

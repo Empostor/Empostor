@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,7 @@ using Empostor.Api.Unity;
 using Empostor.Server.Events.Game.Player;
 using Empostor.Server.Events.Meeting;
 using Empostor.Server.Events.Player;
+using Empostor.Server.Net.Anticheat;
 using Empostor.Server.Net.Inner;
 using Empostor.Server.Net.Inner.Objects;
 using Empostor.Server.Net.Inner.Objects.Components;
@@ -367,6 +368,12 @@ namespace Empostor.Server.Net.State
                 default:
                 {
                     _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
+
+                    if (!await InnerNetObject.ValidateGameDataTag(new CheatContext(nameof(GameDataTag)), sender, reader.Tag))
+                    {
+                        return GameDataResult.Abort;
+                    }
+
                     return GameDataResult.Continue;
                 }
             }
@@ -411,6 +418,7 @@ namespace Empostor.Server.Net.State
                 case InnerShipStatus shipStatus:
                 {
                     GameNet.ShipStatus = shipStatus;
+                    AntiCheat.NoteRoundStarted();
                     break;
                 }
 
@@ -426,6 +434,8 @@ namespace Empostor.Server.Net.State
                     {
                         await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.SpawnFlag)), CheatCategory.GameFlow, "Failed to find player that spawned the InnerPlayerControl");
                     }
+
+                    AntiCheat.For(control.PlayerId).SpawnedAt = AntiCheatState.Now;
 
                     // Hook up InnerPlayerControl <-> InnerPlayerControl.PlayerInfo.
                     var playerInfo = GameNet.GameData.GetPlayerById(control.PlayerId);
@@ -466,6 +476,8 @@ namespace Empostor.Server.Net.State
 
                 case InnerMeetingHud meetingHud:
                 {
+                    AntiCheat.NoteMeetingOpened();
+
                     foreach (var player in _players.Values)
                     {
                         if (GameNet.ShipStatus != null)
@@ -501,6 +513,13 @@ namespace Empostor.Server.Net.State
                 case InnerShipStatus:
                 {
                     GameNet.ShipStatus = null;
+                    AntiCheat.NoteRoundEnded();
+                    break;
+                }
+
+                case InnerMeetingHud:
+                {
+                    AntiCheat.NoteMeetingClosed();
                     break;
                 }
 
