@@ -37,3 +37,7 @@ Data/
 tmp/
 temp/
 *.tmp
+
+# Prebuilt Dockerfile needs the publish output (see Dockerfile.prebuilt)
+!src/Empostor.Server/bin/Release/net8.0/linux-x64/publish/
+!src/Empostor.Server/bin/Release/net8.0/linux-x64/publish/**

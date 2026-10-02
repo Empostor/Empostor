@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Empostor.Api;
@@ -13,6 +13,7 @@ using Empostor.Api.Net.Inner.Objects;
 using Empostor.Api.Net.Messages.Rpcs;
 using Empostor.Api.Utils;
 using Empostor.Server.Events.Player;
+using Empostor.Server.Net.Anticheat;
 using Empostor.Server.Net.Inner.Objects.Components;
 using Empostor.Server.Net.State;
 using Microsoft.Extensions.DependencyInjection;
@@ -255,10 +256,14 @@ namespace Empostor.Server.Net.Inner.Objects
                         return false;
                     }
 
+                    if (!await ValidateMeetingTiming(call, sender))
+                    {
+                        return false;
+                    }
+
                     Rpc11ReportDeadBody.Deserialize(reader, out var targetId);
                     break;
                 }
-
                 case RpcCalls.MurderPlayer:
                 {
                     if (!await ValidateHost(call, sender) ||
@@ -287,6 +292,11 @@ namespace Empostor.Server.Net.Inner.Objects
                 {
                     if (!await ValidateHost(call, sender) ||
                         !await ValidateBroadcast(call, sender, target))
+                    {
+                        return false;
+                    }
+
+                    if (!await ValidateMeetingTiming(call, sender))
                     {
                         return false;
                     }
@@ -1045,6 +1055,11 @@ namespace Empostor.Server.Net.Inner.Objects
                 IsMurdering = target;
             }
 
+            if (!await ValidateMurderTiming(RpcCalls.CheckMurder, sender, PlayerId, target))
+            {
+                return false;
+            }
+
             if (_game.IsHostAuthoritive)
             {
                 return true;
@@ -1074,6 +1089,11 @@ namespace Empostor.Server.Net.Inner.Objects
                 {
                     target.ProtectedOn = null;
                     await ForceMurderPlayerAsync(target, evt.Result);
+
+                    if (!evt.Result.IsFailed())
+                    {
+                        Game.AntiCheat.For(PlayerId).NoteKill(target.PlayerId, AntiCheatState.Now);
+                    }
                 }
             }
 

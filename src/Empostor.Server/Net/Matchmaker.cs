@@ -2,10 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Api.Events.Managers;
+using Empostor.Api.Languages;
 using Empostor.Server.Events.Client;
+using Empostor.Server.Http;
 using Empostor.Server.Net.Hazel;
 using Empostor.Server.Net.Manager;
 using Empostor.Server.Service.Auth;
@@ -30,9 +33,15 @@ namespace Empostor.Server.Net
         private readonly ServerConfig _serverConfig;
         private readonly AuthCacheService _authCache;
         private readonly IOptions<AntiCheatConfig> _antiCheatOptions;
+        private readonly IpRateLimitService _rateLimit;
+        private readonly LanguageService _language;
 
         private UdpConnectionListener? _mainListener;
         private readonly ConcurrentDictionary<int, UdpConnectionListener> _deltaListeners = new();
+
+        // Shared port for over-quota (rate limited) joins; 0 until first use.
+        private int _rejectPort;
+        private readonly SemaphoreSlim _rejectPortLock = new(1, 1);
 
         private IPEndPoint? _mainEndPoint;
 
@@ -46,7 +55,9 @@ namespace Empostor.Server.Net
             IFirewallService firewall,
             IOptions<ServerConfig> serverConfig,
             AuthCacheService authCache,
-            IOptions<AntiCheatConfig> antiCheatOptions)
+            IOptions<AntiCheatConfig> antiCheatOptions,
+            IpRateLimitService rateLimit,
+            LanguageService language)
         {
             _eventManager = eventManager;
             _clientManager = clientManager;
@@ -58,6 +69,8 @@ namespace Empostor.Server.Net
             _serverConfig = serverConfig.Value;
             _authCache = authCache;
             _antiCheatOptions = antiCheatOptions;
+            _rateLimit = rateLimit;
+            _language = language;
 
             // Subscribe to port return events from the pool
             _portPool.OnPortReturned += OnPortReturned;
@@ -189,6 +202,66 @@ namespace Empostor.Server.Net
             }
         }
 
+        /// <summary>
+        ///     One shared UDP port for all over-quota joins: reserving it here
+        ///     (once) means rate-limited TCP requests never take a pool port and
+        ///     never start their own listener. The listener above answers every
+        ///     handshake on this port with the localized hint and closes it, so
+        ///     the player is told why they cannot join instead of seeing a black
+        ///     screen — without letting them into a game.
+        /// </summary>
+        public async ValueTask<int> GetRateLimitRejectPortAsync()
+        {
+            if (!_portPool.IsEnabled)
+            {
+                // Fixed-port mode: the main listener is the reject target.
+                return 0;
+            }
+
+            var existing = Volatile.Read(ref _rejectPort);
+            if (existing > 0)
+            {
+                return existing;
+            }
+
+            await _rejectPortLock.WaitAsync();
+            try
+            {
+                existing = Volatile.Read(ref _rejectPort);
+                if (existing > 0)
+                {
+                    return existing;
+                }
+
+                var port = _portPool.AllocatePort("(rate limit reject)");
+                if (port <= 0)
+                {
+                    _logger.LogWarning("Matchmaker could not reserve the rate-limit reject port: pool unavailable");
+                    return 0;
+                }
+
+                if (!await StartDeltaListenerAsync(port))
+                {
+                    // StartDeltaListenerAsync already returned the port.
+                    return 0;
+                }
+
+                // Confirmed so it is never reclaimed by the allocation timeout:
+                // this port lives for the whole lifetime of the server.
+                _portPool.ConfirmPort(port);
+                Volatile.Write(ref _rejectPort, port);
+
+                _logger.LogInformation(
+                    "Matchmaker rate-limit reject port reserved on {Port} (one shared port for all over-quota joins)",
+                    port);
+                return port;
+            }
+            finally
+            {
+                _rejectPortLock.Release();
+            }
+        }
+
         public async ValueTask StopAsync()
         {
             if (_mainListener != null)
@@ -228,6 +301,21 @@ namespace Empostor.Server.Net
                     out var platformSpecificData);
 
                 connection = new HazelConnection(e.Connection, _connectionLogger, _antiCheatOptions);
+
+                // Shared rate-limit reject port: there is no auth entry and no
+                // player behind it, so the only thing to do is tell the client
+                // — in its own language — why it is not let in.
+                if (port != 0 && port == Volatile.Read(ref _rejectPort))
+                {
+                    var message = BuildRateLimitMessage(connection.EndPoint?.Address, language);
+                    _logger.LogWarning(
+                        "Matchmaker rate limit rejected {Ip} on reject port {Port} │ {Message}",
+                        connection.EndPoint?.Address?.ToString() ?? "unknown", port, message);
+
+                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, message);
+                    return;
+                }
+
                 await _eventManager.CallAsync(new ClientConnectionEvent(connection, e.HandshakeData));
                 await _clientManager.RegisterConnectionAsync(
                     connection, name, clientVersion, language, chatMode, platformSpecificData,
@@ -242,6 +330,22 @@ namespace Empostor.Server.Net
                 connection?.DisposeInnerConnection();
                 e.Connection.Dispose();
             }
+        }
+
+        // Localized "please try again in N minutes" hint. N is what is actually
+        // left for that IP when it can be read off the quota, the full window
+        // otherwise (behind a CDN the UDP source address may not be the key the
+        // requests were counted with).
+        private string BuildRateLimitMessage(IPAddress? ip, Language language)
+        {
+            var minutes = Math.Max(1, _antiCheatOptions.Value.IpRateLimitWindowMinutes);
+
+            if (ip != null && _rateLimit.IsLimited(ip, out var retryAfter))
+            {
+                minutes = IpRateLimitService.MinutesUntilRetry(retryAfter);
+            }
+
+            return _language.Get(IpRateLimitService.MessageKey, language).Format(minutes).Get();
         }
 
         private void OnPortReturned(int port)

@@ -53,5 +53,6 @@
   "ban.notice.reason": "理由：{0}",
   "ban.notice.unban": "解封時間：{0}",
   "ban.notice.unban_permanent": "解封時間：永久",
-  "ban.notice.contact": "如有問題請聯絡管理員"
+  "ban.notice.contact": "如有問題請聯絡管理員",
+  "ratelimit.too_frequent": "請求過於頻繁請 {0} 分鐘後重試"
 }

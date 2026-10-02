@@ -18,4 +18,13 @@ public interface IDeltaListenerManager
     ///     Stops and disposes the UDP listener on a specific port.
     /// </summary>
     ValueTask StopDeltaListenerAsync(int port);
+
+    /// <summary>
+    ///     Returns the single shared UDP port that rate-limited (over-quota) join
+    ///     requests are pointed at, binding it on first use. Its listener never
+    ///     creates a player, it only sends the localized "too frequent" hint, so
+    ///     an over-quota IP cannot consume a pool port per request.
+    /// </summary>
+    /// <returns>The reject port, or 0 when the delta pool is unavailable.</returns>
+    ValueTask<int> GetRateLimitRejectPortAsync();
 }

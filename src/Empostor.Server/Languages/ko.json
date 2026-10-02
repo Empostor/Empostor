@@ -39,5 +39,6 @@
   "ban.notice.reason": "사유: {0}",
   "ban.notice.unban": "차단 해제 시간: {0}",
   "ban.notice.unban_permanent": "차단 해제 시간: 영구",
-  "ban.notice.contact": "문의 사항이 있으면 관리자에게 연락해 주세요."
+  "ban.notice.contact": "문의 사항이 있으면 관리자에게 연락해 주세요.",
+  "ratelimit.too_frequent": "요청이 너무 많습니다. {0}분 후에 다시 시도해 주세요."
 }

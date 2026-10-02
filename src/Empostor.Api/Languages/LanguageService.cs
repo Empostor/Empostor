@@ -155,6 +155,7 @@ public sealed class LanguageService
     // Any Pr fix grammer wrongs is OK!
     private const string DefaultEn = """
 {
+  "ratelimit.too_frequent": "Too many requests, please try again in {0} minute(s).",
   "command.error": "An error occurred while executing #{0}.",
   "command.usage": "Usage: #{0}",
   "command.help.list": "=== Commands ===",
@@ -215,6 +216,7 @@ public sealed class LanguageService
 
     private const string DefaultZhCn = """
 {
+  "ratelimit.too_frequent": "请求过于频繁请 {0} 分钟后重试",
   "command.error": "执行 #{0}时发生错误。",
   "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
@@ -275,6 +277,7 @@ public sealed class LanguageService
 
     private const string DefaultZhTw = """
 {
+  "ratelimit.too_frequent": "請求過於頻繁請 {0} 分鐘後重試",
   "command.error": "執行 #{0}時發生錯誤。",
   "command.usage": "用法：#{0}",
   "command.help.list": "=== 指令列表 ===",
@@ -335,6 +338,7 @@ public sealed class LanguageService
 
     private const string DefaultKo = """
 {
+  "ratelimit.too_frequent": "요청이 너무 많습니다. {0}분 후에 다시 시도해 주세요.",
   "command.error": "#{0}실행 중 오류가 발생했습니다.",
   "command.usage": "사용법: #{0}",
   "command.help.list": "=== 명령어 목록 ===",
@@ -381,6 +385,7 @@ public sealed class LanguageService
 
     private const string DefaultRu = """
 {
+  "ratelimit.too_frequent": "Слишком много запросов, повторите попытку через {0} мин.",
   "command.error": "Ошибка при выполнении #{0}.",
   "command.usage": "Использование: #{0}",
   "command.help.list": "=== Команды ===",
@@ -427,6 +432,7 @@ public sealed class LanguageService
 
     private const string DefaultDe = """
 {
+  "ratelimit.too_frequent": "Zu viele Anfragen, bitte versuche es in {0} Minute(n) erneut.",
   "command.error": "Fehler beim Ausführen von #{0}.",
   "command.usage": "Verwendung: #{0}",
   "command.help.list": "=== Befehle ===",
@@ -473,6 +479,7 @@ public sealed class LanguageService
 
     private const string DefaultFr = """
 {
+  "ratelimit.too_frequent": "Trop de requêtes, veuillez réessayer dans {0} minute(s).",
   "command.error": "Erreur lors de l'exécution de #{0}.",
   "command.usage": "Utilisation : #{0}",
   "command.help.list": "=== Commandes ===",
@@ -519,6 +526,7 @@ public sealed class LanguageService
 
     private const string DefaultJa = """
 {
+  "ratelimit.too_frequent": "リクエストが多すぎます。{0}分後に再試行してください。",
   "command.error": "#{0}の実行中にエラーが発生しました。",
   "command.usage": "使い方：#{0}",
   "command.help.list": "=== コマンド一覧 ===",
@@ -565,6 +573,7 @@ public sealed class LanguageService
 
     private const string DefaultPt = """
 {
+  "ratelimit.too_frequent": "Muitos pedidos, tente novamente em {0} minuto(s).",
   "command.error": "Ocorreu um erro ao executar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
@@ -611,6 +620,7 @@ public sealed class LanguageService
 
     private const string DefaultPtBr = """
 {
+  "ratelimit.too_frequent": "Muitas solicitações, tente novamente em {0} minuto(s).",
   "command.error": "Ocorreu um erro ao executar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
@@ -655,6 +665,7 @@ public sealed class LanguageService
 
     private const string DefaultEs = """
 {
+  "ratelimit.too_frequent": "Demasiadas solicitudes, inténtalo de nuevo en {0} minuto(s).",
   "command.error": "Error al ejecutar #{0}.",
   "command.usage": "Uso: #{0}",
   "command.help.list": "=== Comandos ===",
@@ -699,6 +710,7 @@ public sealed class LanguageService
 
     private const string DefaultIt = """
 {
+  "ratelimit.too_frequent": "Troppe richieste, riprova tra {0} minuto/i.",
   "command.error": "Errore durante l'esecuzione di #{0}.",
   "command.usage": "Utilizzo: #{0}",
   "command.help.list": "=== Comandi ===",
@@ -743,6 +755,7 @@ public sealed class LanguageService
 
     private const string DefaultNl = """
 {
+  "ratelimit.too_frequent": "Te veel verzoeken, probeer het over {0} minuut/minuten opnieuw.",
   "command.error": "Fout bij uitvoeren van #{0}.",
   "command.usage": "Gebruik: #{0}",
   "command.help.list": "=== Commando's ===",
@@ -787,6 +800,7 @@ public sealed class LanguageService
 
     private const string DefaultFil = """
 {
+  "ratelimit.too_frequent": "Masyaraming request, subukan muli sa {0} minuto.",
   "command.error": "May error sa pagpapatakbo ng #{0}.",
   "command.usage": "Paggamit: #{0}",
   "command.help.list": "=== Mga Command ===",
@@ -831,6 +845,7 @@ public sealed class LanguageService
 
     private const string DefaultGa = """
 {
+  "ratelimit.too_frequent": "Iarraidh ró-mhóra, bain triail eile as i {0} nóiméad.",
   "command.error": "Earráid agus #{0}á rith.",
   "command.usage": "Úsáid: #{0}",
   "command.help.list": "=== Orduithe ===",

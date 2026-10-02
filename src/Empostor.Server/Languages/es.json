@@ -37,5 +37,6 @@
   "ban.notice.reason": "Motivo: {0}",
   "ban.notice.unban": "Fin del baneo: {0}",
   "ban.notice.unban_permanent": "Fin del baneo: Permanente",
-  "ban.notice.contact": "Si tienes dudas, contacta con un administrador."
+  "ban.notice.contact": "Si tienes dudas, contacta con un administrador.",
+  "ratelimit.too_frequent": "Demasiadas solicitudes, inténtalo de nuevo en {0} minuto(s)."
 }
