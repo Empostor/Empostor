@@ -119,7 +119,8 @@ namespace Empostor.Server.Net.State
             return GameJoinResult.FromError(GameJoinError.InvalidClient);
         }
 
-        private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew)        {
+        private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew) 
+        {
             var client = sender.Client;
             var authority = client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
             var version = client.GameVersion.ToString();
