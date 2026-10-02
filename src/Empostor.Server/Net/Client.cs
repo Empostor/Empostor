@@ -93,7 +93,7 @@ namespace Empostor.Server.Net
                 CheatCategory.Sabotage => _antiCheatConfig.EnableSabotageChecks,
                 CheatCategory.Meeting => _antiCheatConfig.EnableMeetingChecks,
                 CheatCategory.Voting => _antiCheatConfig.EnableVotingChecks,
-                CheatCategory.Venting => _antiCheatConfig.EnableVentExploitCheck,
+                CheatCategory.RateLimit => _antiCheatConfig.EnableRateLimits,
                 CheatCategory.Other => true,
                 _ => LogUnknownCategory(category),
             };

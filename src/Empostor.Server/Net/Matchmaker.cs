@@ -338,7 +338,7 @@ namespace Empostor.Server.Net
         // requests were counted with).
         private string BuildRateLimitMessage(IPAddress? ip, Language language)
         {
-            var minutes = Math.Max(1, _antiCheatOptions.Value.IpRateLimitWindowMinutes);
+            var minutes = IpRateLimitService.WindowMinutes;
 
             if (ip != null && _rateLimit.IsLimited(ip, out var retryAfter))
             {

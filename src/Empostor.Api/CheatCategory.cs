@@ -47,8 +47,8 @@ public enum CheatCategory
     /// <summary>A vote cast outside a meeting, or by a player who is already dead.</summary>
     Voting,
 
-    /// <summary>Vent and pipe use the current game state cannot produce.</summary>
-    Venting,
+    /// <summary>A client sent more messages in a window than the room can legitimately produce.</summary>
+    RateLimit,
 
     /// <summary>Legacy category for unsorted anticheat checks.</summary>
     Other,

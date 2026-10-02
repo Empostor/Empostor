@@ -7,11 +7,18 @@ using Empostor.Api.Net.Inner;
 using Empostor.Api.Net.Inner.Objects;
 using Empostor.Server.Net.Anticheat;
 using Empostor.Server.Net.Inner.Objects;
+using Empostor.Server.Net.State;
 
 namespace Empostor.Server.Net.Inner
 {
     internal abstract partial class InnerNetObject
     {
+        private const int RpcRateLimitPerSecond = 20;
+
+        private const int TaskRateLimitCount = 3;
+
+        private const double TaskRateLimitWindowSeconds = 2;
+
         protected async ValueTask<bool> ValidateOwnership(CheatContext context, IClientPlayer sender)
         {
             if (!sender.IsOwner(this))
@@ -137,7 +144,7 @@ namespace Empostor.Server.Net.Inner
             return true;
         }
 
-        protected async ValueTask<bool> ValidateMurderTiming(CheatContext context, IClientPlayer sender, byte killerPlayerId, IInnerPlayerControl? target)
+        protected async ValueTask<bool> ValidateMurder(CheatContext context, IClientPlayer sender, byte killerPlayerId, IInnerPlayerControl? target)
         {
             if (!Game.AntiCheat.Config.EnableMurderChecks || target == null)
             {
@@ -170,31 +177,20 @@ namespace Empostor.Server.Net.Inner
                 return true;
             }
 
+            var now = AntiCheatState.Now;
             var window = options.KillCooldown / 2;
 
-            if (IsFastKill(timeline, target.PlayerId, window, AntiCheatState.Now, out var reason))
+            if (window > 0 &&
+                timeline.LastKillAt >= 0 &&
+                timeline.LastKillTarget != target.PlayerId &&
+                now - timeline.LastKillAt < window)
             {
-                return await sender.Client.ReportCheatAsync(context, CheatCategory.Murder, reason!);
+                return await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.Murder,
+                    $"Killed {target.PlayerId} only {now - timeline.LastKillAt:0.###}s after killing {timeline.LastKillTarget}");
             }
 
-            return true;
-        }
-
-        private static bool IsFastKill(PlayerTimeline timeline, byte victimId, double windowSeconds, double now, out string? reason)
-        {
-            reason = null;
-
-            if (windowSeconds <= 0 || timeline.LastKillAt < 0 || timeline.LastKillTarget == victimId)
-            {
-                return false;
-            }
-
-            if (now - timeline.LastKillAt >= windowSeconds)
-            {
-                return false;
-            }
-
-            reason = $"Killed {victimId} only {now - timeline.LastKillAt:0.###}s after killing {timeline.LastKillTarget}";
             return true;
         }
 
@@ -231,9 +227,14 @@ namespace Empostor.Server.Net.Inner
 
             try
             {
-                if (!TryReadUpdateSystem(reader, out var systemType, out var playerControl, out var isVent, out var sequenceId, out var state, out var ventId))
+                if (!TryReadUpdateSystem(reader, out var systemType, out var playerControl, out var isSabotageRoute, out var state))
                 {
-                    return await sender.Client.ReportCheatAsync(context, CheatCategory.ProtocolExtension, "Client sent a malformed UpdateSystem RPC");
+                    if (await sender.Client.ReportCheatAsync(context, CheatCategory.ProtocolExtension, "Client sent a malformed UpdateSystem RPC"))
+                    {
+                        return false;
+                    }
+
+                    return true;
                 }
 
                 if (!sender.IsHost && !playerControl.IsOwnedBy(sender))
@@ -246,14 +247,14 @@ namespace Empostor.Server.Net.Inner
 
                 var actorId = ResolveActorId(playerControl, sender);
 
-                if (isVent)
-                {
-                    return await ValidateVentExploit(context, sender, actorId, sequenceId, state, ventId);
-                }
-
                 if (!Game.AntiCheat.ShipGraceOver)
                 {
                     return true;
+                }
+
+                if (!await ValidateSystemAmount(context, sender, systemType, state))
+                {
+                    return false;
                 }
 
                 if (!await ValidateSabotageInMeeting(context, sender, systemType))
@@ -261,7 +262,7 @@ namespace Empostor.Server.Net.Inner
                     return false;
                 }
 
-                if (!await ValidateRapidSabotage(context, sender, actorId, systemType))
+                if (!await ValidateRapidSabotage(context, sender, actorId, systemType, state))
                 {
                     return false;
                 }
@@ -275,38 +276,22 @@ namespace Empostor.Server.Net.Inner
             }
         }
 
-        protected async ValueTask<bool> ValidateVentExploit(CheatContext context, IClientPlayer sender, byte playerId, ushort sequenceId, byte state, byte ventId)
+        protected async ValueTask<bool> ValidateSystemAmount(CheatContext context, IClientPlayer sender, SystemTypes system, byte amount)
         {
-            if (!Game.AntiCheat.Config.EnableVentExploitCheck)
+            if (system != SystemTypes.Electrical || (amount & 0x80) != 0 || amount <= 4)
             {
                 return true;
             }
 
-            const byte EnterVentState = 2;
-            const byte BootFromVentState = 5;
-            const ushort ExploitSequenceId = 1;
-
-            var timeline = Game.AntiCheat.For(playerId);
-            var now = AntiCheatState.Now;
-
-            if (state == EnterVentState && sequenceId == 0 && ventId == 0)
+            if (await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.ProtocolExtension,
+                    $"Client sent an out of range state {amount} for {system}"))
             {
-                timeline.VentExploitPendingAt = now;
-                return true;
+                return false;
             }
 
-            if (state != BootFromVentState || sequenceId != ExploitSequenceId || ventId != 0 ||
-                timeline.VentExploitPendingAt < 0 ||
-                now - timeline.VentExploitPendingAt > 1)
-            {
-                return true;
-            }
-
-            timeline.VentExploitPendingAt = -1;
-            return await sender.Client.ReportCheatAsync(
-                context,
-                CheatCategory.Venting,
-                "Client sent the vent kick exploit pair (vent 0, sequence id 0 then 1)");
+            return true;
         }
 
         protected async ValueTask<bool> ValidateSabotageInMeeting(CheatContext context, IClientPlayer sender, SystemTypes system)
@@ -316,15 +301,20 @@ namespace Empostor.Server.Net.Inner
                 return true;
             }
 
-            return await sender.Client.ReportCheatAsync(
-                context,
-                CheatCategory.Sabotage,
-                $"Client sabotaged {system} while a meeting is in progress");
+            if (await sender.Client.ReportCheatAsync(
+                    context,
+                    CheatCategory.Sabotage,
+                    $"Client sabotaged {system} while a meeting is in progress"))
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        protected async ValueTask<bool> ValidateRapidSabotage(CheatContext context, IClientPlayer sender, byte playerId, SystemTypes system)
+        protected async ValueTask<bool> ValidateRapidSabotage(CheatContext context, IClientPlayer sender, byte playerId, SystemTypes system, byte state)
         {
-            if ((int)system == 16)
+            if ((int)system == 16 || (state & 0x80) == 0)
             {
                 return true;
             }
@@ -333,13 +323,19 @@ namespace Empostor.Server.Net.Inner
             var now = AntiCheatState.Now;
 
             if (timeline.LastSabotageAt >= 0 &&
-                now - timeline.LastSabotageAt < 0.1 &&
+                now - timeline.LastSabotageAt < 3 &&
                 timeline.LastSabotageSystem != (int)system)
             {
-                var reason = $"Sabotaged {system} {(now - timeline.LastSabotageAt) * 1000:0.###}ms after {timeline.LastSabotageSystem}";
+                var reason = $"Sabotaged {system} {now - timeline.LastSabotageAt:0.###}s after {timeline.LastSabotageSystem}";
                 timeline.LastSabotageAt = now;
                 timeline.LastSabotageSystem = (int)system;
-                return await sender.Client.ReportCheatAsync(context, CheatCategory.Sabotage, reason);
+
+                if (await sender.Client.ReportCheatAsync(context, CheatCategory.Sabotage, reason))
+                {
+                    return false;
+                }
+
+                return true;
             }
 
             timeline.LastSabotageAt = now;
@@ -364,9 +360,13 @@ namespace Empostor.Server.Net.Inner
                 ? $"Non-impostor started a sabotage of {system} (state 0x{state:X2})"
                 : $"Non-impostor triggered {system}";
 
-            return await sender.Client.ReportCheatAsync(context, CheatCategory.Sabotage, reason);
-        }
+            if (await sender.Client.ReportCheatAsync(context, CheatCategory.Sabotage, reason))
+            {
+                return false;
+            }
 
+            return true;
+        }
         protected async ValueTask<bool> ValidateVoteCast(CheatContext context, IClientPlayer sender)
         {
             if (!Game.AntiCheat.Config.EnableVotingChecks)
@@ -419,6 +419,56 @@ namespace Empostor.Server.Net.Inner
                 $"Client sent a VotingComplete with {voters} voters (max {limit})");
         }
 
+        protected async ValueTask<bool> ValidateTaskCompletion(CheatContext context, IClientPlayer sender, byte playerId)
+        {
+            if (!Game.AntiCheat.Config.EnableRateLimits)
+            {
+                return true;
+            }
+
+            var config = Game.AntiCheat.Config;
+            if (!Game.AntiCheat.For(playerId).CountTask(AntiCheatState.Now, TaskRateLimitCount, TaskRateLimitWindowSeconds))
+            {
+                return true;
+            }
+
+            return await sender.Client.ReportCheatAsync(
+                context,
+                CheatCategory.RateLimit,
+                $"Client completed more than {TaskRateLimitCount} tasks in {TaskRateLimitWindowSeconds}s");
+        }
+
+        internal static async ValueTask<bool> ValidateRpcRate(Game game, CheatContext context, IClientPlayer sender, InnerNetObject obj, bool toPlayer)
+        {
+            if (!game.AntiCheat.Config.EnableRateLimits)
+            {
+                return true;
+            }
+
+            var ownerId = obj.OwnerId >= 0 ? obj.OwnerId : sender.Client.Id;
+
+            if (!toPlayer && ownerId != sender.Client.Id)
+            {
+                return true;
+            }
+
+            var playerId = game.GetClientPlayer(ownerId)?.Character?.PlayerId;
+            if (playerId == null)
+            {
+                return true;
+            }
+
+            if (!game.AntiCheat.For(playerId.Value).CountRpc(AntiCheatState.Now, RpcRateLimitPerSecond))
+            {
+                return true;
+            }
+
+            return await sender.Client.ReportCheatAsync(
+                context,
+                CheatCategory.RateLimit,
+                $"Client sent more than {RpcRateLimitPerSecond} RPCs in one second");
+        }
+
         internal static async ValueTask<bool> ValidateGameDataTag(CheatContext context, IClientPlayer sender, byte tag)
         {
             if (await sender.Client.ReportCheatAsync(context, CheatCategory.ProtocolExtension, $"Client sent an unknown game data tag {tag}"))
@@ -433,17 +483,13 @@ namespace Empostor.Server.Net.Inner
             IMessageReader reader,
             out SystemTypes systemType,
             out InnerPlayerControl playerControl,
-            out bool isVent,
-            out ushort sequenceId,
-            out byte state,
-            out byte ventId)
+            out bool isSabotageRoute,
+            out byte state)
         {
-            systemType = SystemTypes.Hallway;
+            systemType = default;
             playerControl = null!;
-            isVent = false;
-            sequenceId = 0;
+            isSabotageRoute = false;
             state = 0;
-            ventId = byte.MaxValue;
 
             if (reader.Position >= reader.Length)
             {
@@ -460,36 +506,20 @@ namespace Empostor.Server.Net.Inner
 
             playerControl = control;
 
-            if (systemType == SystemTypes.Ventilation)
-            {
-                if (reader.Length - reader.Position < 4)
-                {
-                    return false;
-                }
-
-                isVent = true;
-                sequenceId = reader.ReadUInt16();
-                state = reader.ReadByte();
-                ventId = reader.ReadByte();
-                return true;
-            }
-
             if (reader.Position >= reader.Length)
             {
                 return false;
             }
 
+            state = reader.ReadByte();
+
             if (systemType == SystemTypes.Sabotage)
             {
-                if (reader.Length - reader.Position < 2)
-                {
-                    return false;
-                }
-
-                systemType = (SystemTypes)reader.ReadByte();
+                isSabotageRoute = true;
+                systemType = (SystemTypes)state;
+                state = 0x80;
             }
 
-            state = reader.ReadByte();
             return true;
         }
 

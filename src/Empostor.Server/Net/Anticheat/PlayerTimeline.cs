@@ -20,8 +20,19 @@ namespace Empostor.Server.Net.Anticheat
         /// <summary>Gets or sets the system of the last sabotage this player triggered.</summary>
         public int LastSabotageSystem { get; set; } = -1;
 
-        /// <summary>Gets or sets the moment of the vent in of a possible vent kick exploit.</summary>
-        public double VentExploitPendingAt { get; set; } = -1;
+        private RateLimitWindow _rpcWindow;
+
+        private RateLimitWindow _taskWindow;
+
+        public bool CountRpc(double now, int maxPerSecond)
+        {
+            return _rpcWindow.Hit(now, maxPerSecond, 1);
+        }
+
+        public bool CountTask(double now, int maxCount, double windowSeconds)
+        {
+            return _taskWindow.Hit(now, maxCount, windowSeconds);
+        }
 
         public void NoteKill(byte victimId, double now)
         {
@@ -37,7 +48,6 @@ namespace Empostor.Server.Net.Anticheat
             DeadTargetKills = 0;
             LastSabotageAt = -1;
             LastSabotageSystem = -1;
-            VentExploitPendingAt = -1;
         }
     }
 }

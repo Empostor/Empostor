@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Empostor.Api;
@@ -616,6 +616,11 @@ namespace Empostor.Server.Net.Inner.Objects
 
         private async ValueTask HandleCompleteTask(ClientPlayer sender, uint taskId)
         {
+            if (!await ValidateTaskCompletion(RpcCalls.CompleteTask, sender, PlayerId))
+            {
+                return;
+            }
+
             TaskInfo? task = null;
             if (PlayerInfo == null)
             {
@@ -1055,7 +1060,7 @@ namespace Empostor.Server.Net.Inner.Objects
                 IsMurdering = target;
             }
 
-            if (!await ValidateMurderTiming(RpcCalls.CheckMurder, sender, PlayerId, target))
+            if (!await ValidateMurder(RpcCalls.CheckMurder, sender, PlayerId, target))
             {
                 return false;
             }

@@ -36,18 +36,12 @@ namespace Empostor.Api.Config
 
         public bool EnableVotingChecks { get; set; } = true;
 
-        public bool EnableVentExploitCheck { get; set; } = false;
+        public bool EnableRateLimits { get; set; } = true;
 
         public bool ForbidProtocolExtensions { get; set; } = true;
 
         public bool EnablePacketSizeChecks { get; set; } = true;
 
         public int PacketSizeLimit { get; set; } = 1203;
-
-        public bool EnableIpRateLimit { get; set; } = true;
-
-        public int IpRateLimitRequests { get; set; } = 30;
-
-        public int IpRateLimitWindowMinutes { get; set; } = 1;
     }
 }

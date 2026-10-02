@@ -126,7 +126,7 @@ namespace Empostor.Server.Net.State
 
                 try
                 {
-                    result = await HandleGameDataInnerAsync(reader, sender, target);
+                    result = await HandleGameDataInnerAsync(reader, sender, target, toPlayer);
                 }
                 catch (Exception ex)
                 {
@@ -150,7 +150,7 @@ namespace Empostor.Server.Net.State
             return parent.Length > startPosition;
         }
 
-        private async ValueTask<GameDataResult> HandleGameDataInnerAsync(IMessageReader reader, ClientPlayer sender, ClientPlayer? target)
+        private async ValueTask<GameDataResult> HandleGameDataInnerAsync(IMessageReader reader, ClientPlayer sender, ClientPlayer? target, bool toPlayer)
         {
             switch (reader.Tag)
             {
@@ -174,6 +174,11 @@ namespace Empostor.Server.Net.State
                     var netId = reader.ReadPackedUInt32();
                     if (_allObjects.TryGetValue(netId, out var obj))
                     {
+                        if (!await InnerNetObject.ValidateRpcRate(this, new CheatContext(nameof(GameDataTag.RpcFlag)), sender, obj, toPlayer))
+                        {
+                            return GameDataResult.Abort;
+                        }
+
                         if (!await obj.HandleRpcAsync(sender, target, (RpcCalls)reader.ReadByte(), reader))
                         {
                             return GameDataResult.Remove;

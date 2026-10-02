@@ -5,15 +5,14 @@ using Empostor.Api.Config;
 using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Http;
-
-// Per-IP request counter used by the anticheat "Ip request rate limit".
-// Every real IP gets a fixed window (default 5 minutes); when the IP sends
-// more TCP (HTTP) requests than configured (default 30) it is blocked until
-// the window slides away.
 public sealed class IpRateLimitService
 {
     // Language key of the localized hint, see Languages/*.json.
     public const string MessageKey = "ratelimit.too_frequent";
+
+    public const int MaxRequestsPerWindow = 30;
+
+    public const int WindowMinutes = 1;
 
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromSeconds(60);
 
@@ -34,7 +33,7 @@ public sealed class IpRateLimitService
 
         var config = _options.Value;
         var window = GetWindow(config);
-        if (ip == null || window == null || config.IpRateLimitRequests <= 0)
+        if (ip == null || window == null)
         {
             return true;
         }
@@ -54,7 +53,7 @@ public sealed class IpRateLimitService
             }
 
             entry.Count++;
-            if (entry.Count <= config.IpRateLimitRequests)
+            if (entry.Count <= MaxRequestsPerWindow)
             {
                 return true;
             }
@@ -79,7 +78,7 @@ public sealed class IpRateLimitService
 
         var config = _options.Value;
         var window = GetWindow(config);
-        if (ip == null || window == null || config.IpRateLimitRequests <= 0)
+        if (ip == null || window == null)
         {
             return false;
         }
@@ -92,7 +91,7 @@ public sealed class IpRateLimitService
         var now = DateTime.UtcNow;
         lock (entry)
         {
-            if (now - entry.StartUtc >= window.Value || entry.Count <= config.IpRateLimitRequests)
+            if (now - entry.StartUtc >= window.Value || entry.Count <= MaxRequestsPerWindow)
             {
                 return false;
             }
@@ -109,12 +108,12 @@ public sealed class IpRateLimitService
 
     private static TimeSpan? GetWindow(AntiCheatConfig config)
     {
-        if (!config.EnableIpRateLimit)
+        if (!config.EnableRateLimits)
         {
             return null;
         }
 
-        return TimeSpan.FromMinutes(Math.Max(1, config.IpRateLimitWindowMinutes));
+        return TimeSpan.FromMinutes(WindowMinutes);
     }
 
     // Whole minutes to wait, always at least one so the hint never says

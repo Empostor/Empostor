@@ -31,13 +31,10 @@
     "EnableSabotageChecks": true,
     "EnableMeetingChecks": true,
     "EnableVotingChecks": true,
-    "EnableVentExploitCheck": false,
+    "EnableRateLimits": true,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
-    "PacketSizeLimit": 1203,
-    "EnableIpRateLimit": true,
-    "IpRateLimitRequests": 30,
-    "IpRateLimitWindowMinutes": 1
+    "PacketSizeLimit": 1203
   },
   "Timeout": {
     "SpawnTimeout": 5000,
