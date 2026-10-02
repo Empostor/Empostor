@@ -32,6 +32,7 @@
     "EnableMeetingChecks": true,
     "EnableVotingChecks": true,
     "EnableRateLimits": true,
+    "EnableDuplicateLoginCheck": true,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
     "PacketSizeLimit": 1203

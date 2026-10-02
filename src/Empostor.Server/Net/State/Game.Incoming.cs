@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Empostor.Api.Config;
 using Empostor.Api.Games;
 using Empostor.Api.Net;
 using Next.Hazel;
@@ -118,8 +119,7 @@ namespace Empostor.Server.Net.State
             return GameJoinResult.FromError(GameJoinError.InvalidClient);
         }
 
-        private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew)
-        {
+        private async ValueTask HandleJoinGameNew(ClientPlayer sender, bool isNew)        {
             var client = sender.Client;
             var authority = client.GameVersion.HasDisableServerAuthorityFlag ? "true" : "false";
             var version = client.GameVersion.ToString();
@@ -155,6 +155,29 @@ namespace Empostor.Server.Net.State
             }
         }
 
+        private bool IsDuplicateAccount(ClientBase client)
+        {
+            if (string.IsNullOrEmpty(client.ProductUserId))
+            {
+                return false;
+            }
+
+            foreach (var other in _players.Values)
+            {
+                if (other.Client == client)
+                {
+                    continue;
+                }
+
+                if (string.Equals(other.Client.ProductUserId, client.ProductUserId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private async ValueTask<GameJoinResult> AddClientSafeAsync(ClientBase client)
         {
             if (_bannedIps.Contains(client.Connection.EndPoint.Address))
@@ -163,6 +186,15 @@ namespace Empostor.Server.Net.State
             }
 
             var player = client.Player;
+            if (AntiCheat.Config.EnableDuplicateLoginCheck && IsDuplicateAccount(client))
+            {
+                _logger.LogWarning(
+                    "#{Id} {Name} rejected: account {Puid} is already playing in this game",
+                    client.Id, client.Name, client.ProductUserId);
+
+                return GameJoinResult.FromError(GameJoinError.DuplicateConnection);
+            }
+
             if (_compatibilityConfig.AllowVersionMixing == false &&
                 this.Host != null && client.GameVersion != this.Host.Client.GameVersion)
             {

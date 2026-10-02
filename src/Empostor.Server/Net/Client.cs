@@ -221,6 +221,9 @@ namespace Empostor.Server.Net
                         case GameJoinError.Custom:
                             await DisconnectAsync(DisconnectReason.Custom, result.Message);
                             break;
+                        case GameJoinError.DuplicateConnection:
+                            await DisconnectAsync(DisconnectReason.DuplicateConnectionDetected);
+                            break;
                         default:
                             await DisconnectAsync(DisconnectReason.Custom, "Unknown error.");
                             break;

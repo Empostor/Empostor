@@ -38,6 +38,8 @@ namespace Empostor.Api.Config
 
         public bool EnableRateLimits { get; set; } = true;
 
+        public bool EnableDuplicateLoginCheck { get; set; } = true;
+
         public bool ForbidProtocolExtensions { get; set; } = true;
 
         public bool EnablePacketSizeChecks { get; set; } = true;

@@ -54,5 +54,10 @@
         ///     A custom message can be set in <see cref="GameJoinResult.Message" />.
         /// </remarks>
         Custom,
+
+        /// <summary>
+        ///     The same account is already playing in this game.
+        /// </summary>
+        DuplicateConnection,
     }
 }
