@@ -173,6 +173,7 @@ namespace Empostor.Server
                     services.AddSingleton<GameManager>();
                     services.AddSingleton<IGameManager>(p => p.GetRequiredService<GameManager>());
                     services.AddSingleton<ListingManager>();
+                    services.AddSingleton<IpRateLimitService>();
 
                     services.AddEventPools();
 
@@ -263,6 +264,10 @@ namespace Empostor.Server
                     });
                     builder.Configure(app =>
                     {
+                        // Anticheat IP request rate limit — runs before every
+                        // HTTP (TCP) endpoint, including the plugin ones.
+                        app.UseMiddleware<IpRateLimitMiddleware>();
+
                         foreach (var p in app.ApplicationServices.GetRequiredService<PluginLoaderService>().Plugins)
                             if (p.Startup is IPluginHttpStartup s)
                             {

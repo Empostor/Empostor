@@ -37,5 +37,6 @@
   "ban.notice.reason": "Motivo: {0}",
   "ban.notice.unban": "Desbanimento: {0}",
   "ban.notice.unban_permanent": "Desbanimento: Permanente",
-  "ban.notice.contact": "Em caso de dúvidas, contate o administrador."
+  "ban.notice.contact": "Em caso de dúvidas, contate o administrador.",
+  "ratelimit.too_frequent": "Muitas solicitações, tente novamente em {0} minuto(s)."
 }

@@ -70,5 +70,6 @@
   "ban.notice.reason": "理由：{0}",
   "ban.notice.unban": "解封时间：{0}",
   "ban.notice.unban_permanent": "解封时间：永久",
-  "ban.notice.contact": "如有问题请联系管理员"
+  "ban.notice.contact": "如有问题请联系管理员",
+  "ratelimit.too_frequent": "请求过于频繁请 {0} 分钟后重试"
 }

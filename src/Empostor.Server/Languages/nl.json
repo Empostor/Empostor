@@ -37,5 +37,6 @@
   "ban.notice.reason": "Reden: {0}",
   "ban.notice.unban": "Ontbantijd: {0}",
   "ban.notice.unban_permanent": "Ontbantijd: Permanent",
-  "ban.notice.contact": "Neem bij vragen contact op met de beheerder."
+  "ban.notice.contact": "Neem bij vragen contact op met de beheerder.",
+  "ratelimit.too_frequent": "Te veel verzoeken, probeer het over {0} minuut/minuten opnieuw."
 }

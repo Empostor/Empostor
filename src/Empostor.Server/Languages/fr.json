@@ -39,5 +39,6 @@
   "ban.notice.reason": "Raison : {0}",
   "ban.notice.unban": "Débannissement : {0}",
   "ban.notice.unban_permanent": "Débannissement : Permanent",
-  "ban.notice.contact": "En cas de question, contactez un administrateur."
+  "ban.notice.contact": "En cas de question, contactez un administrateur.",
+  "ratelimit.too_frequent": "Trop de requêtes, veuillez réessayer dans {0} minute(s)."
 }
