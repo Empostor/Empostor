@@ -345,18 +345,39 @@ public sealed class DiscordWebhookListener : IEventListener
             TrimUrl(url) + (url.Contains('?') ? "&" : "?") + "wait=true",
             new StringContent(json, Encoding.UTF8, "application/json"));
 
+        // Read the body regardless of status so failures carry diagnostic content
+        // (proxies, captive portals and WAFs answer with arbitrary non-JSON text).
+        var body = await response.Content.ReadAsStringAsync();
+
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("DiscordWebhook live message create returned {Status}", (int)response.StatusCode);
+            _logger.LogWarning(
+                "DiscordWebhook live message create returned {Status}: {Body}",
+                (int)response.StatusCode, Truncate(body));
             return null;
         }
 
-        var body = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
-        return doc.RootElement.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String
-            ? id.GetString()
-            : null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            return doc.RootElement.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String
+                ? id.GetString()
+                : null;
+        }
+        catch (JsonException ex)
+        {
+            // A 2xx response that is not JSON did not come from Discord. Logging the body
+            // makes the culprit (proxy, hijacked DNS, wrong URL) immediately visible.
+            _logger.LogError(
+                ex,
+                "DiscordWebhook live message create returned non-JSON body ({Bytes} bytes): {Body}",
+                body.Length, Truncate(body));
+            return null;
+        }
     }
+
+    private static string Truncate(string s)
+        => s.Length <= 300 ? s : s.Substring(0, 300) + "…";
 
     /// <summary>Returns true when the message no longer exists (404).</summary>
     private async ValueTask<bool> PatchLiveMessageAsync(TrackedLobby lobby, object embed)
