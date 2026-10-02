@@ -17,7 +17,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Empostor.Api.Innersloth.Generator\Empostor.Api.Innersloth.Generator.csproj" />
     <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
-    <ProjectReference Include="..\Empostor.Plugins.PlayerLog\Empostor.Plugins.PlayerLog.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Runtime assets outside wwwroot: keep them next to the executable so the admin panel
+         can read the shipped themes and its string table. -->
+    <Content Update="Pages\themes\**\theme.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="Pages\AdminStrings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Empostor.Hazel" Version="1.0.2" />

@@ -1,13 +1,10 @@
 namespace Empostor.Api.Config
 {
     /// <summary>
-    ///     Configuration for the HPLP (HTTP Public Lobby List Protocol) endpoint,
-    ///     which allows Starlight clients to discover games hosted on this server.
+    ///     HPLP settings, which let Starlight clients discover games hosted on this server.
     /// </summary>
     public class HplpConfig
     {
-        public const string Section = "HPLP";
-
         /// <summary>
         ///     Whether the HPLP endpoint (<c>GET /x-api/games</c>) is enabled.
         /// </summary>

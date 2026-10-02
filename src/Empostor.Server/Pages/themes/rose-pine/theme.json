@@ -1,0 +1,38 @@
+{
+  "Id": "rose-pine",
+  "Name": "Rosé Pine",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#FAF4ED",
+    "--s": "#F2E9E1",
+    "--b": "#E4DAD2",
+    "--t": "#575279",
+    "--m": "#797593",
+    "--a": "#286983",
+    "--g": "#56949F",
+    "--y": "#EA9D34",
+    "--r": "#B4637A",
+    "--p": "#907AA9",
+    "--o": "#D7827E",
+    "--field": "#FFFCF9",
+    "--hover": "rgba(87,82,121,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#191724",
+    "--s": "#1F1D2E",
+    "--b": "#26233A",
+    "--t": "#E0DEF4",
+    "--m": "#908CAA",
+    "--a": "#C4A7E7",
+    "--g": "#31748F",
+    "--y": "#F6C177",
+    "--r": "#EB6F92",
+    "--p": "#C4A7E7",
+    "--o": "#EA9D34",
+    "--field": "#12111A",
+    "--hover": "rgba(224,222,244,.06)",
+    "--on-a": "#191724"
+  },
+  "CustomCss": "body{font-family:'Georgia','Iowan Old Style',ui-serif,serif;letter-spacing:.15px}\nh1,h2,h3,.nlbl{font-family:ui-serif,Georgia,serif}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b)}\n.form,.sc,.ig,table{border-radius:16px}\n.form,.sc{box-shadow:0 1px 4px rgba(87,82,121,.05)}\n.ni{border-radius:0 12px 12px 0}\n.ni.active{background:rgba(196,167,231,.14);font-weight:600}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:12px;font-weight:600}\ninput,select,textarea{border-radius:12px}\ninput:focus,select:focus,textarea:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(196,167,231,.2)}\nth{font-style:italic;font-weight:600}\n.pnl.active{animation:rpIn .3s ease}\n@keyframes rpIn{from{opacity:0}to{opacity:1}}"
+}

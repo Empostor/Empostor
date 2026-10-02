@@ -17,6 +17,13 @@ public interface IAdminExtension
     /// <summary>Sidebar grouping label. Defaults to "Plugins".</summary>
     string Section => "Plugins";
 
+    /// <summary>
+    ///     Whether the panel should be re-fetched once per second while it is visible. Only panels
+    ///     that mirror live server state (e.g. an in-game chat feed) need this; static panels keep
+    ///     their DOM stable, which matters for widgets with in-progress typing or row editing.
+    /// </summary>
+    bool AutoRefresh => false;
+
     /// <summary>Declare the panel's widgets and callbacks.</summary>
     void Build(AdminPanelBuilder builder);
 }

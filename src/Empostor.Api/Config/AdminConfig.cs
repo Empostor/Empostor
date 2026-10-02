@@ -9,6 +9,11 @@ namespace Empostor.Api.Config
         public string MarketplaceUrl { get; set; } =
             "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/plugins.json";
 
+        public string ThemeMarketplaceUrl { get; set; } =
+            "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/themes.json";
+        
+        public string GitHubToken { get; set; } = string.Empty;
+
         /// <summary>Active admin theme id. Themes live under <c>Pages/themes/{Id}</c> or as plugins.</summary>
         public string Theme { get; set; } = "default";
 

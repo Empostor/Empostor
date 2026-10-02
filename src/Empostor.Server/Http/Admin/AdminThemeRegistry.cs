@@ -9,30 +9,44 @@ using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Http.Admin;
 
-public sealed record AdminThemeInfo(string Id, string Name);
+public sealed record AdminThemeInfo(string Id, string Name, string Source);
 
 /// <summary>
-///     Resolves admin-panel themes. Themes come from compiled <see cref="IAdminTheme"/> plugins
-///     and from folders under <c>Pages/themes/{Id}/theme.json</c>. A theme may extend another via
+///     Resolves admin-panel themes. Themes come from compiled <see cref="IAdminTheme"/> plugins,
+///     from folders under <c>Pages/themes/{Id}/theme.json</c>, and — at runtime — from themes
+///     installed through the marketplace. A theme may extend another via
 ///     <see cref="IAdminTheme.Extends"/>; tokens/css are inherited and overridden layer by layer.
 /// </summary>
 public sealed class AdminThemeRegistry
 {
     private readonly ILogger<AdminThemeRegistry> _logger;
+    private readonly List<IAdminTheme> _compiled;
     private readonly Dictionary<string, ThemeEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, AdminThemeDefinition> _resolved = new(StringComparer.OrdinalIgnoreCase);
 
     public AdminThemeRegistry(IEnumerable<IAdminTheme> compiled, ILogger<AdminThemeRegistry> logger)
     {
         _logger = logger;
+        _compiled = compiled.ToList();
+        Rescan();
+    }
 
-        Add("default", "Default", null, new AdminThemeDefinition());
+    /// <summary>
+    ///     Re-reads the compiled plugins and <c>Pages/themes</c>. Called before answering
+    ///     theme requests so a theme dropped into the folder is usable without a restart.
+    /// </summary>
+    public void Rescan()
+    {
+        _entries.Clear();
+        _resolved.Clear();
 
-        foreach (var theme in compiled)
+        Add("default", "Default", "builtin", null, new AdminThemeDefinition());
+
+        foreach (var theme in _compiled)
         {
             try
             {
-                Add(theme.Id, theme.Name, theme.Extends, theme.Define());
+                Add(theme.Id, theme.Name, "plugin", theme.Extends, theme.Define());
             }
             catch (Exception ex)
             {
@@ -48,10 +62,19 @@ public sealed class AdminThemeRegistry
         => _entries.Values
             .OrderBy(e => e.Id == "default" ? 0 : 1)
             .ThenBy(e => e.Id, StringComparer.OrdinalIgnoreCase)
-            .Select(e => new AdminThemeInfo(e.Id, e.Name))
+            .Select(e => new AdminThemeInfo(e.Id, e.Name, e.Source))
             .ToList();
 
+    /// <summary>True when the theme ships as a folder on disk (so it can be replaced or removed).</summary>
+    public bool IsDiskTheme(string id)
+        => _entries.TryGetValue(id, out var entry)
+           && string.Equals(entry.Source, "disk", StringComparison.OrdinalIgnoreCase);
+
     public bool Exists(string id) => _entries.ContainsKey(id);
+
+    /// <summary>Folder scanned for disk themes; themes are installed here as <c>{Id}/theme.json</c>.</summary>
+    public static string ThemesDirectory
+        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Pages", "themes");
 
     public AdminThemeDefinition? Resolve(string id)
         => _resolved.TryGetValue(id, out var definition) ? definition : null;
@@ -91,14 +114,14 @@ public sealed class AdminThemeRegistry
         return sb.ToString();
     }
 
-    private void Add(string id, string name, string? extends, AdminThemeDefinition definition)
+    private void Add(string id, string name, string source, string? extends, AdminThemeDefinition definition)
     {
-        _entries[id] = new ThemeEntry { Id = id, Name = name, Extends = extends, Definition = definition };
+        _entries[id] = new ThemeEntry { Id = id, Name = name, Source = source, Extends = extends, Definition = definition };
     }
 
     private void LoadDiskThemes()
     {
-        var themesDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Pages", "themes");
+        var themesDir = ThemesDirectory;
         if (!Directory.Exists(themesDir))
         {
             return;
@@ -130,7 +153,7 @@ public sealed class AdminThemeRegistry
                     Components = disk.Components ?? new Dictionary<string, string>(),
                 };
 
-                Add(disk.Id, disk.Name ?? disk.Id, disk.Extends, definition);
+                Add(disk.Id, disk.Name ?? disk.Id, "disk", disk.Extends, definition);
                 _logger.LogInformation("Loaded admin theme '{Id}' from {Path}", disk.Id, path);
             }
             catch (Exception ex)
@@ -222,6 +245,9 @@ public sealed class AdminThemeRegistry
         public string Id { get; set; } = string.Empty;
 
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>"builtin" for default, "plugin" for compiled themes, "disk" for folders.</summary>
+        public string Source { get; set; } = string.Empty;
 
         public string? Extends { get; set; }
 

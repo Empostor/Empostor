@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <VersionPrefix>2.0.0</VersionPrefix>
+    <VersionPrefix>2.0.1</VersionPrefix>
     <AssemblyName>Empostor.Api</AssemblyName>
     <AssemblyTitle>Empostor.Api</AssemblyTitle>
     <Authors>AeonLucid</Authors>

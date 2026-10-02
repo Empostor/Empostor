@@ -14,6 +14,7 @@ namespace Empostor.Api.Admin;
 [JsonDerivedType(typeof(AdminTable), "table")]
 [JsonDerivedType(typeof(AdminChips), "chips")]
 [JsonDerivedType(typeof(AdminDivider), "divider")]
+[JsonDerivedType(typeof(AdminEntries), "entries")]
 public abstract class AdminWidget
 {
     public string? Action { get; set; }
@@ -161,6 +162,67 @@ public sealed class AdminChips : AdminWidget
 
 public sealed class AdminDivider : AdminWidget
 {
+}
+
+/// <summary>One editable column of an <see cref="AdminEntries"/> widget.</summary>
+public sealed class AdminEntryField
+{
+    /// <summary>Row value key. The <b>first</b> field is the row identity used by edit/remove actions.</summary>
+    public string Key { get; set; } = string.Empty;
+
+    public string Label { get; set; } = string.Empty;
+
+    public bool Monospace { get; set; }
+}
+
+/// <summary>
+///     An editable list of structured entries (search + add + per-row edit/delete), backed by
+///     three actions: add (payload carries the new row), edit (value = old identity, payload carries
+///     the replacement row) and remove (value = row identity).
+/// </summary>
+public sealed class AdminEntries : AdminWidget
+{
+    public List<AdminEntryField> Fields { get; set; } = new();
+
+    /// <summary>Rows keyed by field key; the first field's value identifies the row.</summary>
+    public List<Dictionary<string, string>> Rows { get; set; } = new();
+
+    public string? SearchPlaceholder { get; set; }
+
+    public string? AddLabel { get; set; }
+
+    public string AddAction { get; set; } = string.Empty;
+
+    public string EditAction { get; set; } = string.Empty;
+
+    public string RemoveAction { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public AdminAction? AddHandler { get; set; }
+
+    [JsonIgnore]
+    public AdminAction? EditHandler { get; set; }
+
+    [JsonIgnore]
+    public AdminAction? RemoveHandler { get; set; }
+
+    public AdminEntries OnAdd(AdminAction handler)
+    {
+        AddHandler = handler;
+        return this;
+    }
+
+    public AdminEntries OnEdit(AdminAction handler)
+    {
+        EditHandler = handler;
+        return this;
+    }
+
+    public AdminEntries OnRemove(AdminAction handler)
+    {
+        RemoveHandler = handler;
+        return this;
+    }
 }
 
 public sealed record AdminOption(string Label, string Value);

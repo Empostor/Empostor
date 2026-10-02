@@ -57,6 +57,8 @@ public sealed class AdminPanelBuilder
 
     public AdminPanelBuilder RegisterChips(Action<AdminChips> configure) => Register(configure);
 
+    public AdminPanelBuilder RegisterEntries(Action<AdminEntries> configure) => Register(configure);
+
     public AdminPanelBuilder RegisterDivider()
     {
         Widgets.Add(new AdminDivider());
@@ -93,6 +95,27 @@ public sealed class AdminPanelBuilder
             {
                 chips.RemoveAction = NextAction();
                 _actions[chips.RemoveAction] = chips.RemoveHandler;
+            }
+        }
+
+        if (widget is AdminEntries entries)
+        {
+            if (entries.AddHandler != null)
+            {
+                entries.AddAction = NextAction();
+                _actions[entries.AddAction] = entries.AddHandler;
+            }
+
+            if (entries.EditHandler != null)
+            {
+                entries.EditAction = NextAction();
+                _actions[entries.EditAction] = entries.EditHandler;
+            }
+
+            if (entries.RemoveHandler != null)
+            {
+                entries.RemoveAction = NextAction();
+                _actions[entries.RemoveAction] = entries.RemoveHandler;
             }
         }
 

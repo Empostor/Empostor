@@ -11,15 +11,21 @@ public sealed class FixedCodeListener : IEventListener
 {
     private readonly ILogger<FixedCodeListener> _logger;
 
-    private readonly Dictionary<string, GameCode> _map;
+    private readonly FixedCodeStore _store;
+
+    private Dictionary<string, GameCode> _map;
 
     public int MappingCount => _map.Count;
 
-    public FixedCodeListener(ILogger<FixedCodeListener> logger, FixedCodeConfig config)
+    public FixedCodeListener(ILogger<FixedCodeListener> logger, FixedCodeStore store)
     {
         _logger = logger;
-        _map = BuildMap(config, logger);
+        _store = store;
+        _map = BuildMap(_store.Mappings, logger);
     }
+
+    /// <summary>Rebuilds the in-memory map after the admin panel changed the mappings.</summary>
+    public void Rebuild() => _map = BuildMap(_store.Mappings, _logger);
 
     [EventListener]
     public void OnGameCreation(IGameCreationEvent e)
@@ -36,12 +42,12 @@ public sealed class FixedCodeListener : IEventListener
     }
 
     private static Dictionary<string, GameCode> BuildMap(
-        FixedCodeConfig config,
+        IEnumerable<FriendCodeMapping> mappings,
         ILogger logger)
     {
         var map = new Dictionary<string, GameCode>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var m in config.Mappings)
+        foreach (var m in mappings)
         {
             if (string.IsNullOrWhiteSpace(m.FriendCode) ||
                 string.IsNullOrWhiteSpace(m.RoomCode))

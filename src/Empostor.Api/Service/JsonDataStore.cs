@@ -93,12 +93,16 @@ public abstract class JsonDataStore<TData> : IDisposable
     ///     Load data from the file on disk. If the file does not exist or fails to parse,
     ///     the store remains in its default (constructor-initialized) state.
     /// </summary>
-    protected void Load()
+    /// <returns>
+    ///     <c>true</c> when a persisted snapshot was applied, <c>false</c> when the store kept its
+    ///     constructor defaults (no file yet or unreadable). Callers use this to seed from config.
+    /// </returns>
+    protected bool Load()
     {
         if (!File.Exists(FilePath))
         {
             Logger.LogDebug("{Name} no data file at {Path}, using defaults", GetType().Name, FilePath);
-            return;
+            return false;
         }
 
         try
@@ -109,12 +113,15 @@ public abstract class JsonDataStore<TData> : IDisposable
             {
                 ApplySnapshot(data);
                 Logger.LogInformation("{Name} loaded from {Path}", GetType().Name, FilePath);
+                return true;
             }
         }
         catch (Exception ex)
         {
             Logger.LogWarning(ex, "{Name} failed to load {Path}, using defaults", GetType().Name, FilePath);
         }
+
+        return false;
     }
 
     /// <summary>

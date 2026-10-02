@@ -1,0 +1,38 @@
+{
+  "Id": "gruvbox",
+  "Name": "Gruvbox",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#FBF1C7",
+    "--s": "#F2E5BC",
+    "--b": "#E0CFA0",
+    "--t": "#3C3836",
+    "--m": "#7C6F64",
+    "--a": "#AF3A03",
+    "--g": "#79740E",
+    "--y": "#B57614",
+    "--r": "#9D0006",
+    "--p": "#8F3F71",
+    "--o": "#D65D0E",
+    "--field": "#FFFBF0",
+    "--hover": "rgba(60,56,54,.06)",
+    "--on-a": "#FBF1C7"
+  },
+  "DarkTokens": {
+    "--bg": "#282828",
+    "--s": "#3C3836",
+    "--b": "#504945",
+    "--t": "#EBDBB2",
+    "--m": "#A89984",
+    "--a": "#FE8019",
+    "--g": "#B8BB26",
+    "--y": "#FABD2F",
+    "--r": "#FB4934",
+    "--p": "#D3869B",
+    "--o": "#D65D0E",
+    "--field": "#1D2021",
+    "--hover": "rgba(235,219,178,.06)",
+    "--on-a": "#282828"
+  },
+  "CustomCss": "body{letter-spacing:.1px}\nh2{padding-bottom:8px;border-bottom:2px solid var(--b)}\n.form,.sc,.ig,table{border-radius:6px;border-width:2px}\n.ni{border-radius:0 8px 8px 0}\n.ni.active{font-weight:700}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:6px;font-weight:700;text-transform:none}\ninput,select,textarea{border-radius:6px;border-width:2px}\nth{font-weight:700;letter-spacing:.6px}\n.badge{border-radius:6px}\n.code{font-weight:700}"
+}

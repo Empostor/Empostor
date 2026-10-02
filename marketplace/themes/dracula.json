@@ -1,0 +1,38 @@
+{
+  "Id": "dracula",
+  "Name": "Dracula",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#F7F7FB",
+    "--s": "#EFEFF6",
+    "--b": "#DFDFEC",
+    "--t": "#282A36",
+    "--m": "#6272A4",
+    "--a": "#7C4DFF",
+    "--g": "#1E9E52",
+    "--y": "#B08400",
+    "--r": "#D63031",
+    "--p": "#C2185B",
+    "--o": "#C4601A",
+    "--field": "#FFFFFF",
+    "--hover": "rgba(40,42,54,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#282A36",
+    "--s": "#323444",
+    "--b": "#44475A",
+    "--t": "#F8F8F2",
+    "--m": "#A3ACCC",
+    "--a": "#BD93F9",
+    "--g": "#50FA7B",
+    "--y": "#F1FA8C",
+    "--r": "#FF5555",
+    "--p": "#FF79C6",
+    "--o": "#FFB86C",
+    "--field": "#21222C",
+    "--hover": "rgba(248,248,242,.06)",
+    "--on-a": "#282A36"
+  },
+  "CustomCss": "body{letter-spacing:.15px}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b)}\n.form,.sc,.ig,table{border-radius:12px}\n.form,.sc{box-shadow:0 1px 2px rgba(40,42,54,.06)}\n.form:hover{border-color:var(--a);box-shadow:0 3px 14px rgba(189,147,249,.14)}\n.ni{border-radius:10px;transition:background .15s ease,color .15s ease}\n.ni:hover{background:var(--hover)}\n.ni.active{background:rgba(189,147,249,.14);color:var(--a);font-weight:600}\nbutton.bp,button.bd,button.bw,button.bsm{border-radius:9px;font-weight:600;transition:transform .1s ease}\nbutton.bp:hover,button.bd:hover,button.bw:hover{transform:translateY(-1px)}\ninput,select,textarea{border-radius:9px}\ninput:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(189,147,249,.22)}\n.pnl.active{animation:fadeIn .25s ease}\n@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}"
+}

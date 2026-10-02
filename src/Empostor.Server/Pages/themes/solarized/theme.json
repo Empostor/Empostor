@@ -1,0 +1,38 @@
+{
+  "Id": "solarized",
+  "Name": "Solarized",
+  "Extends": null,
+  "Tokens": {
+    "--bg": "#FDF6E3",
+    "--s": "#EEE8D5",
+    "--b": "#DDD6C1",
+    "--t": "#073642",
+    "--m": "#657B83",
+    "--a": "#268BD2",
+    "--g": "#7A8C00",
+    "--y": "#B58900",
+    "--r": "#DC322F",
+    "--p": "#6C71C4",
+    "--o": "#CB4B16",
+    "--field": "#FFFBF0",
+    "--hover": "rgba(7,54,66,.05)",
+    "--on-a": "#FFFFFF"
+  },
+  "DarkTokens": {
+    "--bg": "#002B36",
+    "--s": "#073642",
+    "--b": "#14505F",
+    "--t": "#EEE8D5",
+    "--m": "#93A1A1",
+    "--a": "#3FA3E8",
+    "--g": "#B4C43A",
+    "--y": "#D4A72C",
+    "--r": "#E85550",
+    "--p": "#8B90E0",
+    "--o": "#E5763F",
+    "--field": "#00252E",
+    "--hover": "rgba(238,232,213,.06)",
+    "--on-a": "#002B36"
+  },
+  "CustomCss": "body{font-family:'Menlo','Consolas','DejaVu Sans Mono',ui-monospace,monospace;font-size:13px}\nh1,h2{font-weight:600}\nh2{padding-bottom:8px;border-bottom:1px solid var(--b)}\n.form,.sc,.ig,table{border-radius:4px}\n.ni{border-left-width:3px}\nth{background:var(--s);font-weight:700}\nbutton.bp,button.bd,button.bw{border-radius:4px;font-weight:600}\ninput,select,textarea{border-radius:4px}\n.code,.ip,td.mono{font-weight:600}"
+}

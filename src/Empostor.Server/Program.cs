@@ -112,7 +112,6 @@ namespace Empostor.Server
                     services.Configure<TimeoutConfig>(host.Configuration.GetSection(TimeoutConfig.Section));
                     services.Configure<HttpServerConfig>(host.Configuration.GetSection(HttpServerConfig.Section));
                     services.Configure<AdminConfig>(host.Configuration.GetSection(AdminConfig.Section));
-                    services.Configure<HplpConfig>(host.Configuration.GetSection(HplpConfig.Section));
                     services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
 
                     services.AddSingleton<AuthCacheService>();
