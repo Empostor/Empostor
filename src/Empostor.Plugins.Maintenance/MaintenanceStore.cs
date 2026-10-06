@@ -1,5 +1,5 @@
+using System.Linq;
 using System.Threading.Tasks;
-using Empostor.Api.Innersloth;
 using Empostor.Api.Service;
 using Microsoft.Extensions.Logging;
 
@@ -7,15 +7,22 @@ namespace Empostor.Plugins.Maintenance;
 
 public sealed class MaintenanceConfig
 {
+    private const string FallbackMessage = "服务器正在维护中，请联系管理员获取支持。";
+
     public bool Enabled { get; set; }
 
-    public string MessageZh { get; set; } = "服务器正在维护中，请联系管理员获取支持。";
+    public string? Message { get; set; }
 
-    public string MessageEn { get; set; } = "The server is under maintenance. Please contact the administrator for support.";
+    // Kept so a config written before the two languages were merged still loads its text.
+    public string? MessageZh { get; set; }
+
+    public string? MessageEn { get; set; }
+
+    public string MessageOrDefault => Message ?? MessageZh ?? MessageEn ?? FallbackMessage;
 }
 
 /// <summary>
-///     Holds the maintenance flag and the two kick messages. Persisted so a restart does not
+///     Holds the maintenance flag and the kick message. Persisted so a restart does not
 ///     silently drop the server back into service while an operator is mid-update.
 /// </summary>
 public sealed class MaintenanceStore : JsonDataStore<MaintenanceConfig>
@@ -28,38 +35,27 @@ public sealed class MaintenanceStore : JsonDataStore<MaintenanceConfig>
 
     public bool Enabled { get; private set; }
 
-    public string MessageZh { get; private set; } = new MaintenanceConfig().MessageZh;
-
-    public string MessageEn { get; private set; } = new MaintenanceConfig().MessageEn;
-
-    /// <summary>The message shown to a client speaking the given language.</summary>
-    public string MessageFor(Language language) => language switch
-    {
-        Language.SChinese or Language.TChinese => MessageZh,
-        _ => MessageEn,
-    };
+    public string Message { get; private set; } = new MaintenanceConfig().MessageOrDefault;
 
     public void SetEnabled(bool enabled) => Enabled = enabled;
 
-    public void SetMessages(string zh, string en)
-    {
-        MessageZh = zh;
-        MessageEn = en;
-    }
+    public void SetMessage(string message) => Message = message;
 
     public new async ValueTask SaveAsync() => await base.SaveAsync();
 
     protected override MaintenanceConfig GetSnapshot() => new()
     {
         Enabled = Enabled,
-        MessageZh = MessageZh,
-        MessageEn = MessageEn,
+        Message = Message,
     };
 
     protected override void ApplySnapshot(MaintenanceConfig data)
     {
         Enabled = data.Enabled;
-        MessageZh = data.MessageZh;
-        MessageEn = data.MessageEn;
+        Message = FirstNonBlank(data.Message, data.MessageZh, data.MessageEn)
+                  ?? new MaintenanceConfig().MessageOrDefault;
     }
+
+    private static string? FirstNonBlank(params string?[] candidates)
+        => candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate));
 }

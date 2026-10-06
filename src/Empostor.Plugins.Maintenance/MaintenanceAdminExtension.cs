@@ -21,6 +21,9 @@ public sealed class MaintenanceAdminExtension : IAdminExtension
 
     public string Icon => "shield";
 
+    // The textbox holds a half-typed message most of the time, so the panel must not refetch itself.
+    public bool AutoRefresh => false;
+
     public void Build(AdminPanelBuilder b)
     {
         b.RegisterText(
@@ -41,18 +44,10 @@ public sealed class MaintenanceAdminExtension : IAdminExtension
 
         b.RegisterTextbox(textbox =>
         {
-            textbox.Label = "Kick message (Chinese)";
-            textbox.Value = _store.MessageZh;
+            textbox.Label = "Kick message";
+            textbox.Value = _store.Message;
             textbox.Multiline = true;
-            textbox.OnSubmit(async ctx => await SaveMessageAsync(ctx, zh: ctx.Value, en: null));
-        });
-
-        b.RegisterTextbox(textbox =>
-        {
-            textbox.Label = "Kick message (English)";
-            textbox.Value = _store.MessageEn;
-            textbox.Multiline = true;
-            textbox.OnSubmit(async ctx => await SaveMessageAsync(ctx, zh: null, en: ctx.Value));
+            textbox.OnSubmit(async ctx => await SaveMessageAsync(ctx));
         });
     }
 
@@ -66,12 +61,14 @@ public sealed class MaintenanceAdminExtension : IAdminExtension
             : "Maintenance mode OFF. The server is accepting players again.");
     }
 
-    private async ValueTask<AdminActionResult> SaveMessageAsync(AdminActionContext ctx, string? zh, string? en)
+    private async ValueTask<AdminActionResult> SaveMessageAsync(AdminActionContext ctx)
     {
-        _store.SetMessages(
-            string.IsNullOrWhiteSpace(zh) ? _store.MessageZh : zh.Trim(),
-            string.IsNullOrWhiteSpace(en) ? _store.MessageEn : en.Trim());
+        if (string.IsNullOrWhiteSpace(ctx.Value))
+        {
+            return AdminActionResult.Ok("Kick message left unchanged, the box was empty.");
+        }
 
+        _store.SetMessage(ctx.Value.Trim());
         await _store.SaveAsync();
         return AdminActionResult.Ok("Kick message saved.");
     }

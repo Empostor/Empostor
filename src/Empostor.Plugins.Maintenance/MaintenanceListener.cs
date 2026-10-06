@@ -62,7 +62,7 @@ public sealed class MaintenanceListener : IEventListener
 
                 try
                 {
-                    await client.DisconnectAsync(DisconnectReason.Custom, _store.MessageFor(client.Language));
+                    await client.DisconnectAsync(DisconnectReason.Custom, _store.Message);
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +78,7 @@ public sealed class MaintenanceListener : IEventListener
         // A client that never reaches a lobby would otherwise sit connected forever.
         if (_store.Enabled)
         {
-            await e.Client.DisconnectAsync(DisconnectReason.Custom, _store.MessageFor(e.Client.Language));
+            await e.Client.DisconnectAsync(DisconnectReason.Custom, _store.Message);
         }
     }
 
@@ -87,7 +87,7 @@ public sealed class MaintenanceListener : IEventListener
     {
         if (_store.Enabled && e.Client != null)
         {
-            await e.Client.DisconnectAsync(DisconnectReason.Custom, _store.MessageFor(e.Client.Language));
+            await e.Client.DisconnectAsync(DisconnectReason.Custom, _store.Message);
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class MaintenanceListener : IEventListener
     {
         if (_store.Enabled)
         {
-            e.JoinResult = GameJoinResult.CreateCustomError(_store.MessageFor(e.Player.Client.Language));
+            e.JoinResult = GameJoinResult.CreateCustomError(_store.Message);
         }
     }
 }
