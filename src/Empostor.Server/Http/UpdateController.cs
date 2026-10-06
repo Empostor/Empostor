@@ -358,11 +358,6 @@ namespace Empostor.Server.Http
             return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "osx-" + arch : "linux-" + arch;
         }
 
-        /// <summary>
-        ///     Asset names always end with the RID — "Empostor-Server_2.0.0_win-x64.zip" for tagged
-        ///     releases and "Empostor-Server-latest-win-x64.zip" for nightly — so a suffix match
-        ///     covers both and skips unrelated files such as the nupkg or manifest.json.
-        /// </summary>
         private static (string Name, string Url, long Size)? FindPlatformAsset(JsonElement release, string rid)
         {
             if (!release.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)

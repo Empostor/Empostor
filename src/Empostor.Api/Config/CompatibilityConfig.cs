@@ -9,5 +9,7 @@ namespace Empostor.Api.Config
         public bool AllowHostAuthority { get; set; } = false;
 
         public bool AllowVersionMixing { get; set; } = false;
+
+        public bool AllowDuplicateLogin { get; set; } = true;
     }
 }

@@ -187,7 +187,7 @@ namespace Empostor.Server.Net.State
             }
 
             var player = client.Player;
-            if (AntiCheat.Config.EnableDuplicateLoginCheck && IsDuplicateAccount(client))
+            if (_compatibilityConfig.AllowDuplicateLogin && IsDuplicateAccount(client))
             {
                 _logger.LogWarning(
                     "#{Id} {Name} rejected: account {Puid} is already playing in this game",
