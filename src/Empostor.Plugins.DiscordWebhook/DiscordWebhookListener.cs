@@ -26,6 +26,7 @@ public sealed class DiscordWebhookListener : IEventListener
     private readonly IHttpClientFactory _http;
     private readonly DiscordWebhookStore _config;
     private readonly LiveGameTracker _tracker;
+    private readonly LiveRoomToggle _toggle;
 
     // Per-lobby edit throttle, plus a marker so skipped updates are flushed once instead of lost.
     private readonly ConcurrentDictionary<int, DateTime> _lastEdit = new();
@@ -35,19 +36,52 @@ public sealed class DiscordWebhookListener : IEventListener
         ILogger<DiscordWebhookListener> logger,
         IHttpClientFactory http,
         DiscordWebhookStore config,
-        LiveGameTracker tracker)
+        LiveGameTracker tracker,
+        LiveRoomToggle toggle)
     {
         _logger = logger;
         _http = http;
         _config = config;
         _tracker = tracker;
+        _toggle = toggle;
     }
 
     // ---- Live mode: one persistent message per lobby, edited as it changes ----
 
+    /// <summary>Applies the host's <c>#dcwb</c> choice to one lobby, creating the message on enable.</summary>
+    public void SetRoomForwarding(IGame game, bool enabled)
+    {
+        _toggle.Set(game.Code, enabled);
+        _logger.LogInformation(
+            "DiscordWebhook forwarding for {Code} turned {State} by {Player}",
+            GameCodeParser.IntToGameName(game.Code),
+            enabled ? "on" : "off",
+            game.Host?.Client.Name ?? "—");
+
+        if (!enabled)
+        {
+            return;
+        }
+
+        // Enabling mid-lobby: mirror it right away instead of waiting for the next player change.
+        if (_tracker.TryGet(game.Code, out var lobby) && lobby.Game != null)
+        {
+            _ = UpdateLobbyAsync(lobby.Game, force: true);
+        }
+        else
+        {
+            _ = CreateLiveMessageAsync(game);
+        }
+    }
+
     [EventListener]
     public void OnGameCreated(IGameCreatedEvent e)
     {
+        if (_toggle.IsMuted(e.Game.Code))
+        {
+            return;
+        }
+
         if (_config.LiveRoomUpdates)
         {
             // The live message is created on the first player join instead: at creation time the
@@ -69,6 +103,8 @@ public sealed class DiscordWebhookListener : IEventListener
     [EventListener]
     public void OnGameStarted(IGameStartedEvent e)
     {
+        if (_toggle.IsMuted(e.Game.Code)) { return; }
+
         if (!_config.LiveRoomUpdates) { SendOneShot("Game Started", ColorInGame, LegacyFields(e.Game)); return; }
         _ = UpdateLobbyAsync(e.Game, force: true);
     }
@@ -76,6 +112,11 @@ public sealed class DiscordWebhookListener : IEventListener
     [EventListener]
     public void OnGameEnded(IGameEndedEvent e)
     {
+        if (_toggle.IsMuted(e.Game.Code))
+        {
+            return;
+        }
+
         if (!_config.LiveRoomUpdates)
         {
             SendOneShot("Game Ended", ColorEnded, new()
@@ -162,7 +203,7 @@ public sealed class DiscordWebhookListener : IEventListener
     private async ValueTask CreateLiveMessageAsync(IGame game)
     {
         var url = _config.MatchmakerUrl;
-        if (string.IsNullOrWhiteSpace(url))
+        if (string.IsNullOrWhiteSpace(url) || _toggle.IsMuted(game.Code))
         {
             return;
         }
@@ -209,7 +250,7 @@ public sealed class DiscordWebhookListener : IEventListener
 
     private async ValueTask UpdateLobbyAsync(IGame game, bool force = false, string? resultOverride = null)
     {
-        if (!_config.LiveRoomUpdates || !_tracker.TryGet(game.Code, out var lobby))
+        if (!_config.LiveRoomUpdates || _toggle.IsMuted(game.Code) || !_tracker.TryGet(game.Code, out var lobby))
         {
             return;
         }
@@ -243,6 +284,8 @@ public sealed class DiscordWebhookListener : IEventListener
 
     private async ValueTask DeleteLiveMessageAsync(int gameCode)
     {
+        _toggle.Clear(gameCode);
+
         if (!_tracker.Untrack(gameCode, out var lobby))
         {
             return;
@@ -364,14 +407,11 @@ public sealed class DiscordWebhookListener : IEventListener
                 ? id.GetString()
                 : null;
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            // A 2xx response that is not JSON did not come from Discord. Logging the body
-            // makes the culprit (proxy, hijacked DNS, wrong URL) immediately visible.
             _logger.LogError(
-                ex,
-                "DiscordWebhook live message create returned non-JSON body ({Bytes} bytes): {Body}",
-                body.Length, Truncate(body));
+                "DiscordWebhook live message create got a non-JSON body ({Bytes} bytes) from {Host}: {Body}",
+                body.Length, response.RequestMessage?.RequestUri?.Host ?? "?", Truncate(body));
             return null;
         }
     }

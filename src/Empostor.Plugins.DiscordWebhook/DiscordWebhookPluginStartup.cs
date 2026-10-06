@@ -1,4 +1,5 @@
 using Empostor.Api.Admin;
+using Empostor.Api.Commands;
 using Empostor.Api.Events;
 using Empostor.Api.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +15,13 @@ public sealed class DiscordWebhookPluginStartup : IPluginStartup
     {
         services.AddHttpClient();
         services.AddSingleton<LiveGameTracker>();
+        services.AddSingleton<LiveRoomToggle>();
         services.AddSingleton<DiscordWebhookStore>();
-        services.AddSingleton<IEventListener, DiscordWebhookListener>();
+        services.AddSingleton<DiscordWebhookListener>();
+        services.AddSingleton<IEventListener>(sp => sp.GetRequiredService<DiscordWebhookListener>());
+        services.AddSingleton<DiscordWebhookCommand>();
+        services.AddSingleton<ICommand, DiscordWebhookCommand>(
+            sp => sp.GetRequiredService<DiscordWebhookCommand>());
         services.AddSingleton<IAdminExtension, DiscordWebhookAdminExtension>();
         services.AddHostedService<WebhookOrphanCleanup>();
     }
