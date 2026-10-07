@@ -200,6 +200,7 @@ namespace Empostor.Server
                     services.AddHazel();
                     services.AddSingleton<ICustomMessageManager<ICustomRootMessage>, CustomMessageManager<ICustomRootMessage>>();
                     services.AddSingleton<ICustomMessageManager<ICustomRpc>, CustomMessageManager<ICustomRpc>>();
+                    services.AddSingleton<ICustomMessageManager<ICustomSystemType>, CustomMessageManager<ICustomSystemType>>();
                     services.AddSingleton<IMessageWriterProvider, MessageWriterProvider>();
                     services.AddSingleton<IGameCodeFactory, GameCodeFactory>();
                     services.AddSingleton<IEventManager, EventManager>();

@@ -8,6 +8,7 @@ using Empostor.Api.Innersloth.Maps;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Custom;
 using Empostor.Api.Net.Inner;
+using Empostor.Api.Net.Inner.Objects;
 using Empostor.Api.Net.Inner.Objects.ShipStatus;
 using Empostor.Api.Net.Messages.Rpcs;
 using Empostor.Server.Net.Inner.Objects.Systems;
@@ -18,10 +19,13 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
 {
     internal abstract class InnerShipStatus : InnerNetObject, IInnerShipStatus
     {
+        private readonly ICustomMessageManager<ICustomSystemType> _customSystemManager;
         private readonly Dictionary<SystemTypes, ISystemType> _systems = new Dictionary<SystemTypes, ISystemType>();
 
-        protected InnerShipStatus(ICustomMessageManager<ICustomRpc> customMessageManager, Game game, MapTypes mapType) : base(customMessageManager, game)
+        protected InnerShipStatus(ICustomMessageManager<ICustomRpc> customMessageManager, ICustomMessageManager<ICustomSystemType> customSystemManager, Game game, MapTypes mapType) : base(customMessageManager, game)
         {
+            _customSystemManager = customSystemManager;
+
             Components.Add(this);
 
             MapType = mapType;
@@ -35,22 +39,21 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
 
         public Dictionary<int, bool> Doors { get; }
 
-        internal override ValueTask OnSpawnAsync()
-        {
-            for (var i = 0; i < Doors.Count; i++)
-            {
-                Doors.Add(i, false);
-            }
-
-            AddSystems(_systems);
-            _systems.Add(SystemTypes.Sabotage, new SabotageSystemType(_systems.Values.OfType<IActivatable>().ToArray()));
-
-            return base.OnSpawnAsync();
-        }
-
         public override ValueTask<bool> SerializeAsync(IMessageWriter writer, bool initialState)
         {
-            throw new NotImplementedException();
+            var result = false;
+            foreach (var systemType in SystemTypeHelpers.AllTypes)
+            {
+                if (_systems.TryGetValue(systemType, out var value))
+                {
+                    result = true;
+                    writer.StartMessage((byte)systemType);
+                    value.Serialize(writer, initialState);
+                    writer.EndMessage();
+                }
+            }
+
+            return new ValueTask<bool>(result);
         }
 
         public override async ValueTask DeserializeAsync(IClientPlayer sender, IClientPlayer? target, IMessageReader reader, bool initialState)
@@ -62,11 +65,15 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
 
             while (reader.Position < reader.Length)
             {
-                var messageReader = reader.ReadMessage();
+                using var messageReader = reader.ReadMessage();
                 var type = (SystemTypes)messageReader.Tag;
                 if (_systems.TryGetValue(type, out var value))
                 {
                     value.Deserialize(messageReader, initialState);
+                }
+                else if (_customSystemManager.TryGet(messageReader.Tag, out var customSystem))
+                {
+                    await customSystem.DeserializeAsync(this, sender, target, messageReader, initialState);
                 }
             }
         }
@@ -84,6 +91,7 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
                     }
 
                     Rpc27CloseDoorsOfType.Deserialize(reader, out var systemType);
+                    CloseDoorsOfType(systemType);
                     break;
                 }
 
@@ -94,8 +102,20 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
                         return false;
                     }
 
-                    // TODO: properly deserialize this RPC
-                    // Rpc35UpdateSystem.Deserialize(reader, Game, out var systemType, out var playerControl, out var sequenceId, out var state, out var ventId);
+                    Rpc35UpdateSystem.Deserialize(reader, Game, out var systemType, out var playerControl, out var payload);
+                    if (_systems.TryGetValue(systemType, out var system))
+                    {
+                        system.UpdateSystem(playerControl, payload);
+                    }
+                    else if (_customSystemManager.TryGet((byte)systemType, out var customSystem))
+                    {
+                        return await customSystem.HandleUpdateSystemAsync(this, playerControl, sender, target, payload);
+                    }
+                    else if (await sender.Client.ReportCheatAsync(call, CheatCategory.ProtocolExtension, $"Client sent unregistered system type {(byte)systemType}"))
+                    {
+                        return false;
+                    }
+
                     break;
                 }
 
@@ -141,6 +161,58 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
         {
             systems.Add(SystemTypes.Electrical, new SwitchSystem());
             systems.Add(SystemTypes.MedBay, new MedScanSystem());
+        }
+
+        protected void InitializeSystems()
+        {
+            for (var i = 0; i < Data.Doors.Count; i++)
+            {
+                Doors[i] = true;
+            }
+
+            AddSystems(_systems);
+            _systems.Add(SystemTypes.Sabotage, new SabotageSystemType(_systems.Values.OfType<IActivatable>().ToArray(), UpdateSystem));
+        }
+
+        protected void UpdateSystem(IInnerPlayerControl? playerControl, SystemTypes systemType, byte amount)
+        {
+            if (!_systems.TryGetValue(systemType, out var system))
+            {
+                return;
+            }
+
+            switch (system)
+            {
+                case SwitchSystem switchSystem:
+                    switchSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case ReactorSystemType reactorSystem:
+                    reactorSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case LifeSuppSystemType lifeSuppSystem:
+                    lifeSuppSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case HudOverrideSystemType hudOverrideSystem:
+                    hudOverrideSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case HqHudSystemType hqHudSystem:
+                    hqHudSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case HeliSabotageSystemType heliSabotageSystem:
+                    heliSabotageSystem.UpdateSystem(playerControl, amount);
+                    break;
+                case MushroomMixupSabotageSystemType mushroomMixupSabotageSystem:
+                    mushroomMixupSabotageSystem.UpdateSystem(playerControl, amount);
+                    break;
+            }
+        }
+
+        protected void CloseDoorsOfType(SystemTypes room)
+        {
+            if (_systems.TryGetValue(SystemTypes.Doors, out var system) && system is IDoorSystem doorSystem)
+            {
+                doorSystem.CloseDoorsOfType(room);
+            }
         }
 
         private static Vector2 Rotate(Vector2 self, float degrees)
