@@ -4,14 +4,10 @@ using Empostor.Api.Events;
 using Empostor.Api.Events.Client;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Shared
+namespace Empostor.Server.Service.Reactor
 {
     // Based on Reactor.Empostor protocol:
     // https://github.com/NuclearPowered/Reactor.Empostor
-    //
-    // Reactor appends its data after the normal Among Us handshake:
-    // [normal AU handshake] [uint64 header: 7-byte "reactor" magic + 1-byte protocol version]
-    // If protocol >= V3: [packed int modCount] [for each: string id, string version, ushort flags]
     internal sealed class ReactorHandshakeListener : IEventListener
     {
         // "reactor" in ASCII (7 bytes), packed as upper 56 bits of a uint64 in little-endian

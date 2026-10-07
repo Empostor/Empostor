@@ -7,10 +7,8 @@ using Empostor.Api.Languages;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Http;
+namespace Empostor.Server.Service.Ip;
 
-// Anticheat "Ip request rate limit": rejects TCP (HTTP) requests of IPs that
-// exceeded the configured quota and answers with a localized hint.
 public sealed class IpRateLimitMiddleware
 {
     private const string MessageKey = IpRateLimitService.MessageKey;

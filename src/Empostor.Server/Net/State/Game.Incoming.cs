@@ -7,10 +7,10 @@ using Empostor.Api.Games;
 using Empostor.Api.Net;
 using Next.Hazel;
 using Empostor.Server.Events;
-using Empostor.Server.Service.Shared;
 using Empostor.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Empostor.Server.Service.Reactor;
 
 namespace Empostor.Server.Net.State
 {

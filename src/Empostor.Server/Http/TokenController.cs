@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Server.Net;
 using Empostor.Server.Service.Auth;
+using Empostor.Server.Service.Ip;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

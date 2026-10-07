@@ -4,10 +4,9 @@ using System.Net;
 using Empostor.Api.Config;
 using Microsoft.Extensions.Options;
 
-namespace Empostor.Server.Http;
+namespace Empostor.Server.Service.Ip;
 public sealed class IpRateLimitService
 {
-    // Language key of the localized hint, see Languages/*.json.
     public const string MessageKey = "ratelimit.too_frequent";
 
     public const int MaxRequestsPerWindow = 30;

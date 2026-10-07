@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Empostor.Server.Service.Shared
+namespace Empostor.Server.Service.Ip
 {
     public class IpGeolocationService
     {

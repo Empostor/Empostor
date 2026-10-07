@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Empostor.Server.Http;
+namespace Empostor.Server.Http.Admin;
 
 internal static class AdminTemplateDefaults
 {

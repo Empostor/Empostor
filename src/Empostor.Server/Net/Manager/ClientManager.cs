@@ -11,16 +11,16 @@ using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
 using Empostor.Api.Service;
 using Empostor.Server.Events.Client;
-using Empostor.Server.Http;
 using Empostor.Server.Net.Factories;
 using Empostor.Server.Service;
-using Empostor.Server.Service.Shared;
 using Empostor.Server.Service.Auth;
 using Empostor.Server.Utils;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Next.Hazel;
+using Empostor.Server.Service.Ip;
+using Empostor.Server.Service.Reactor;
 
 namespace Empostor.Server.Net.Manager
 {
