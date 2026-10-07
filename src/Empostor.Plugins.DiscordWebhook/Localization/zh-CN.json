@@ -1,0 +1,10 @@
+{
+ "command.dcwb.description":"开关本房间的 Discord 转发（仅房主）。",
+ "command.dcwb.usage":"dcwb <on|off>",
+ "discordwebhook.host_only":"只有房主可以开关 Discord 转发。",
+ "discordwebhook.usage":"用法：#dcwb <on|off>",
+ "discordwebhook.already":"本房间的 Discord 转发已经是{0}了。",
+ "discordwebhook.changed":"本房间的 Discord 转发已{0}。",
+ "discordwebhook.state_on":"开启",
+ "discordwebhook.state_off":"关闭"
+}

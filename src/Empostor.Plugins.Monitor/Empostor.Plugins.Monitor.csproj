@@ -9,6 +9,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <Target Name="CopyToMarketplace" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="..\..\marketplace" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="E:\WindowsFile\Empostor\Empostor\marketplace" />
   </Target>
 </Project>

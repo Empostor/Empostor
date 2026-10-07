@@ -25,14 +25,14 @@ public sealed class PlayersCommand : ICommand
 
         var players = ctx.Game.Players.ToList();
         var sb = new StringBuilder();
-        sb.AppendLine(ctx.GetString("command.players.header").Format(players.Count));
+        sb.AppendLine(ctx.GetString("command.players.header", players.Count));
 
         foreach (var p in players)
         {
             var name = p.Client.Name;
             var fc = p.Client.FriendCode ?? "???";
             var ping = p.Client.Connection?.AveragePing ?? 0;
-            sb.AppendLine(ctx.GetString("command.players.entry").Format(name, fc, (int)ping));
+            sb.AppendLine(ctx.GetString("command.players.entry", name, fc, (int)ping));
         }
 
         await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString().TrimEnd(), ctx.PlayerControl);

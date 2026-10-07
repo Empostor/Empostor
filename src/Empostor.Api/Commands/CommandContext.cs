@@ -1,5 +1,5 @@
 using Empostor.Api.Games;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Inner.Objects;
 
@@ -19,7 +19,7 @@ namespace Empostor.Api.Commands
 
         public required IGame Game { get; init; }
 
-        public required LanguageService Lang { get; init; }
+        public required ILocalizationService Localization { get; init; }
 
         public Innersloth.Language SenderLanguage => Sender.Client.Language;
 
@@ -27,7 +27,10 @@ namespace Empostor.Api.Commands
             => SenderLanguage == Innersloth.Language.SChinese ||
                SenderLanguage == Innersloth.Language.TChinese;
 
-        public LanguageString GetString(string key)
-            => Lang.Get(key, SenderLanguage);
+        public string GetString(string key, params object?[] arguments)
+            => Localization.Get(new LocalizedMessageKey("empostor", key), SenderLanguage, arguments);
+
+        public string GetPluginString(string owner, string key, params object?[] arguments)
+            => Localization.Get(new LocalizedMessageKey(owner, key), SenderLanguage, arguments);
     }
 }

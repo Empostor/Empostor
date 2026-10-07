@@ -14,6 +14,7 @@ public sealed class QqVerifyCommand : ICommand
     }
 
     public string Name => "verify";
+    public string LocalizationOwner => QqVerifyPlugin.Owner;
 
     public string[] Aliases => new[] { "ver" };
 
@@ -56,16 +57,14 @@ public sealed class QqVerifyCommand : ICommand
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
             T(ctx, "qqverify.recorded",
-                    "Verification request recorded! Send /验证 {0} to the QQ bot.\nNote: The code is valid for 10 minutes.")
-                .Replace("{0}", fc),
+                    "Verification request recorded! Send /验证 {0} to the QQ bot.\nNote: The code is valid for 10 minutes.", fc),
             ctx.PlayerControl);
 
         return true;
     }
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(QqVerifyPlugin.Owner, key, arguments);
     }
 }

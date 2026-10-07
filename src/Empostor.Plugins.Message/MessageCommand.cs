@@ -17,6 +17,7 @@ public sealed class MessageCommand : ICommand
     }
 
     public string Name => "msg";
+    public string LocalizationOwner => MessagePlugin.Owner;
     public string[] Aliases => new[] { "message", "leave" };
     public string Description => "Leave a message for a player by friend code.";
     public string Usage => "msg <friendcode> <message>";
@@ -59,8 +60,7 @@ public sealed class MessageCommand : ICommand
         if (content.Length > _config.MessageMaxLength)
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                T(ctx, "message.too_long", "Message is too long.")
-                    .Replace("{0}", _config.MessageMaxLength.ToString()),
+                T(ctx, "message.too_long", "Message is too long.", _config.MessageMaxLength),
                 ctx.PlayerControl);
             return true;
         }
@@ -68,8 +68,7 @@ public sealed class MessageCommand : ICommand
         if (_store.Count(targetFc) >= _config.MaxMessagesPerTarget)
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                T(ctx, "message.full", "Already has too many pending messages.")
-                    .Replace("{0}", targetFc),
+                T(ctx, "message.full", "Already has too many pending messages.", targetFc),
                 ctx.PlayerControl);
             return true;
         }
@@ -90,15 +89,14 @@ public sealed class MessageCommand : ICommand
         _store.Add(msg);
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            T(ctx, "message.sent", "Message sent to {0}.").Replace("{0}", targetFc),
+            T(ctx, "message.sent", "Message sent to {0}.", targetFc),
             ctx.PlayerControl);
 
         return true;
     }
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(MessagePlugin.Owner, key, arguments);
     }
 }

@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Api.Events.Managers;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using Empostor.Api.Net;
 using Empostor.Api.Net.Manager;
 using Empostor.Api.Service;
@@ -38,7 +38,7 @@ namespace Empostor.Server.Net.Manager
         private readonly IpGeolocationService _ipGeo;
         private readonly ClientIdStore _clientIdStore;
         private readonly IpRateLimitService _rateLimit;
-        private readonly LanguageService _language;
+        private readonly ILocalizationService _language;
         private int _idLast;
 
         public ClientManager(
@@ -53,7 +53,7 @@ namespace Empostor.Server.Net.Manager
             IpGeolocationService ipGeo,
             ClientIdStore clientIdStore,
             IpRateLimitService rateLimit,
-            LanguageService language)
+            ILocalizationService language)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -285,10 +285,7 @@ namespace Empostor.Server.Net.Manager
             string ip)
         {
             var minutes = IpRateLimitService.MinutesUntilRetry(retryAfter);
-            var message = _language
-                .Get(IpRateLimitService.MessageKey, language)
-                .Format(minutes)
-                .Get();
+            var message = _language.Get(new LocalizedMessageKey("empostor", IpRateLimitService.MessageKey), language, minutes);
 
             _logger.LogWarning(
                 "IpRateLimit rejecting game connection from {Ip} │ retry in {Minutes}m",

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Client;
 using Empostor.Api.Innersloth;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Plugins.FriendCodeValidator
@@ -5367,11 +5367,11 @@ namespace Empostor.Plugins.FriendCodeValidator
     };
 
         private readonly ILogger<FriendCodeValidationListener> _logger;
-        private readonly LanguageService _lang;
+        private readonly ILocalizationService _lang;
 
         public FriendCodeValidationListener(
             ILogger<FriendCodeValidationListener> logger,
-            LanguageService lang)
+            ILocalizationService lang)
         {
             _logger = logger;
             _lang = lang;
@@ -5387,7 +5387,7 @@ namespace Empostor.Plugins.FriendCodeValidator
             {
                 _logger.LogWarning("[FriendCodeValidator] Invalid FC {FC} ({Name}) — kicking",
                     fc, e.Client.Name);
-                var reason = _lang.Get("friendcode.invalid_reason", e.Client.Language).Get();
+                var reason = _lang.Get(new LocalizedMessageKey(FriendCodeValidatorPlugin.Owner, "friendcode.invalid_reason"), e.Client.Language);
                 await e.Client.DisconnectAsync(DisconnectReason.Kicked, reason);
             }
         }

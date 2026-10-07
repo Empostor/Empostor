@@ -12,4 +12,7 @@
     <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
   </ItemGroup>
 
+  <Target Name="CopyToMarketplace" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="E:\WindowsFile\Empostor\Empostor\marketplace" />
+  </Target>
 </Project>

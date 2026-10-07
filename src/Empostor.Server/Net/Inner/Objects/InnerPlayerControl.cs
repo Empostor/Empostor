@@ -1176,7 +1176,7 @@ namespace Empostor.Server.Net.Inner.Objects
                     Sender = sender,
                     PlayerControl = this,
                     Game = Game,
-                    Lang = _commandService.Lang,
+                    Localization = _commandService.Localization,
                 };
                 var handled = await _commandService.TryHandleAsync(ctx);
                 if (handled)

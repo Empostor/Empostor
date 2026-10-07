@@ -1,0 +1,6 @@
+{
+  "titles.display_format": "[{0}] {1}",
+  "command.title.too_long": "Title too long. Max 12 characters.",
+  "command.title.cleared": "Title removed.",
+  "command.title.set": "Title set: {0}"
+}

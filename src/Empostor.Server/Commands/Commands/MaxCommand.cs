@@ -30,7 +30,7 @@ public sealed class MaxCommand : ICommand
         ctx.Game.Options.MaxPlayers = count;
         await ctx.Game.SyncSettingsAsync();
 
-        var msg = ctx.GetString("command.max.set").Format(count).Get();
+        var msg = ctx.GetString("command.max.set", count);
         if (count > 15)
         {
             msg += "\n" + ctx.GetString("command.max.warning");

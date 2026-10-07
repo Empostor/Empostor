@@ -1,0 +1,16 @@
+{
+ "command.narrator.description":"Ask the narrator for AI-powered advice during a meeting.",
+ "command.narrator.usage":"narrator <your question>",
+ "narrator.meeting_only":"You can only use #narrator during a meeting.",
+ "narrator.disabled":"The narrator is currently disabled by the host.",
+ "narrator.status_enabled":"enabled",
+ "narrator.status_disabled":"disabled",
+ "narrator.host_status":"Status: {0} | Max uses per player per game: {1}",
+ "narrator.host_commands":"Host commands: #narrator enable | disable | limit <number>",
+ "narrator.host_enabled":"Narrator enabled for this game.",
+ "narrator.host_disabled":"Narrator disabled for this game.",
+ "narrator.host_limit_set":"Narrator usage limit set to {0} per player per game.",
+ "narrator.host_limit_zero":"Narrator usage limit set to 0 (effectively disabled).",
+ "narrator.host_limit_usage":"Usage: #narrator limit <number>\nExample: #narrator limit 3",
+ "narrator.usage":"Usage: #narrator <your question or statement>\nExample: #narrator I'm being accused but I have a visual task, how do I prove myself?"
+}

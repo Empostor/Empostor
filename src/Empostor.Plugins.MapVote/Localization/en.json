@@ -1,0 +1,20 @@
+{
+ "command.votemap.description":"Vote for the next map.",
+ "command.votemap.usage":"votemap <map>",
+ "mapvote.disabled":"Map voting is currently disabled by the host.",
+ "mapvote.unknown_map":"Unknown map: {0}. Available: Skeld, Mira, Polus, Airship, Fungle",
+ "mapvote.voted":"{0} voted for {1}.",
+ "mapvote.already_voted":"You already voted for {0}. Use #votemap <map> to change your vote.",
+ "mapvote.no_votes":"No map votes yet. Use #votemap <map> to vote!",
+ "mapvote.results_header":"=== Map Vote Results ===",
+ "mapvote.results_entry":"  {0}: {1} vote(s)",
+ "mapvote.results_winner":"Winner: {0} ({1} votes)",
+ "mapvote.results_random":"No votes cast, using random map: {0}",
+ "mapvote.usage":"Usage: #votemap <map>\nMaps: Skeld, Mira, Polus, Airship, Fungle\nExample: #votemap polus",
+ "mapvote.host_commands":"Host commands: #votemap public | close | enable | disable | results",
+ "mapvote.host_only":"Only the host can use this command.",
+ "mapvote.host_enabled":"Map voting enabled.",
+ "mapvote.host_disabled":"Map voting disabled.",
+ "mapvote.session_started":"Map vote session started! Players, use #votemap <map> to vote.\nMaps: Skeld, Mira, Polus, Airship, Fungle",
+ "mapvote.map_set":"Map set to {0} by vote."
+}

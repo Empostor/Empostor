@@ -216,7 +216,7 @@ public sealed class NarratorService
         if (game.Options is NormalGameOptions normalOpts)
         {
             sb.AppendLine($"Visual tasks enabled: {(normalOpts.VisualTasks ? "Yes" : "No")}");
-            sb.AppendLine($"Confirm ejects: {(normalOpts.ConfirmEmpostor ? "On" : "Off")}");
+            sb.AppendLine($"Confirm ejects: {(normalOpts.ConfirmImpostor ? "On" : "Off")}");
         }
 
         sb.AppendLine($"Total impostors: {game.Options.NumImpostors}");

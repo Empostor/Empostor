@@ -4,16 +4,19 @@ using System.Threading.Tasks;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Game.Player;
 using Empostor.Api.Events.Player;
+using Empostor.Api.Localization;
 
 namespace Empostor.Plugins.Message;
 
 public sealed class MessageEventListener : IEventListener
 {
     private readonly MessageStore _store;
+    private readonly ILocalizationService _localization;
 
-    public MessageEventListener(MessageStore store)
+    public MessageEventListener(MessageStore store, ILocalizationService localization)
     {
         _store = store;
+        _localization = localization;
     }
 
     [EventListener]
@@ -26,12 +29,13 @@ public sealed class MessageEventListener : IEventListener
         if (messages.Count == 0) return;
 
         var sb = new StringBuilder();
-        sb.AppendLine(string.Format("--- You have {0} pending message(s) ---", messages.Count));
+        sb.AppendLine(_localization.Get(new LocalizedMessageKey(MessagePlugin.Owner, "message.delivery_header"), e.ClientPlayer.Client.Language, messages.Count));
 
         foreach (var msg in messages.OrderBy(m => m.Timestamp))
         {
             var time = msg.Timestamp.ToLocalTime().ToString("MM-dd HH:mm");
-            sb.AppendLine($"[{time}] <{msg.SenderName}> {msg.Content}");
+            sb.AppendLine(_localization.Get(new LocalizedMessageKey(MessagePlugin.Owner, "message.delivery_entry"), e.ClientPlayer.Client.Language,
+                time, msg.SenderName, "", msg.Content));
         }
 
         await e.PlayerControl.SendChatToPlayerAsync(sb.ToString(), e.PlayerControl);

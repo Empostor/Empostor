@@ -35,7 +35,7 @@ public sealed class NoteCommand : ICommand
 
         ctx.Game.Note = ctx.RawArgs;
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            ctx.GetString("command.note.set").Format(ctx.RawArgs), ctx.PlayerControl);
+            ctx.GetString("command.note.set", ctx.RawArgs), ctx.PlayerControl);
         return true;
     }
 }

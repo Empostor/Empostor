@@ -47,7 +47,7 @@ public sealed class BanCommand : ICommand
         if (target == null)
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                ctx.GetString("command.ban.not_found").Format(search), ctx.PlayerControl);
+                ctx.GetString("command.ban.not_found", search), ctx.PlayerControl);
             return true;
         }
 
@@ -78,7 +78,7 @@ public sealed class BanCommand : ICommand
 
         var key = !string.IsNullOrEmpty(fc) ? fc : name;
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            ctx.GetString("command.ban.banned").Format(key, reason), ctx.PlayerControl);
+            ctx.GetString("command.ban.banned", key, reason), ctx.PlayerControl);
 
         return true;
     }

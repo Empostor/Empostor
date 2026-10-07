@@ -12,6 +12,8 @@ namespace Empostor.Api.Commands
 
         string Usage { get; }
 
+        string LocalizationOwner => "empostor";
+
         ValueTask<bool> ExecuteAsync(CommandContext ctx);
     }
 }

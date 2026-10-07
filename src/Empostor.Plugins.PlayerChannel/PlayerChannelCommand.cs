@@ -14,6 +14,7 @@ public sealed class PlayerChannelCommand : ICommand
     }
 
     public string Name => "channel";
+    public string LocalizationOwner => PlayerChannelPlugin.Owner;
 
     public string Description => "Send a message to your player channel.";
 
@@ -42,9 +43,7 @@ public sealed class PlayerChannelCommand : ICommand
             return true;
         }
 
-        var prefixed = T(ctx, "playerchannel.message_format", "[{0}] {1}")
-            .Replace("{0}", channel.Name)
-            .Replace("{1}", text);
+        var prefixed = T(ctx, "playerchannel.message_format", "[{0}] {1}", channel.Name, text);
 
         foreach (var player in ctx.Game.Players)
         {
@@ -78,9 +77,8 @@ public sealed class PlayerChannelCommand : ICommand
         return false;
     }
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(PlayerChannelPlugin.Owner, key, arguments);
     }
 }

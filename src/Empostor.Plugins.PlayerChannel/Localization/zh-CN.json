@@ -1,0 +1,7 @@
+{
+ "command.channel.description":"向你的玩家频道发送消息。",
+ "command.channel.usage":"channel <消息>",
+ "playerchannel.unknown_friendcode":"[Refuse Channel] 未知的好友代码",
+ "playerchannel.not_in_channel":"[Refuse Channel] 不在任何频道中",
+ "playerchannel.message_format":"[{0}] {1}"
+}

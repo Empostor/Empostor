@@ -28,26 +28,25 @@ public sealed class HelpCommand : ICommand
             if (target == null)
             {
                 await ctx.PlayerControl.SendChatToPlayerAsync(
-                    ctx.GetString("command.help.unknown").Format(ctx.Args[0]),
+                    ctx.GetString("command.help.unknown", ctx.Args[0]),
                     ctx.PlayerControl);
                 return true;
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine(ctx.GetString("command.help.entry").Format(target.Name, GetDesc(ctx, target)));
-            sb.AppendLine(ctx.GetString("command.usage").Format(GetUsage(ctx, target)));
+            sb.AppendLine(ctx.GetString("command.help.entry", target.Name, GetDesc(ctx, target)));
+            sb.AppendLine(ctx.GetString("command.usage", GetUsage(ctx, target)));
             if (target.Aliases.Length > 0)
-                sb.AppendLine(ctx.GetString("command.help.aliases")
-                    .Format(string.Join(", ", target.Aliases.Select(a => "#" + a))));
+                sb.AppendLine(ctx.GetString("command.help.aliases", string.Join(", ", target.Aliases.Select(a => "#" + a))));
 
             await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString().TrimEnd(), ctx.PlayerControl);
             return true;
         }
 
-        var list = new StringBuilder(ctx.GetString("command.help.list").Get() + "\n");
+        var list = new StringBuilder(ctx.GetString("command.help.list") + "\n");
         foreach (var cmd in _service.All.OrderBy(c => c.Name))
         {
-            list.AppendLine(ctx.GetString("command.help.entry").Format(cmd.Name, GetDesc(ctx, cmd)));
+            list.AppendLine(ctx.GetString("command.help.entry", cmd.Name, GetDesc(ctx, cmd)));
         }
 
         await ctx.PlayerControl.SendChatToPlayerAsync(list.ToString().TrimEnd(), ctx.PlayerControl);
@@ -57,14 +56,14 @@ public sealed class HelpCommand : ICommand
     private static string GetDesc(CommandContext ctx, ICommand cmd)
     {
         var key = $"command.{cmd.Name}.description";
-        var result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? cmd.Description : result.Get();
+        var result = ctx.GetPluginString(cmd.LocalizationOwner, key);
+        return result == $"{cmd.LocalizationOwner}:{key}" ? cmd.Description : result;
     }
 
     private static string GetUsage(CommandContext ctx, ICommand cmd)
     {
         var key = $"command.{cmd.Name}.usage";
-        var result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? cmd.Usage : result.Get();
+        var result = ctx.GetPluginString(cmd.LocalizationOwner, key);
+        return result == $"{cmd.LocalizationOwner}:{key}" ? cmd.Usage : result;
     }
 }

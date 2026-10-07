@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/Localization')">
+    <None Remove="Localization/**/*.json" />
+    <Content Remove="Localization/**/*.json" />
+    <EmbeddedResource Include="Localization/*.json" />
+  </ItemGroup>
+</Project>

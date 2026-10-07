@@ -1,0 +1,16 @@
+{
+ "command.narrator.description":"在会议中向旁白寻求AI建议。",
+ "command.narrator.usage":"narrator <你要提的问题>",
+ "narrator.meeting_only":"只能在会议中使用 #narrator。",
+ "narrator.disabled":"房主已禁用旁白功能。",
+ "narrator.status_enabled":"已启用",
+ "narrator.status_disabled":"已禁用",
+ "narrator.host_status":"状态：{0} | 每局每人最大次数：{1}",
+ "narrator.host_commands":"房主指令：#narrator enable | disable | limit <次数>",
+ "narrator.host_enabled":"旁白已在此局中启用。",
+ "narrator.host_disabled":"旁白已在此局中禁用。",
+ "narrator.host_limit_set":"旁白使用次数限制已设为每人每局 {0} 次。",
+ "narrator.host_limit_zero":"旁白使用次数限制已设为 0（等效禁用）。",
+ "narrator.host_limit_usage":"用法：#narrator limit <次数>\n示例：#narrator limit 3",
+ "narrator.usage":"用法：#narrator <你要说的话>\n示例：#narrator 我被指控了但我有可视任务，怎么证明自己？"
+}

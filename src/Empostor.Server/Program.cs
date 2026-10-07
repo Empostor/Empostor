@@ -9,7 +9,8 @@ using Empostor.Api.Events;
 using Empostor.Api.Events.Managers;
 using Empostor.Api.Games;
 using Empostor.Api.Games.Managers;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
+using Empostor.Server.Localization;
 using Empostor.Api.Net.Custom;
 using Empostor.Api.Net.Manager;
 using Empostor.Api.Plugins;
@@ -195,7 +196,9 @@ namespace Empostor.Server
                     services.AddSingleton<Http.Admin.AdminThemeRegistry>();
 
                     // Language
-                    services.AddSingleton<LanguageService>();
+                    services.AddSingleton<LocalizationService>();
+                    services.AddSingleton<ILocalizationService>(p => p.GetRequiredService<LocalizationService>());
+                    services.AddSingleton<ILocalizationRegistry>(p => p.GetRequiredService<LocalizationService>());
 
                     services.AddHazel();
                     services.AddSingleton<ICustomMessageManager<ICustomRootMessage>, CustomMessageManager<ICustomRootMessage>>();

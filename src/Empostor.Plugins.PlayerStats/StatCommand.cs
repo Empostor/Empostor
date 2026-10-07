@@ -47,7 +47,7 @@ public sealed class StatCommand : ICommand
 
         async Task Send(string key, params object[] args)
             => await ctx.PlayerControl.SendChatToPlayerAsync(
-                ctx.GetString(key).Format(args), ctx.PlayerControl);
+                ctx.GetString(key, args), ctx.PlayerControl);
 
         await Send("command.stat.header");
         await Send("command.stat.games", stats.GamesPlayed);

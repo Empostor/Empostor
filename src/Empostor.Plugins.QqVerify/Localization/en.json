@@ -1,0 +1,8 @@
+{
+ "command.verify.description":"Verify your QQ number for group access.",
+ "command.verify.usage":"verify <QQ number>",
+ "qqverify.chinese_only":"This command is only available for Chinese language players.\n此功能仅支持简体/繁体中文玩家使用。",
+ "qqverify.no_friendcode":"Unable to get your friend code. Please make sure you are logged in.",
+ "qqverify.usage_message":"Usage: #verify <your QQ number>\nExample: #verify 123456789",
+ "qqverify.recorded":"Verification request recorded! Send /验证 {0} to the QQ bot.\nNote: The code is valid for 10 minutes."
+}

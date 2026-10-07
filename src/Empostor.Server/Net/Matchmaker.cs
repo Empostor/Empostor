@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Empostor.Api.Config;
 using Empostor.Api.Events.Managers;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using Empostor.Server.Events.Client;
 using Empostor.Server.Net.Hazel;
 using Empostor.Server.Net.Manager;
@@ -34,7 +34,7 @@ namespace Empostor.Server.Net
         private readonly AuthCacheService _authCache;
         private readonly IOptions<AntiCheatConfig> _antiCheatOptions;
         private readonly IpRateLimitService _rateLimit;
-        private readonly LanguageService _language;
+        private readonly ILocalizationService _language;
 
         private UdpConnectionListener? _mainListener;
         private readonly ConcurrentDictionary<int, UdpConnectionListener> _deltaListeners = new();
@@ -57,7 +57,7 @@ namespace Empostor.Server.Net
             AuthCacheService authCache,
             IOptions<AntiCheatConfig> antiCheatOptions,
             IpRateLimitService rateLimit,
-            LanguageService language)
+            ILocalizationService language)
         {
             _eventManager = eventManager;
             _clientManager = clientManager;
@@ -345,7 +345,7 @@ namespace Empostor.Server.Net
                 minutes = IpRateLimitService.MinutesUntilRetry(retryAfter);
             }
 
-            return _language.Get(IpRateLimitService.MessageKey, language).Format(minutes).Get();
+            return _language.Get(new LocalizedMessageKey("empostor", IpRateLimitService.MessageKey), language, minutes);
         }
 
         private void OnPortReturned(int port)

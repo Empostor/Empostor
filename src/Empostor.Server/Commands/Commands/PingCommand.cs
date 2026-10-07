@@ -15,7 +15,7 @@ public sealed class PingCommand : ICommand
     {
         var ping = (int)(ctx.Sender.Client.Connection?.AveragePing ?? 0);
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            ctx.GetString("command.ping.result").Format(ping), ctx.PlayerControl);
+            ctx.GetString("command.ping.result", ping), ctx.PlayerControl);
         return true;
     }
 }

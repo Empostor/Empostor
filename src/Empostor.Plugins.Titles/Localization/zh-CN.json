@@ -1,0 +1,6 @@
+{
+  "titles.display_format": "[{0}] {1}",
+  "command.title.too_long": "头衔过长，最多 12 个字符。",
+  "command.title.cleared": "头衔已移除。",
+  "command.title.set": "头衔已设置：{0}"
+}

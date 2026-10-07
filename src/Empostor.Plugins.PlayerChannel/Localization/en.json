@@ -1,0 +1,7 @@
+{
+ "command.channel.description":"Send a message to your player channel.",
+ "command.channel.usage":"channel <message>",
+ "playerchannel.unknown_friendcode":"[Refuse Channel] Unknown Friendcode",
+ "playerchannel.not_in_channel":"[Refuse Channel] Not in any channel",
+ "playerchannel.message_format":"[{0}] {1}"
+}

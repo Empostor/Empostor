@@ -3,7 +3,8 @@ using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
+using Empostor.Server.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -22,13 +23,13 @@ public sealed class IpRateLimitMiddleware
 
     private readonly RequestDelegate _next;
     private readonly IpRateLimitService _rateLimit;
-    private readonly LanguageService _language;
+    private readonly ILocalizationService _language;
     private readonly ILogger<IpRateLimitMiddleware> _logger;
 
     public IpRateLimitMiddleware(
         RequestDelegate next,
         IpRateLimitService rateLimit,
-        LanguageService language,
+        ILocalizationService language,
         ILogger<IpRateLimitMiddleware> logger)
     {
         _next = next;
@@ -68,10 +69,7 @@ public sealed class IpRateLimitMiddleware
 
         var minutes = IpRateLimitService.MinutesUntilRetry(retryAfter);
 
-        var message = _language
-            .Get(MessageKey, ResolveLangCode(context))
-            .Format(minutes)
-            .Get();
+        var message = _language.Get(new LocalizedMessageKey("empostor", MessageKey), LanguageCodes.FromTag(ResolveLangCode(context)), minutes);
 
         _logger.LogWarning(
             "IpRateLimit blocked {Ip} on {Path} │ retry in {Minutes}m",

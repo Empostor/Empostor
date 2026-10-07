@@ -16,6 +16,7 @@ public sealed class DiscordWebhookCommand : ICommand
     }
 
     public string Name => "dcwb";
+    public string LocalizationOwner => DiscordWebhookPlugin.Owner;
 
     public string[] Aliases => new[] { "discordwebhook" };
 
@@ -60,8 +61,7 @@ public sealed class DiscordWebhookCommand : ICommand
         if (enabled == !_toggle.IsMuted(ctx.Game.Code))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                T(ctx, "discordwebhook.already", "Discord posting is already {0} for this room.")
-                    .Replace("{0}", State(ctx, enabled)),
+                T(ctx, "discordwebhook.already", "Discord posting is already {0} for this room.", State(ctx, enabled)),
                 ctx.PlayerControl);
             return true;
         }
@@ -69,8 +69,7 @@ public sealed class DiscordWebhookCommand : ICommand
         _listener.SetRoomForwarding(ctx.Game, enabled);
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            T(ctx, "discordwebhook.changed", "Discord posting {0} for this room.")
-                .Replace("{0}", State(ctx, enabled)),
+            T(ctx, "discordwebhook.changed", "Discord posting {0} for this room.", State(ctx, enabled)),
             ctx.PlayerControl);
 
         return true;
@@ -81,9 +80,8 @@ public sealed class DiscordWebhookCommand : ICommand
             ? T(ctx, "discordwebhook.state_on", "on")
             : T(ctx, "discordwebhook.state_off", "off");
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(DiscordWebhookPlugin.Owner, key, arguments);
     }
 }

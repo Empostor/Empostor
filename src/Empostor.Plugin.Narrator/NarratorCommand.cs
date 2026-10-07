@@ -17,6 +17,7 @@ public sealed class NarratorCommand : ICommand
     }
 
     public string Name => "narrator";
+    public string LocalizationOwner => NarratorPlugin.Owner;
 
     public string[] Aliases => new[] { "nar", "n" };
 
@@ -55,9 +56,7 @@ public sealed class NarratorCommand : ICommand
                 var max = _service.GetMaxUses(ctx.Game);
                 var statusText = T(ctx, enabled ? "narrator.status_enabled" : "narrator.status_disabled",
                     enabled ? "enabled" : "disabled");
-                var msg = T(ctx, "narrator.host_status", "Status: {0} | Max uses per player per game: {1}")
-                    .Replace("{0}", statusText)
-                    .Replace("{1}", max.ToString());
+                var msg = T(ctx, "narrator.host_status", "Status: {0} | Max uses per player per game: {1}", statusText, max);
                 await ctx.PlayerControl.SendChatToPlayerAsync(msg, ctx.PlayerControl);
                 return true;
             }
@@ -77,8 +76,7 @@ public sealed class NarratorCommand : ICommand
                         T(ctx, "narrator.host_limit_zero", "Limit set to 0 (effectively disabled)."), ctx.PlayerControl);
                 else
                     await ctx.PlayerControl.SendChatToPlayerAsync(
-                        T(ctx, "narrator.host_limit_set", "Limit set to {0} per player per game.")
-                            .Replace("{0}", limit.ToString()),
+                        T(ctx, "narrator.host_limit_set", "Limit set to {0} per player per game.", limit),
                         ctx.PlayerControl);
                 return true;
             }
@@ -147,9 +145,8 @@ public sealed class NarratorCommand : ICommand
         await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString(), ctx.PlayerControl);
     }
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(NarratorPlugin.Owner, key, arguments);
     }
 }

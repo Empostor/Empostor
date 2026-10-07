@@ -8,4 +8,7 @@
     <ProjectReference Include="..\Empostor.Api\Empostor.Api.csproj" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
+  <Target Name="CopyToMarketplace" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="E:\WindowsFile\Empostor\Empostor\marketplace" />
+  </Target>
 </Project>

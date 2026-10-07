@@ -1,4 +1,4 @@
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +12,10 @@ namespace Empostor.Server.Commands;
 public sealed class CommandService
 {
     private readonly ILogger<CommandService> _logger;
-    private readonly LanguageService _lang;
+    private readonly ILocalizationService _lang;
     private readonly Dictionary<string, ICommand> _commands = new(StringComparer.OrdinalIgnoreCase);
 
-    public CommandService(ILogger<CommandService> logger, LanguageService lang)
+    public CommandService(ILogger<CommandService> logger, ILocalizationService lang)
     {
         _logger = logger;
         _lang = lang;
@@ -40,7 +40,7 @@ public sealed class CommandService
 
     public IReadOnlyList<ICommand> All => _commands.Values.Distinct().ToList();
 
-    public LanguageService Lang => _lang;
+    public ILocalizationService Localization => _lang;
 
     public async ValueTask<bool> TryHandleAsync(CommandContext ctx)
     {
@@ -54,13 +54,13 @@ public sealed class CommandService
             var success = await command.ExecuteAsync(ctx);
             if (!success)
                 await ctx.PlayerControl.SendChatToPlayerAsync(
-                    ctx.GetString("command.usage").Format(command.Usage), ctx.PlayerControl);
+                    ctx.GetString("command.usage", command.Usage), ctx.PlayerControl);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[Commands] Error executing /{Name}", ctx.Name);
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                ctx.GetString("command.error").Format(ctx.Name), ctx.PlayerControl);
+                ctx.GetString("command.error", ctx.Name), ctx.PlayerControl);
         }
 
         return true;

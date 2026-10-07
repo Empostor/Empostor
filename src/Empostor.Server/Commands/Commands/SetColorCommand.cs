@@ -30,7 +30,7 @@ public sealed class SetColorCommand : ICommand
 
         await ctx.PlayerControl.SetColorAsync((ColorType)colorId);
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            ctx.GetString("command.color.set").Format((ColorType)colorId, colorId),
+            ctx.GetString("command.color.set", (ColorType)colorId, colorId),
             ctx.PlayerControl);
         return true;
     }

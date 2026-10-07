@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Empostor.Api.Events;
 using Empostor.Api.Events.Client;
-using Empostor.Api.Languages;
+using Empostor.Api.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace Empostor.Server.Service.Shared;
@@ -11,9 +11,9 @@ public sealed class BanEnforcementListener : IEventListener
 {
     private readonly ILogger<BanEnforcementListener> _logger;
     private readonly BanStore _bans;
-    private readonly LanguageService _language;
+    private readonly ILocalizationService _language;
 
-    public BanEnforcementListener(ILogger<BanEnforcementListener> logger, BanStore bans, LanguageService language)
+    public BanEnforcementListener(ILogger<BanEnforcementListener> logger, BanStore bans, ILocalizationService language)
     {
         _logger = logger;
         _bans = bans;
@@ -44,13 +44,12 @@ public sealed class BanEnforcementListener : IEventListener
 
     private string BuildMessage(Language language, string reason, DateTime? bannedUntil)
     {
-        var header = _language.Get("ban.notice.header", language).Get();
-        var reasonLine = _language.Get("ban.notice.reason", language)
-            .Format(string.IsNullOrWhiteSpace(reason) ? "-" : reason).Get();
+        var header = _language.Get(new LocalizedMessageKey("empostor", "ban.notice.header"), language);
+        var reasonLine = _language.Get(new LocalizedMessageKey("empostor", "ban.notice.reason"), language, string.IsNullOrWhiteSpace(reason) ? "-" : reason);
         var unbanLine = bannedUntil.HasValue
-            ? _language.Get("ban.notice.unban", language).Format(FormatExpiry(bannedUntil.Value)).Get()
-            : _language.Get("ban.notice.unban_permanent", language).Get();
-        var contactLine = _language.Get("ban.notice.contact", language).Get();
+            ? _language.Get(new LocalizedMessageKey("empostor", "ban.notice.unban"), language, FormatExpiry(bannedUntil.Value))
+            : _language.Get(new LocalizedMessageKey("empostor", "ban.notice.unban_permanent"), language);
+        var contactLine = _language.Get(new LocalizedMessageKey("empostor", "ban.notice.contact"), language);
 
         return $"{header}\n{reasonLine}\n{unbanLine}\n{contactLine}";
     }

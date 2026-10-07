@@ -1,0 +1,20 @@
+{
+ "command.votemap.description":"投票选择下一张地图。",
+ "command.votemap.usage":"votemap <地图名>",
+ "mapvote.disabled":"投票选图功能已被房主禁用。",
+ "mapvote.unknown_map":"未知地图：{0}。可选：Skeld, Mira, Polus, Airship, Fungle",
+ "mapvote.voted":"{0} 投票选择了 {1}。",
+ "mapvote.already_voted":"你已经投票了 {0}。使用 #votemap <地图> 来修改投票。",
+ "mapvote.no_votes":"还没有人投票。使用 #votemap <地图> 来投票！",
+ "mapvote.results_header":"=== 地图投票结果 ===",
+ "mapvote.results_entry":"  {0}：{1} 票",
+ "mapvote.results_winner":"胜出：{0}（{1} 票）",
+ "mapvote.results_random":"无人投票，随机选择地图：{0}",
+ "mapvote.usage":"用法：#votemap <地图>\n可选地图：Skeld, Mira, Polus, Airship, Fungle\n示例：#votemap polus",
+ "mapvote.host_commands":"房主指令：#votemap public | close | enable | disable | results",
+ "mapvote.host_only":"只有房主可以使用此指令。",
+ "mapvote.host_enabled":"投票选图已启用。",
+ "mapvote.host_disabled":"投票选图已禁用。",
+ "mapvote.session_started":"地图投票已开始！请使用 #votemap <地图> 投票。\n可选地图：Skeld, Mira, Polus, Airship, Fungle",
+ "mapvote.map_set":"投票结果，地图已设为 {0}。"
+}

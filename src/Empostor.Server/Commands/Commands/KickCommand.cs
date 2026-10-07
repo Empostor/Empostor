@@ -39,7 +39,7 @@ public sealed class KickCommand : ICommand
         if (target == null)
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                ctx.GetString("command.kick.not_found").Format(search), ctx.PlayerControl);
+                ctx.GetString("command.kick.not_found", search), ctx.PlayerControl);
             return true;
         }
 
@@ -54,7 +54,7 @@ public sealed class KickCommand : ICommand
         await target.Client.DisconnectAsync(DisconnectReason.Kicked, reason);
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            ctx.GetString("command.kick.kicked").Format(name, reason), ctx.PlayerControl);
+            ctx.GetString("command.kick.kicked", name, reason), ctx.PlayerControl);
 
         return true;
     }

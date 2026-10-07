@@ -1,0 +1,13 @@
+{
+ "command.msg.description":"Leave a message for a player by friend code.",
+ "command.msg.usage":"msg <friendcode> <message>",
+ "message.usage":"Usage: #msg <friendcode> <message>\nExample: #msg ABCDEFG Hey, let's play again!",
+ "message.sent":"Message sent to {0}.",
+ "message.too_long":"Message is too long. Max {0} characters.",
+ "message.empty":"Message cannot be empty.",
+ "message.invalid_fc":"Invalid friend code format.",
+ "message.self":"You cannot send a message to yourself.",
+ "message.full":"{0} already has too many pending messages. Try again later.",
+ "message.delivery_header":"--- You have {0} pending message(s) ---",
+ "message.delivery_entry":"[{0}] <{1}> {2}: {3}"
+}

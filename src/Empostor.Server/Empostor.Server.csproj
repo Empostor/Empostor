@@ -25,6 +25,13 @@
     <Content Update="Pages\AdminStrings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <Content Remove="Localization/Resources/*.json" />
+    <Content Remove="Languages/**/*.json" />
+    <None Update="Languages/**/*.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <None Remove="Localization/Resources/*.json" />
+    <EmbeddedResource Include="Localization/Resources/*.json" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Empostor.Hazel" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />

@@ -19,6 +19,7 @@ public sealed class MapVoteCommand : ICommand
     }
 
     public string Name => "votemap";
+    public string LocalizationOwner => MapVotePlugin.Owner;
     public string[] Aliases => new[] { "vm" };
     public string Description => "Vote for the next map.";
     public string Usage => "votemap <map>";
@@ -122,7 +123,7 @@ public sealed class MapVoteCommand : ICommand
         if (!_service.TryParseMap(ctx.RawArgs!, out var map))
         {
             await ctx.PlayerControl.SendChatToPlayerAsync(
-                T(ctx, "mapvote.unknown_map", "Unknown map.").Replace("{0}", ctx.RawArgs ?? "?"), ctx.PlayerControl);
+                T(ctx, "mapvote.unknown_map", "Unknown map.", ctx.RawArgs ?? "?"), ctx.PlayerControl);
             return true;
         }
 
@@ -130,9 +131,7 @@ public sealed class MapVoteCommand : ICommand
         _service.CastVote(gameCode, playerName, map);
 
         await ctx.PlayerControl.SendChatToPlayerAsync(
-            T(ctx, "mapvote.voted", "{0} voted for {1}.")
-                .Replace("{0}", playerName)
-                .Replace("{1}", MapVoteService.MapDisplayName(map)),
+            T(ctx, "mapvote.voted", "{0} voted for {1}.", playerName, MapVoteService.MapDisplayName(map)),
             ctx.PlayerControl);
 
         return true;
@@ -154,9 +153,7 @@ public sealed class MapVoteCommand : ICommand
         sb.AppendLine(T(ctx, "mapvote.results_header", "=== Map Vote Results ==="));
         foreach (var (map, count) in tally)
         {
-            sb.AppendLine(T(ctx, "mapvote.results_entry", "  {0}: {1} vote(s)")
-                .Replace("{0}", MapVoteService.MapDisplayName(map))
-                .Replace("{1}", count.ToString()));
+            sb.AppendLine(T(ctx, "mapvote.results_entry", "  {0}: {1} vote(s)", MapVoteService.MapDisplayName(map), count));
         }
 
         await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString(), ctx.PlayerControl);
@@ -165,25 +162,16 @@ public sealed class MapVoteCommand : ICommand
     private static async ValueTask ShowWinnerToAllAsync(CommandContext ctx, Api.Innersloth.MapTypes winner,
         IReadOnlyDictionary<Api.Innersloth.MapTypes, int> tally, int voterCount)
     {
-        var sb = new StringBuilder();
-        if (tally.Count == 0)
-        {
-            sb.AppendLine(ctx.Lang.Get("mapvote.results_random", ctx.SenderLanguage)
-                .Replace("{0}", MapVoteService.MapDisplayName(winner)));
-        }
-        else
-        {
-            var maxVotes = tally.Values.Max();
-            sb.AppendLine(ctx.Lang.Get("mapvote.results_winner", ctx.SenderLanguage)
-                .Replace("{0}", MapVoteService.MapDisplayName(winner))
-                .Replace("{1}", maxVotes.ToString()));
-        }
-
         foreach (var player in ctx.Game.Players)
         {
             var ctrl = player.Character;
             if (ctrl != null)
-                await ctrl.SendChatToPlayerAsync(sb.ToString(), ctrl);
+            {
+                var key = tally.Count == 0 ? "mapvote.results_random" : "mapvote.results_winner";
+                var text = ctx.Localization.Get(new Empostor.Api.Localization.LocalizedMessageKey(MapVotePlugin.Owner, key),
+                    player.Client.Language, MapVoteService.MapDisplayName(winner), tally.Count == 0 ? 0 : tally.Values.Max());
+                await ctrl.SendChatToPlayerAsync(text, ctrl);
+            }
         }
     }
 
@@ -196,9 +184,8 @@ public sealed class MapVoteCommand : ICommand
         await ctx.PlayerControl.SendChatToPlayerAsync(sb.ToString(), ctx.PlayerControl);
     }
 
-    private static string T(CommandContext ctx, string key, string defaultText)
+    private static string T(CommandContext ctx, string key, string defaultText, params object?[] arguments)
     {
-        string result = ctx.Lang.Get(key, ctx.SenderLanguage);
-        return result == key ? defaultText : result;
+        return ctx.GetPluginString(MapVotePlugin.Owner, key, arguments);
     }
 }
