@@ -13,7 +13,6 @@ using Empostor.Api.Net.Inner.Objects;
 using Empostor.Api.Net.Messages.Rpcs;
 using Empostor.Api.Utils;
 using Empostor.Server.Events.Player;
-using Empostor.Server.Net.Anticheat;
 using Empostor.Server.Net.Inner.Objects.Components;
 using Empostor.Server.Net.State;
 using Microsoft.Extensions.DependencyInjection;
@@ -256,14 +255,10 @@ namespace Empostor.Server.Net.Inner.Objects
                         return false;
                     }
 
-                    if (!await ValidateMeetingTiming(call, sender))
-                    {
-                        return false;
-                    }
-
                     Rpc11ReportDeadBody.Deserialize(reader, out var targetId);
                     break;
                 }
+
                 case RpcCalls.MurderPlayer:
                 {
                     if (!await ValidateHost(call, sender) ||
@@ -292,11 +287,6 @@ namespace Empostor.Server.Net.Inner.Objects
                 {
                     if (!await ValidateHost(call, sender) ||
                         !await ValidateBroadcast(call, sender, target))
-                    {
-                        return false;
-                    }
-
-                    if (!await ValidateMeetingTiming(call, sender))
                     {
                         return false;
                     }
@@ -616,7 +606,14 @@ namespace Empostor.Server.Net.Inner.Objects
 
         private async ValueTask HandleCompleteTask(ClientPlayer sender, uint taskId)
         {
-            if (!await ValidateTaskCompletion(RpcCalls.CompleteTask, sender, PlayerId))
+            // Rate limit: counted per player id, because the host also completes
+            // tasks on behalf of other players.
+            if (Game.AntiCheatConfig.EnableRateLimits
+                && Game.CountTask(PlayerId)
+                && await sender.Client.ReportCheatAsync(
+                    RpcCalls.CompleteTask,
+                    CheatCategory.RateLimit,
+                    $"Client completed more than {Game.AntiCheatConfig.TaskRateLimitCount} tasks in {Game.AntiCheatConfig.TaskRateLimitWindowSeconds}s"))
             {
                 return;
             }
@@ -1060,11 +1057,6 @@ namespace Empostor.Server.Net.Inner.Objects
                 IsMurdering = target;
             }
 
-            if (!await ValidateMurder(RpcCalls.CheckMurder, sender, PlayerId, target))
-            {
-                return false;
-            }
-
             if (_game.IsHostAuthoritive)
             {
                 return true;
@@ -1094,11 +1086,6 @@ namespace Empostor.Server.Net.Inner.Objects
                 {
                     target.ProtectedOn = null;
                     await ForceMurderPlayerAsync(target, evt.Result);
-
-                    if (!evt.Result.IsFailed())
-                    {
-                        Game.AntiCheat.For(PlayerId).NoteKill(target.PlayerId, AntiCheatState.Now);
-                    }
                 }
             }
 

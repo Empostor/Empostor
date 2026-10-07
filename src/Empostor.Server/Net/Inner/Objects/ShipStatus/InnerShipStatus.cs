@@ -89,12 +89,13 @@ namespace Empostor.Server.Net.Inner.Objects.ShipStatus
 
                 case RpcCalls.UpdateSystem:
                 {
-                    if (!await ValidateCmd(call, sender, target) ||
-                        !await ValidateUpdateSystem(call, sender, reader))
+                    if (!await ValidateCmd(call, sender, target))
                     {
                         return false;
                     }
 
+                    // TODO: properly deserialize this RPC
+                    // Rpc35UpdateSystem.Deserialize(reader, Game, out var systemType, out var playerControl, out var sequenceId, out var state, out var ventId);
                     break;
                 }
 

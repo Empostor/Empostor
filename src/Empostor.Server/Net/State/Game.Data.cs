@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,6 @@ using Empostor.Api.Unity;
 using Empostor.Server.Events.Game.Player;
 using Empostor.Server.Events.Meeting;
 using Empostor.Server.Events.Player;
-using Empostor.Server.Net.Anticheat;
 using Empostor.Server.Net.Inner;
 using Empostor.Server.Net.Inner.Objects;
 using Empostor.Server.Net.Inner.Objects.Components;
@@ -174,7 +173,19 @@ namespace Empostor.Server.Net.State
                     var netId = reader.ReadPackedUInt32();
                     if (_allObjects.TryGetValue(netId, out var obj))
                     {
-                        if (!await InnerNetObject.ValidateRpcRate(this, new CheatContext(nameof(GameDataTag.RpcFlag)), sender, obj, toPlayer))
+
+                        var ownerId = obj.OwnerId >= 0 ? obj.OwnerId : sender.Client.Id;
+                        var limitedPlayerId = toPlayer || ownerId == sender.Client.Id
+                            ? GetClientPlayer(ownerId)?.Character?.PlayerId
+                            : null;
+
+                        if (AntiCheatConfig.EnableRateLimits
+                            && limitedPlayerId != null
+                            && CountRpc(limitedPlayerId.Value)
+                            && await sender.Client.ReportCheatAsync(
+                                new CheatContext(nameof(GameDataTag.RpcFlag)),
+                                CheatCategory.RateLimit,
+                                $"Client sent more than {AntiCheatConfig.RpcRateLimitPerSecond} RPCs in one second"))
                         {
                             return GameDataResult.Abort;
                         }
@@ -374,7 +385,10 @@ namespace Empostor.Server.Net.State
                 {
                     _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
 
-                    if (!await InnerNetObject.ValidateGameDataTag(new CheatContext(nameof(GameDataTag)), sender, reader.Tag))
+                    if (await sender.Client.ReportCheatAsync(
+                            new CheatContext(nameof(GameDataTag)),
+                            CheatCategory.ProtocolExtension,
+                            $"Client sent an unknown game data tag {reader.Tag}"))
                     {
                         return GameDataResult.Abort;
                     }
@@ -423,7 +437,6 @@ namespace Empostor.Server.Net.State
                 case InnerShipStatus shipStatus:
                 {
                     GameNet.ShipStatus = shipStatus;
-                    AntiCheat.NoteRoundStarted();
                     break;
                 }
 
@@ -439,8 +452,6 @@ namespace Empostor.Server.Net.State
                     {
                         await sender.Client.ReportCheatAsync(new CheatContext(nameof(GameDataTag.SpawnFlag)), CheatCategory.GameFlow, "Failed to find player that spawned the InnerPlayerControl");
                     }
-
-                    AntiCheat.For(control.PlayerId).SpawnedAt = AntiCheatState.Now;
 
                     // Hook up InnerPlayerControl <-> InnerPlayerControl.PlayerInfo.
                     var playerInfo = GameNet.GameData.GetPlayerById(control.PlayerId);
@@ -481,8 +492,6 @@ namespace Empostor.Server.Net.State
 
                 case InnerMeetingHud meetingHud:
                 {
-                    AntiCheat.NoteMeetingOpened();
-
                     foreach (var player in _players.Values)
                     {
                         if (GameNet.ShipStatus != null)
@@ -518,13 +527,6 @@ namespace Empostor.Server.Net.State
                 case InnerShipStatus:
                 {
                     GameNet.ShipStatus = null;
-                    AntiCheat.NoteRoundEnded();
-                    break;
-                }
-
-                case InnerMeetingHud:
-                {
-                    AntiCheat.NoteMeetingClosed();
                     break;
                 }
 

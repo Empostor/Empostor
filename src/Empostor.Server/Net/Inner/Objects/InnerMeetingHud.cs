@@ -140,18 +140,12 @@ namespace Empostor.Server.Net.Inner.Objects
 
                     Rpc22Close.Deserialize(reader);
                     _judgeOverrules.Clear();
-                    Game.AntiCheat.NoteMeetingClosed();
                     break;
                 }
 
                 case RpcCalls.VotingComplete:
                 {
                     if (!await ValidateHost(call, sender))
-                    {
-                        return false;
-                    }
-
-                    if (!await ValidateVoterCount(call, sender, reader))
                     {
                         return false;
                     }
@@ -251,11 +245,6 @@ namespace Empostor.Server.Net.Inner.Objects
                 {
                     return false;
                 }
-            }
-
-            if (!await ValidateVoteCast(RpcCalls.CastVote, sender))
-            {
-                return false;
             }
 
             if (!sender.IsHost)
