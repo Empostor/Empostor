@@ -48,6 +48,8 @@ namespace Empostor.Server.Plugins
 
         public IPlugin? Instance { get; set; }
 
+        public bool IsLoaded { get; internal set; }
+
         public override string ToString() => $"{Id} {Name} ({Version}) by {Author}";
     }
 }

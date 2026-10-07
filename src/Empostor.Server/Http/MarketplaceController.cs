@@ -47,6 +47,10 @@ namespace Empostor.Server.Http
 
         private bool IsAuthenticated() => AdminSession.IsAuthenticated(HttpContext, _passwordHash);
 
+        private HashSet<string> GetLoadedPluginIds() => new(
+            _pluginLoaderService.Plugins.Where(p => p.IsLoaded).Select(p => p.Id),
+            StringComparer.OrdinalIgnoreCase);
+
         [HttpGet("/api/admin/marketplace/plugins")]
         public async Task<IActionResult> ListPlugins()
         {
@@ -66,9 +70,7 @@ namespace Empostor.Server.Http
                 using var client = CreateClient();
                 var json = await client.GetStringAsync(url);
 
-                var installedIds = new HashSet<string>(
-                    _pluginLoaderService.Plugins.Select(p => p.Id),
-                    StringComparer.OrdinalIgnoreCase);
+                var installedIds = GetLoadedPluginIds();
 
                 using var doc = JsonDocument.Parse(json);
                 var plugins = new List<JsonElement>();
@@ -123,9 +125,7 @@ namespace Empostor.Server.Http
 
             if (!string.IsNullOrEmpty(req.PluginId))
             {
-                var installedIds = new HashSet<string>(
-                    _pluginLoaderService.Plugins.Select(p => p.Id),
-                    StringComparer.OrdinalIgnoreCase);
+                var installedIds = GetLoadedPluginIds();
 
                 if (installedIds.Contains(req.PluginId))
                 {

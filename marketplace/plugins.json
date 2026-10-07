@@ -39,7 +39,7 @@
     ]
   },
   {
-    "id": "duck.hayashiume.friendcodevalidator",
+    "id": "duck.Empostor.friendcodevalidator",
     "name": "Friend Code Validator",
     "description": "Kicks clients whose friend code does not match the official AB+#XXXX format.",
     "author": "MatchDuck & HayashiUme",
@@ -52,7 +52,7 @@
     ]
   },
   {
-    "id": "cn.hayashiume.fixedcode",
+    "id": "cn.Empostor.fixedcode",
     "name": "Fixed Room Code",
     "description": "Assigns a fixed room code to a host based on their friend code.",
     "author": "HayashiUme",
@@ -65,7 +65,7 @@
     ]
   },
   {
-    "id": "cn.hayashiume.titles",
+    "id": "cn.Empostor.titles",
     "name": "Custom Title",
     "description": "Assigns a title based on their friend code and show in front of their name.",
     "author": "HayashiUme",

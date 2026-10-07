@@ -42,6 +42,7 @@ namespace Empostor.Server.Plugins
 
                 plugin.Instance = instance;
                 await plugin.Instance.EnableAsync();
+                plugin.IsLoaded = true;
 
             }
 
@@ -58,6 +59,7 @@ namespace Empostor.Server.Plugins
                 {
                     _logger.LogInformation("Disabling plugin {0}.", plugin);
                     await plugin.Instance.DisableAsync();
+                    plugin.IsLoaded = false;
                 }
             }
         }
