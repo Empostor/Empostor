@@ -383,6 +383,12 @@ namespace Empostor.Server.Net.State
 
                 default:
                 {
+                    if (GameDataTag.ValidTags.Contains(reader.Tag))
+                    {
+                        _logger.LogDebug("{Code} - Get vanilla GameData tag {Tag} that isn't handled.", Code, reader.Tag);
+                        return GameDataResult.Continue;
+                    }
+
                     _logger.LogWarning("{Code} - Bad GameData tag {Tag}", Code, reader.Tag);
 
                     if (await sender.Client.ReportCheatAsync(
