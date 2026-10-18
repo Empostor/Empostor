@@ -13,6 +13,7 @@ using Empostor.Api.Net.Messages.C2S;
 using Empostor.Api.Net.Messages.S2C;
 using Empostor.Server.Events.Player;
 using Empostor.Server.Net.Manager;
+using Empostor.Server.Service.Auth;
 using Empostor.Server.Service.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,8 +30,10 @@ namespace Empostor.Server.Net
         private readonly ICustomMessageManager<ICustomRootMessage> _customMessageManager;
         private readonly IEventManager _eventManager;
         private readonly ReportStore _reportStore;
+        private readonly GameCodeAuthManager _gameCodeAuth;
+        private readonly ServerConfig _serverConfig;
 
-        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, IEventManager eventManager, ReportStore reportStore, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
+        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, IEventManager eventManager, ReportStore reportStore, GameCodeAuthManager gameCodeAuth, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
             : base(name, gameVersion, language, chatMode, platformSpecificData, connection)
         {
             _logger = logger;
@@ -40,6 +43,8 @@ namespace Empostor.Server.Net
             _customMessageManager = customMessageManager;
             _eventManager = eventManager;
             _reportStore = reportStore;
+            _gameCodeAuth = gameCodeAuth;
+            _serverConfig = serverConfig.Value;
         }
 
         public override async ValueTask<bool> ReportCheatAsync(CheatContext context, CheatCategory category, string message)
@@ -134,6 +139,17 @@ namespace Empostor.Server.Net
                 case MessageFlags.HostGame:
                 case MessageFlags.HostModdedGame:
                 {
+                    // GameCode モードではゲーム生成前に認証情報を確定させる。
+                    if (_serverConfig.UseGameCodeMode && string.IsNullOrEmpty(ProductUserId)
+                        && !TryBindHostAuth())
+                    {
+                        _logger.LogWarning(
+                            "Client [{Id}] {Name} sent HostGame without a matching auth session (gamecode mode)",
+                            Id, Name);
+                        await DisconnectAsync(DisconnectReason.Custom, "Authentication required. Please reopen the game through the server.");
+                        return;
+                    }
+
                     IGameOptions gameOptions;
                     GameFilterOptions gameFilterOptions;
                     Guid? modGuid = null;
@@ -176,8 +192,21 @@ namespace Empostor.Server.Net
                 case MessageFlags.JoinGame:
                 {
                     Message01JoinGameC2S.Deserialize(reader, out var gameCode);
+                    var joinCode = gameCode;
 
-                    var game = _gameManager.Find(gameCode);
+                    if (_serverConfig.UseGameCodeMode)
+                    {
+                        // 一覧が配ったチャレンジコードから認証情報を解決する。
+                        var (bound, realCode) = await TryBindJoinAuthAsync(gameCode);
+                        if (!bound)
+                        {
+                            return;
+                        }
+
+                        joinCode = realCode;
+                    }
+
+                    var game = _gameManager.Find(joinCode);
                     if (game == null)
                     {
                         await DisconnectAsync(DisconnectReason.GameNotFound);
@@ -488,6 +517,99 @@ namespace Empostor.Server.Net
             await _gameManager.OnClientDisconnectAsync(this);
         }
 
+        // JoinGame のコードから認証情報を解決する。GameCode モードではチャレンジコードが鍵。
+        // 解決後は Msg00 で実コードを通知する。旧経路向けに IP/名前/バージョンの保留照合も残す。
+        private async ValueTask<(bool Bound, GameCode RealCode)> TryBindJoinAuthAsync(GameCode code)
+        {
+            if (_gameCodeAuth.TryResolveChallenge(code, Id, out var user, out var target, out var challengeReason)
+                && user != null)
+            {
+                BindAuth(user);
+
+                _logger.LogInformation(
+                    "Client [{Id}] {Name} joined by challenge code {Challenge} → game {Game} │ FC {FriendCode} │ {Puid}",
+                    Id, Name, code.Code, target.Code, FriendCode ?? "unknown", HashPuid(user.ProductUserId));
+
+                using (var writer = MessageWriter.Get(MessageType.Reliable))
+                {
+                    Message00HostGameS2C.Serialize(writer, target);
+                    await Connection.SendAsync(writer);
+                }
+
+                return (true, target);
+            }
+
+            if (!string.IsNullOrEmpty(ProductUserId))
+            {
+                // 既に認証済みの接続が実コードで Join してきた場合はそのまま通す。
+                return (true, code);
+            }
+
+            if (_gameCodeAuth.TryConsumePendingJoin(
+                    code,
+                    NormalizeIp(Connection.EndPoint?.Address),
+                    Name,
+                    GameVersion.Value,
+                    out var fallbackUser,
+                    out var matchInfo)
+                && fallbackUser != null)
+            {
+                BindAuth(fallbackUser);
+
+                _logger.LogInformation(
+                    "Client [{Id}] {Name} joined by real code {Code} │ FC {FriendCode} │ {Puid} │ matched {Match}",
+                    Id, Name, code.Code, FriendCode ?? "unknown", HashPuid(fallbackUser.ProductUserId), matchInfo);
+                return (true, code);
+            }
+
+            _logger.LogWarning(
+                "Client [{Id}] {Name} could not bind JoinGame {Code} (gamecode mode): {Reason}",
+                Id, Name, code.Code, challengeReason);
+            await DisconnectAsync(DisconnectReason.Custom, "Authentication required. Please rejoin through the game server.");
+            return (false, code);
+        }
+
+        // HostGame 時点ではゲームコードがまだ無いので、IP＋名前＋バージョンで募集主を特定する。
+        private bool TryBindHostAuth()
+        {
+            var udpIp = NormalizeIp(Connection.EndPoint?.Address);
+
+            if (_gameCodeAuth.TryConsumeHost(udpIp, Name, GameVersion.Value, out var user, out var matchInfo)
+                && user != null)
+            {
+                BindAuth(user);
+
+                _logger.LogInformation(
+                    "Client [{Id}] {Name} hosting (gamecode) │ FC {FriendCode} │ {Puid} │ matched {Match}",
+                    Id, Name, FriendCode ?? "unknown", HashPuid(user.ProductUserId), matchInfo);
+                return true;
+            }
+
+            _logger.LogWarning(
+                "Client [{Id}] {Name} could not bind a host session (gamecode): {Reason}",
+                Id, Name, matchInfo);
+            return false;
+        }
+
+        private void BindAuth(UserAuthInfo user)
+        {
+            FriendCode = string.IsNullOrEmpty(user.FriendCode) ? null : user.FriendCode;
+            ProductUserId = user.ProductUserId;
+        }
+
+        private static string HashPuid(string? puid) =>
+            puid is { Length: >= 9 } ? puid[..9] : puid ?? "0";
+
+        private static string NormalizeIp(System.Net.IPAddress? address)
+        {
+            if (address == null)
+            {
+                return "(unknown)";
+            }
+
+            return address.IsIPv4MappedToIPv6 ? address.MapToIPv4().ToString() : address.ToString();
+        }
+
         private bool IsPacketAllowed(IMessageReader message, bool hostOnly)
         {
             if (Player == null)
@@ -597,7 +719,9 @@ namespace Empostor.Server.Net
         {
             using var message = MessageWriter.Get(MessageType.Reliable);
 
-            var playerSpecificData = _gameManager.Find(code)?.Players.Select(p => p.Client.PlatformSpecificData) ?? Enumerable.Empty<PlatformSpecificData>();
+            // チャレンジコードで照会されることもあるので実コードへ解決してから探す。
+            var lookup = _gameCodeAuth.TryGetTarget(code, out var targetCode) ? targetCode : code;
+            var playerSpecificData = _gameManager.Find(lookup)?.Players.Select(p => p.Client.PlatformSpecificData) ?? Enumerable.Empty<PlatformSpecificData>();
 
             Message22QueryPlatformIdsS2C.Serialize(message, code, playerSpecificData);
 

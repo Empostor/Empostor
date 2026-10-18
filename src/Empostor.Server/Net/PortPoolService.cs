@@ -24,8 +24,11 @@ public sealed class PortPoolService : IDisposable
     private readonly int _deltaPortEnd;
     private readonly int _listenPort;
     private readonly int _deltaLowWaterMark;
+    private readonly bool _useGameCodeMode;
 
-    public bool IsEnabled => _deltaPortStart > 0
+    // GameCode モードでは動的ポートを一切使わず、共有の UDP ポート 1 つだけを使う。
+    public bool IsEnabled => !_useGameCodeMode
+                             && _deltaPortStart > 0
                              && _deltaPortEnd >= _deltaPortStart;
 
     /// <summary>
@@ -46,6 +49,7 @@ public sealed class PortPoolService : IDisposable
         _deltaPortEnd = cfg.DeltaPortEnd;
         _listenPort = cfg.ListenPort;
         _deltaLowWaterMark = cfg.DeltaPortLowWaterMark;
+        _useGameCodeMode = cfg.UseGameCodeMode;
 
         if (IsEnabled)
         {
@@ -74,8 +78,12 @@ public sealed class PortPoolService : IDisposable
         }
         else
         {
-            _logger.LogInformation("PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
-                _deltaPortStart, _deltaPortEnd);
+            _logger.LogInformation(
+                _useGameCodeMode
+                    ? "PortPool disabled (GameCode verification mode uses the shared UDP port {ListenPort})"
+                    : "PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
+                _useGameCodeMode ? _listenPort : _deltaPortStart,
+                _useGameCodeMode ? 0 : _deltaPortEnd);
         }
     }
 

@@ -1,5 +1,4 @@
 {
- "ratelimit.too_frequent":"Too many requests, please try again in {0} minute(s).",
  "command.error":"An error occurred while executing #{0}.",
  "command.usage":"Usage: #{0}",
  "command.help.list":"=== Commands ===",

@@ -35,7 +35,9 @@ public sealed class AuthCacheService : IDisposable
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp)
+    // UDP 側でゲーム内表示名・バージョンと突き合わせるため、一緒に預かっておく。
+    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp,
+        string? name = null, int clientVersion = 0)
     {
         if (string.IsNullOrEmpty(productUserId) || string.IsNullOrEmpty(matchmakerToken))
         {
@@ -48,6 +50,8 @@ public sealed class AuthCacheService : IDisposable
             MatchmakerToken = matchmakerToken,
             FriendCode = friendCode ?? string.Empty,
             ClientIp = clientIp != null ? NormalizeIp(clientIp) : null,
+            Name = name ?? string.Empty,
+            ClientVersion = clientVersion,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -163,6 +167,9 @@ public sealed class UserAuthInfo
     public string FriendCode { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
+
+    // POST /api/user でクライアントが申告したブロードキャストバージョン。
+    public int ClientVersion { get; set; }
 
     public string? ClientIp { get; set; }
 
