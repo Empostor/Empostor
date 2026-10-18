@@ -27,6 +27,8 @@ namespace Empostor.Server.Net.State
 
         public ClientBase Client { get; }
 
+        public string? EosToken => Client.EosToken;
+
         public Game Game { get; }
 
         public LimboStates Limbo { get; set; }

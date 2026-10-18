@@ -65,19 +65,6 @@
     ]
   },
   {
-    "id": "cn.Empostor.titles",
-    "name": "Custom Title",
-    "description": "Assigns a title based on their friend code and show in front of their name.",
-    "author": "HayashiUme",
-    "versions": [
-      {
-        "version": "1.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.Titles.dll"
-      }
-    ]
-  },
-  {
     "id": "cn.hayashiume.playerchannel",
     "name": "Player Channel",
     "description": "using #channel <text> to send an only channel message by friendcode",
@@ -100,32 +87,6 @@
         "version": "1.0.0",
         "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.QqVerify.dll"
-      }
-    ]
-  },
-  {
-    "id": "cn.hayashiume.narrator",
-    "name": "Narrator",
-    "description": "AI-powered meeting assistant using DeepSeek. Use #narrator during meetings to get strategic advice. Host commands: #narrator enable/disable/limit.",
-    "author": "ELinmei",
-    "versions": [
-      {
-        "version": "1.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugin.Narrator.dll"
-      }
-    ]
-  },
-    {
-    "id": "cn.hayashiume.mapvote",
-    "name": "Map Vote",
-    "description": "using #votemap <map_name> to choose a map for lobby",
-    "author": "ELinmei",
-    "versions": [
-      {
-        "version": "1.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.MapVote.dll"
       }
     ]
   },
@@ -191,19 +152,6 @@
         "version": "2.0.0",
         "empostor_version": "2.0.0",
         "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.PlayerStats.dll"
-      }
-    ]
-  },
-  {
-    "id": "gg.empostor.playerlog",
-    "name": "Player Log",
-    "description": "Logs all player activity (chat, kills, meetings, joins, leaves) and provides an admin panel to view, search, and export logs.",
-    "author": "Empostor",
-    "versions": [
-      {
-        "version": "2.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/main/marketplace/Empostor.Plugins.PlayerLog.dll"
       }
     ]
   },

@@ -78,16 +78,12 @@ public sealed class TokenController : ControllerBase
                 return Unauthorized(new { error = "Invalid token content" });
             }
 
+            _logger.LogInformation("TokenController request for eosToken={eosToken}", eosToken);
+
             var clientIp = GetClientIp();
             var friendCode = await GetFriendCodeAsync(eosToken, productUserId, clientIp);
             var matchmakerToken = GenerateMatchmakerToken(productUserId);
 
-            // Over quota: never take a pool port for a join that cannot succeed
-            // — one port per blocked request would let a single IP drain the
-            // whole delta range. The client is pointed at the shared reject
-            // port instead, whose listener answers with the localized hint: no
-            // game, no black screen, one socket. Port 0 (fixed-port mode) means
-            // the main port, which rejects it the same way.
             if (_rateLimit.IsLimited(clientIp, out var joinRetryAfter))
             {
                 var rejectPort = await _deltaListenerManager.GetRateLimitRejectPortAsync();
@@ -117,7 +113,7 @@ public sealed class TokenController : ControllerBase
                     productUserId, clientIp);
             }
 
-            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp);
+            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp, eosToken);
 
             // Allocate a delta UDP port to match the TCP auth session to the
             // subsequent UDP connection. In fixed-port mode (pool disabled) no
@@ -130,6 +126,7 @@ public sealed class TokenController : ControllerBase
                 MatchmakerToken = matchmakerToken,
                 FriendCode = friendCode ?? string.Empty,
                 ClientIp = clientIp != null ? NormalizeIpString(clientIp) : null,
+                EosToken = eosToken,
                 CreatedAt = DateTime.UtcNow,
             };
 

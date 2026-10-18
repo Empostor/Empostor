@@ -86,6 +86,11 @@ namespace Empostor.Api.Net
         /// </summary>
         string? ProductUserId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the raw EOS token the player authenticated with.
+        /// </summary>
+        string? EosToken { get; set; }
+
         ValueTask<bool> ReportCheatAsync(CheatContext context, CheatCategory category, string message);
 
         [Obsolete("Please use the overload that adds a cheat category")]

@@ -35,7 +35,7 @@ public sealed class AuthCacheService : IDisposable
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp)
+    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp, string? eosToken = null)
     {
         if (string.IsNullOrEmpty(productUserId) || string.IsNullOrEmpty(matchmakerToken))
         {
@@ -48,6 +48,7 @@ public sealed class AuthCacheService : IDisposable
             MatchmakerToken = matchmakerToken,
             FriendCode = friendCode ?? string.Empty,
             ClientIp = clientIp != null ? NormalizeIp(clientIp) : null,
+            EosToken = eosToken,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -161,6 +162,8 @@ public sealed class UserAuthInfo
     public string MatchmakerToken { get; set; } = string.Empty;
 
     public string FriendCode { get; set; } = string.Empty;
+
+    public string? EosToken { get; set; }
 
     public string Name { get; set; } = string.Empty;
 

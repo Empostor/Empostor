@@ -16,6 +16,11 @@ namespace Empostor.Api.Net
         IClient Client { get; }
 
         /// <summary>
+        ///     Gets the EOS token the player authenticated with.
+        /// </summary>
+        string? EosToken { get; }
+
+        /// <summary>
         ///     Gets the game where the <see cref="IClientPlayer" /> belongs to.
         /// </summary>
         IGame Game { get; }
