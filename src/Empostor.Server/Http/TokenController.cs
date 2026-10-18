@@ -37,12 +37,14 @@ public sealed class TokenController : ControllerBase
     private readonly AuthApiConfig _authApiConfig;
     private readonly PortPoolService _portPool;
     private readonly IDeltaListenerManager _deltaListenerManager;
+    private readonly ServerConfig _serverConfig;
 
     public TokenController(
         ILogger<TokenController> logger,
         IHttpClientFactory httpClientFactory,
         AuthCacheService authCache,
         IOptions<AuthApiConfig> authApiConfig,
+        IOptions<ServerConfig> serverConfig,
         PortPoolService portPool,
         IDeltaListenerManager deltaListenerManager)
     {
@@ -50,6 +52,7 @@ public sealed class TokenController : ControllerBase
         _httpClientFactory = httpClientFactory;
         _authCache = authCache;
         _authApiConfig = authApiConfig.Value;
+        _serverConfig = serverConfig.Value;
         _portPool = portPool;
         _deltaListenerManager = deltaListenerManager;
     }
@@ -79,13 +82,11 @@ public sealed class TokenController : ControllerBase
             var friendCode = await GetFriendCodeAsync(eosToken, productUserId);
             var matchmakerToken = GenerateMatchmakerToken(productUserId);
 
+            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp, request.Username, request.ClientVersion);
 
-            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp);
-
-            // Allocate a delta UDP port to match the TCP auth session to the
-            // subsequent UDP connection. In fixed-port mode (pool disabled) no
-            // port is allocated and no PUID/FriendCode matching is performed.
-            var deltaPort = _portPool.AllocatePort(productUserId);
+            // DeltaPort モードでは認証セッションと UDP 接続を結ぶ専用ポートを確保する。
+            // GameCode モードでは確保しない（UDP 側は一時 GameCode で対応付ける）。
+            var deltaPort = _serverConfig.UseGameCodeMode ? 0 : _portPool.AllocatePort(productUserId);
 
             var authInfo = new UserAuthInfo
             {
@@ -96,22 +97,25 @@ public sealed class TokenController : ControllerBase
                 CreatedAt = DateTime.UtcNow,
             };
 
-            // Extract name from friend code (e.g., "ufolud" from "ufolud#1234")
-            var playerName = friendCode?.Split('#')[0] ?? productUserId[..Math.Min(8, productUserId.Length)];
-            authInfo.Name = playerName;
+            // クライアント申告の表示名とバージョン。UDP 側で照合する。
+            authInfo.Name = request.Username ?? string.Empty;
+            authInfo.ClientVersion = request.ClientVersion;
+
+            // ログ用の表示名（申告が無ければフレンドコードから推定）。
+            var playerName = !string.IsNullOrWhiteSpace(authInfo.Name)
+                ? authInfo.Name
+                : friendCode?.Split('#')[0] ?? productUserId[..Math.Min(8, productUserId.Length)];
 
             if (deltaPort > 0)
             {
-                // Unique per-player port (nonce): the subsequent UDP connection
-                // is matched by this port.
+                // 専用ポートを nonce として使い、後続の UDP 接続を突き合わせる。
                 _authCache.StoreByPort(deltaPort, authInfo);
 
                 _logger.LogInformation(
                     "TokenUser {Name} {Puid} {FriendCode} {Ip} {Port} added.",
                     playerName, productUserId, friendCode, clientIp, deltaPort);
 
-                // Await the listener bind so the socket is really listening
-                // before the port is handed back to the client.
+                // クライアントにポートを返す前にリスナーを実際に起動しておく。
                 var listenerStarted = await _deltaListenerManager.StartDeltaListenerAsync(deltaPort);
                 if (!listenerStarted)
                 {
@@ -123,10 +127,16 @@ public sealed class TokenController : ControllerBase
                     return StatusCode(503, new { error = "Server is full, please try again later." });
                 }
             }
+            else if (_serverConfig.UseGameCodeMode)
+            {
+                // GameCode モード: ポート確保なし。一時 GameCode で突き合わせる。
+                _logger.LogInformation(
+                    "TokenUser {Name} {Puid} {FriendCode} {Ip} added (gamecode mode, single port).",
+                    playerName, productUserId, friendCode, clientIp);
+            }
             else if (_portPool.IsEnabled)
             {
-                // Dynamic delta mode but the pool is at/below the low-water
-                // mark: reject the player instead of falling back to IP matching.
+                // DeltaPort モードだがプールが下限以下。IP フォールバックせず拒否する。
                 _logger.LogWarning(
                     "TokenUser {Name} {Puid} rejected: dynamic port pool exhausted.",
                     playerName, productUserId);
@@ -135,9 +145,7 @@ public sealed class TokenController : ControllerBase
             }
             else
             {
-                // Fixed-port mode (DeltaPortStart=0, DeltaPortEnd=0): no dynamic
-                // ports, and PUID/FriendCode matching is intentionally skipped.
-                // The client connects over the fixed UDP port.
+                // 固定ポートモード: 動的ポートも PUID / FriendCode の突き合わせも使わない。
                 _logger.LogInformation(
                     "TokenUser {Name} {Puid} {FriendCode} {Ip} added (fixed port, no matching).",
                     playerName, productUserId, friendCode, clientIp);
@@ -194,7 +202,6 @@ public sealed class TokenController : ControllerBase
                 productUserId, cached);
             return cached;
         }
-
 
         var mode = _authApiConfig.Mode;
         _logger.LogDebug("TokenControllerAuthApi mode: {Mode}", mode);
@@ -440,6 +447,15 @@ public sealed class TokenController : ControllerBase
     {
         [JsonPropertyName("Puid")]
         public required string Puid { get; init; }
+
+        [JsonPropertyName("Username")]
+        public string? Username { get; init; }
+
+        [JsonPropertyName("ClientVersion")]
+        public int ClientVersion { get; init; }
+
+        [JsonPropertyName("Language")]
+        public int Language { get; init; }
     }
 
     public sealed class TokenResponse

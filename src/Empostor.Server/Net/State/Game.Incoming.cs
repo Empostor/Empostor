@@ -134,8 +134,8 @@ namespace Empostor.Server.Net.State
                 ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            _logger.LogInformation("▶ {Name} ({Id}) joined │ {Lang} │ {Platform} │ v{Version} │ Authority:{Authority} │ port {DeltaPort}{Reactor}",
-                sender.Client.Name, sender.Client.Id, lang, platformStr, version, authority, deltaPort, reactorStr);
+            _logger.LogInformation("▶ {Name} ({Id}) joined │ FC {FriendCode} │ {Lang} │ {Platform} │ v{Version} │ Authority:{Authority} │ port {DeltaPort}{Reactor}",
+                sender.Client.Name, sender.Client.Id, sender.Client.FriendCode ?? "unknown", lang, platformStr, version, authority, deltaPort, reactorStr);
 
             if (isNew)
             {

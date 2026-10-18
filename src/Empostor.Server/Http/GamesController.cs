@@ -12,6 +12,9 @@ using Empostor.Api.Games.Managers;
 using Empostor.Api.Innersloth;
 using Empostor.Api.Innersloth.GameFilters;
 using Empostor.Server.Extensions;
+using Empostor.Server.Net;
+using Empostor.Server.Service.Auth;
+using Empostor.Server.Service.Ip;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,17 +28,23 @@ public sealed class GamesController : ControllerBase
     private readonly IGameManager _gameManager;
     private readonly ListingManager _listingManager;
     private readonly ServerConfig _serverConfig;
+    private readonly AuthCacheService _authCache;
+    private readonly GameCodeAuthManager _gameCodeAuth;
     private readonly ILogger<GamesController> _logger;
 
     public GamesController(
         IGameManager gameManager,
         ListingManager listingManager,
         IOptions<ServerConfig> serverConfig,
+        AuthCacheService authCache,
+        GameCodeAuthManager gameCodeAuth,
         ILogger<GamesController> logger)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
         _serverConfig = serverConfig.Value;
+        _authCache = authCache;
+        _gameCodeAuth = gameCodeAuth;
         _logger = logger;
     }
 
@@ -68,8 +77,8 @@ public sealed class GamesController : ControllerBase
         }
 
         var listings = _listingManager.FindListings(HttpContext, mapId, numImpostors, lang, clientVersion);
-        var port = GetDeltaPort();
-        return Ok(listings.Select(g => GameListing.From(g, port)));
+        var auth = TryGetAuthInfo();
+        return Ok(listings.Select(g => BuildListing(g, auth)));
     }
 
     /// <summary>
@@ -78,14 +87,21 @@ public sealed class GamesController : ControllerBase
     [HttpPost]
     public IActionResult Post(int gameId)
     {
-        var code = new GameCode(gameId);
+        var requested = new GameCode(gameId);
+        var code = _gameCodeAuth.TryGetTarget(requested, out var targetCode) ? targetCode : requested;
         var game = _gameManager.Find(code);
         if (game == null)
         {
             return NotFound(new MatchmakerResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        var port = GetDeltaPort();
+        if (_serverConfig.UseGameCodeMode && TryGetAuthInfo() is { } auth)
+        {
+            // 旧経路はコードを返せないので、実コード宛ての保留加入として預ける。
+            _gameCodeAuth.RegisterPendingJoin(code, auth);
+        }
+
+        var port = GetPort();
         return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
     }
 
@@ -95,22 +111,30 @@ public sealed class GamesController : ControllerBase
     [HttpPut]
     public IActionResult Put()
     {
-        var port = GetDeltaPort();
+        if (_serverConfig.UseGameCodeMode && TryGetAuthInfo() is { } auth)
+        {
+            // 募集開始。ゲーム生成は次の UDP HostGame なので、認証情報と IP を保留しておく。
+            var ip = RealIpResolver.Resolve(HttpContext)?.ToString();
+            _gameCodeAuth.RegisterHost(auth, ip);
+        }
+
+        var port = GetPort();
         return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
     }
 
     [HttpGet("{gameId}")]
     public IActionResult Show([FromRoute] int gameId)
     {
-        var code = new GameCode(gameId);
+        // 入力されるコードは実コード（招待・手入力）かチャレンジコードのどちらもありうる。
+        var requested = new GameCode(gameId);
+        var code = _gameCodeAuth.TryGetTarget(requested, out var targetCode) ? targetCode : requested;
         var game = _gameManager.Find(code);
         if (game == null)
         {
             return NotFound(new FindGameByCodeResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        var port = GetDeltaPort();
-        return Ok(new FindGameByCodeResponse(GameListing.From(game, port)));
+        return Ok(new FindGameByCodeResponse(BuildListing(game, TryGetAuthInfo())));
     }
 
     /// <summary>
@@ -140,8 +164,8 @@ public sealed class GamesController : ControllerBase
             }
 
             var filteredGames = _listingManager.FindListingsV2(HttpContext, filtersList);
-            var port = GetDeltaPort();
-            var gameListings = filteredGames.Select(g => GameListing.From(g, port)).ToList();
+            var auth = TryGetAuthInfo();
+            var gameListings = filteredGames.Select(g => BuildListing(g, auth)).ToList();
 
             var response = new
             {
@@ -209,14 +233,16 @@ public sealed class GamesController : ControllerBase
     }
 
     /// <summary>
-    ///     Resolves the UDP port the requesting client should connect to.
-    ///     In dynamic delta mode every client is handed a unique UDP port in its
-    ///     auth response (POST /api/user) and echoes that token back as the
-    ///     Authorization bearer header on subsequent requests, so the port is
-    ///     read from the token. Falls back to the configured public port.
+    ///     The UDP port the client should connect to.
+    ///     GameCode モードでは共有ポート、DeltaPort モードではトークン内の専用ポートを返す。
     /// </summary>
-    private ushort GetDeltaPort()
+    private ushort GetPort()
     {
+        if (_serverConfig.UseGameCodeMode)
+        {
+            return _serverConfig.GameCodePublicPort;
+        }
+
         var auth = HttpContext.Request.Headers.Authorization.ToString();
         if (!string.IsNullOrEmpty(auth) && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
@@ -232,11 +258,51 @@ public sealed class GamesController : ControllerBase
             }
             catch
             {
-                // Malformed or non-base64 token — fall through to the public port.
+                // base64 でない・壊れている場合は公開ポートにフォールバック
             }
         }
 
         return _serverConfig.PublicPort;
+    }
+
+    // ベアラトークンから認証情報を引く。
+    private UserAuthInfo? TryGetAuthInfo()
+    {
+        var header = HttpContext.Request.Headers.Authorization.ToString();
+        if (string.IsNullOrEmpty(header) || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(Convert.FromBase64String(header["Bearer ".Length..]));
+            if (doc.RootElement.TryGetProperty("Hash", out var hashElement)
+                && hashElement.GetString() is { Length: > 0 } hash)
+            {
+                return _authCache.FindByToken(hash);
+            }
+        }
+        catch
+        {
+            // トークンが壊れている場合は未認証として扱う
+        }
+
+        return null;
+    }
+
+    // 一覧 1 件分。GameCode モードでは認証情報に紐づくチャレンジコードを GameId として返す。
+    private GameListing BuildListing(IGame game, UserAuthInfo? auth)
+    {
+        var port = GetPort();
+        var listingCode = game.Code;
+
+        if (_serverConfig.UseGameCodeMode && auth != null && !game.Code.IsInvalid)
+        {
+            listingCode = _gameCodeAuth.CreateChallenge(game.Code, auth);
+        }
+
+        return GameListing.From(game, port, listingCode);
     }
 
     private static uint ConvertAddressToNumber(IPAddress address)
@@ -330,14 +396,14 @@ public sealed class GamesController : ControllerBase
 
         [JsonPropertyName("Options")] public required string Options { get; init; }
 
-        public static GameListing From(IGame game, ushort port)
+        public static GameListing From(IGame game, ushort port, GameCode listingCode)
         {
             var platform = game.Host?.Client.PlatformSpecificData;
             return new GameListing
             {
                 Ip = ConvertAddressToNumber(game.PublicIp.Address),
                 Port = port,
-                GameId = game.Code,
+                GameId = listingCode,
                 PlayerCount = game.PlayerCount,
                 HostName = game.DisplayName ?? game.Host?.Client.Name ?? "Unknown host",
                 TrueHostName = game.DisplayName ?? game.Host?.Client.Name ?? "Unknown host",

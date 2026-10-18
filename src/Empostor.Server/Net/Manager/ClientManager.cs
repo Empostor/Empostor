@@ -36,6 +36,7 @@ namespace Empostor.Server.Net.Manager
         private readonly PortPoolService _portPool;
         private readonly IpGeolocationService _ipGeo;
         private readonly ClientIdStore _clientIdStore;
+        private readonly ServerConfig _serverConfig;
         private int _idLast;
 
         public ClientManager(
@@ -48,7 +49,8 @@ namespace Empostor.Server.Net.Manager
             PlayerConnectStore playerConnectStore,
             PortPoolService portPool,
             IpGeolocationService ipGeo,
-            ClientIdStore clientIdStore)
+            ClientIdStore clientIdStore,
+            IOptions<ServerConfig> serverConfig)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -61,6 +63,7 @@ namespace Empostor.Server.Net.Manager
             _portPool = portPool;
             _ipGeo = ipGeo;
             _clientIdStore = clientIdStore;
+            _serverConfig = serverConfig.Value;
             _idLast = checked((int)_clientIdStore.GetLastId());
 
             if (_compatibilityConfig.AllowFutureGameVersions)
@@ -152,20 +155,14 @@ namespace Empostor.Server.Net.Manager
                 ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            // Match the auth session to this UDP connection. In dynamic delta
-            // mode (deltaPort > 0) the connection must match by its unique
-            // port (nonce); there is no IP fallback anymore. In fixed-port
-            // mode (deltaPort == 0) matching is skipped entirely: no PUID and
-            // no FriendCode are bound to the client.
+            // 認証セッションと UDP 接続の突き合わせ。DeltaPort は専用ポートを nonce に厳密一致、
+            // GameCode は JoinGame / HostGame で確定。固定ポートは突き合わせない。
             if (deltaPort > 0)
             {
                 authInfo = _authCache.FindByPort(deltaPort);
                 if (authInfo == null)
                 {
-                    // Dynamic delta mode: an active port that has no auth info
-                    // bound to it is an unauthenticated UDP connection — reject
-                    // it instead of admitting an anonymous client.
-
+                    // 認証情報の無いポートへの接続 = 未認証。通さず拒否する。
                     _logger.LogWarning(
                         "#{Id} {Name} │ port {Port} has no auth info │ {Ip} │ rejecting unauthenticated UDP connection",
                         id, name, deltaPort, NormalizeIp(clientIp));
@@ -173,10 +170,9 @@ namespace Empostor.Server.Net.Manager
                     return;
                 }
 
-                // Port matched — cancel the allocation timeout
+                // ポート一致 — 確保タイムアウトを止める。
                 _portPool.ConfirmPort(deltaPort);
-                // Mark the auth-cache entry as active so the inactivity
-                // timer never clears the port while the player is connected.
+                // 接続中の間は auth キャッシュ期限切れでポートが回収されないようにする。
                 _authCache.ConfirmPort(deltaPort);
 
                 friendCode = authInfo.FriendCode;
@@ -185,10 +181,16 @@ namespace Empostor.Server.Net.Manager
                     "#{Id} {Name} │ port {Port} │ {Location} │ {Lang} │ {Platform} │ FC {FriendCode} │ {HashPuid}{Reactor}",
                     id, name, deltaPort, locationStr, lang, platformStr, friendCode ?? "unknown", HashPuid(authInfo.ProductUserId), reactorStr);
             }
+            else if (_serverConfig.UseGameCodeMode)
+            {
+                // GameCode モード: この時点では認証情報を紐づけず、JoinGame / HostGame で確定する。
+                _logger.LogInformation(
+                    "#{Id} {Name} │ gamecode mode │ awaiting challenge │ {Location} │ {Lang} │ {Platform}{Reactor}",
+                    id, name, locationStr, lang, platformStr, reactorStr);
+            }
             else
             {
-                // Fixed-port mode: no auth binding, no PUID/FriendCode.
-
+                // 固定ポートモード: PUID / FriendCode の紐づけなし。
                 _logger.LogInformation(
                     "#{Id} {Name} │ fixed port │ {Location} │ {Lang} │ {Platform}{Reactor}",
                     id, name, locationStr, lang, platformStr, reactorStr);
@@ -225,7 +227,6 @@ namespace Empostor.Server.Net.Manager
             => client.Id != 0
                && _clients.TryGetValue(client.Id, out var c)
                && ReferenceEquals(client, c);
-
 
         private static string NormalizeIp(IPAddress? addr)
         {
