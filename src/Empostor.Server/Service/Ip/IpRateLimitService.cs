@@ -7,8 +7,6 @@ using Microsoft.Extensions.Options;
 namespace Empostor.Server.Service.Ip;
 public sealed class IpRateLimitService
 {
-    public const string MessageKey = "ratelimit.too_frequent";
-
     public const int MaxRequestsPerWindow = 30;
 
     public const int WindowMinutes = 1;
@@ -66,42 +64,6 @@ public sealed class IpRateLimitService
             }
 
             return false;
-        }
-    }
-
-    // Reads the quota without counting a request — used to answer the client
-    // in-game (and to skip expensive work) when the IP is already over quota.
-    public bool IsLimited(IPAddress? ip, out TimeSpan retryAfter)
-    {
-        retryAfter = TimeSpan.Zero;
-
-        var config = _options.Value;
-        var window = GetWindow(config);
-        if (ip == null || window == null)
-        {
-            return false;
-        }
-
-        if (!_windows.TryGetValue(ip.ToString(), out var entry))
-        {
-            return false;
-        }
-
-        var now = DateTime.UtcNow;
-        lock (entry)
-        {
-            if (now - entry.StartUtc >= window.Value || entry.Count <= MaxRequestsPerWindow)
-            {
-                return false;
-            }
-
-            retryAfter = entry.StartUtc + window.Value - now;
-            if (retryAfter < TimeSpan.Zero)
-            {
-                retryAfter = TimeSpan.Zero;
-            }
-
-            return true;
         }
     }
 

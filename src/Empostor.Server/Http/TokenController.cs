@@ -37,7 +37,6 @@ public sealed class TokenController : ControllerBase
     private readonly AuthApiConfig _authApiConfig;
     private readonly PortPoolService _portPool;
     private readonly IDeltaListenerManager _deltaListenerManager;
-    private readonly IpRateLimitService _rateLimit;
 
     public TokenController(
         ILogger<TokenController> logger,
@@ -45,8 +44,7 @@ public sealed class TokenController : ControllerBase
         AuthCacheService authCache,
         IOptions<AuthApiConfig> authApiConfig,
         PortPoolService portPool,
-        IDeltaListenerManager deltaListenerManager,
-        IpRateLimitService rateLimit)
+        IDeltaListenerManager deltaListenerManager)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
@@ -54,7 +52,6 @@ public sealed class TokenController : ControllerBase
         _authApiConfig = authApiConfig.Value;
         _portPool = portPool;
         _deltaListenerManager = deltaListenerManager;
-        _rateLimit = rateLimit;
     }
 
     [HttpPost]
@@ -79,43 +76,9 @@ public sealed class TokenController : ControllerBase
             }
 
             var clientIp = GetClientIp();
-            var friendCode = await GetFriendCodeAsync(eosToken, productUserId, clientIp);
+            var friendCode = await GetFriendCodeAsync(eosToken, productUserId);
             var matchmakerToken = GenerateMatchmakerToken(productUserId);
 
-            // Over quota: never take a pool port for a join that cannot succeed
-            // — one port per blocked request would let a single IP drain the
-            // whole delta range. The client is pointed at the shared reject
-            // port instead, whose listener answers with the localized hint: no
-            // game, no black screen, one socket. Port 0 (fixed-port mode) means
-            // the main port, which rejects it the same way.
-            if (_rateLimit.IsLimited(clientIp, out var joinRetryAfter))
-            {
-                var rejectPort = await _deltaListenerManager.GetRateLimitRejectPortAsync();
-                if (rejectPort > 0 || !_portPool.IsEnabled)
-                {
-                    _logger.LogWarning(
-                        "TokenUser {Puid} {Ip} over the request rate limit, sent to reject port {Port} (retry in {Seconds}s).",
-                        productUserId, clientIp, rejectPort,
-                        (int)Math.Ceiling(joinRetryAfter.TotalSeconds));
-
-                    return Ok(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(new TokenResponse
-                    {
-                        Content = new TokenContent
-                        {
-                            ProductUserId = productUserId,
-                            FriendCode = friendCode,
-                        },
-                        Hash = matchmakerToken,
-                        Port = rejectPort,
-                    })));
-                }
-
-                // No reject port available (pool exhausted): fall through to
-                // the normal path, which has its own full/exhausted handling.
-                _logger.LogWarning(
-                    "TokenUser {Puid} {Ip} over the request rate limit but no reject port available, falling back to a normal port.",
-                    productUserId, clientIp);
-            }
 
             _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp);
 
@@ -221,7 +184,7 @@ public sealed class TokenController : ControllerBase
     private static string NormalizeIpString(IPAddress? ip)
         => ip?.IsIPv4MappedToIPv6 == true ? ip.MapToIPv4().ToString() : ip?.ToString() ?? "unknown";
 
-    private async Task<string> GetFriendCodeAsync(string eosToken, string productUserId, IPAddress? clientIp)
+    private async Task<string> GetFriendCodeAsync(string eosToken, string productUserId)
     {
         var cached = TryGetFriendCodeFromCache(productUserId);
         if (cached != null)
@@ -232,16 +195,6 @@ public sealed class TokenController : ControllerBase
             return cached;
         }
 
-        // The join request is never rejected because of the Ip rate limit (the
-        // player is told in-game instead), so skip the outbound auth calls
-        // here — otherwise an IP could keep amplifying traffic to us.
-        if (_rateLimit.IsLimited(clientIp, out _))
-        {
-            _logger.LogWarning(
-                "TokenControllerFriendCode skipped for PUID={Puid}: {Ip} is over the request rate limit, using fallback",
-                productUserId, clientIp);
-            return GenerateFallbackFriendCode(productUserId);
-        }
 
         var mode = _authApiConfig.Mode;
         _logger.LogDebug("TokenControllerAuthApi mode: {Mode}", mode);
