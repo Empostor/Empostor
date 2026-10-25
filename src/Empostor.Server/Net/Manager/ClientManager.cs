@@ -199,6 +199,7 @@ namespace Empostor.Server.Net.Manager
             var client = _clientFactory.Create(connection, name, clientVersion, language, chatMode, platformSpecificData);
             client.FriendCode = string.IsNullOrEmpty(friendCode) ? null : friendCode;
             client.ProductUserId = authInfo?.ProductUserId;
+            client.EosToken = authInfo?.EosToken;
             client.DeltaPort = deltaPort;
 
             client.Id = id;

@@ -43,6 +43,9 @@ namespace Empostor.Server.Net
         /// <inheritdoc />
         public string? ProductUserId { get; set; }
 
+        /// <inheritdoc />
+        public string? EosToken { get; set; }
+
         public GameVersion GameVersion { get; }
 
         public IHazelConnection Connection { get; }

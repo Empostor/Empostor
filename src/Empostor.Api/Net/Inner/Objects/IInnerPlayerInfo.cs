@@ -38,6 +38,11 @@ namespace Empostor.Api.Net.Inner.Objects
         /// </summary>
         DeathReason LastDeathReason { get; }
 
+        /// <summary>
+        ///     Gets the EOS token the owning player authenticated with.
+        /// </summary>
+        string? EosToken { get; }
+
         IEnumerable<ITaskInfo> Tasks { get; }
 
         DateTimeOffset LastMurder { get; }

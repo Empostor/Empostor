@@ -37,7 +37,7 @@ public sealed class AuthCacheService : IDisposable
 
     // Kept together so the UDP side can cross-check the in-game display name and version.
     public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp,
-        string? name = null, int clientVersion = 0)
+        string? eosToken = null, string? name = null, int clientVersion = 0)
     {
         if (string.IsNullOrEmpty(productUserId) || string.IsNullOrEmpty(matchmakerToken))
         {
@@ -52,6 +52,7 @@ public sealed class AuthCacheService : IDisposable
             ClientIp = clientIp != null ? NormalizeIp(clientIp) : null,
             Name = name ?? string.Empty,
             ClientVersion = clientVersion,
+            EosToken = eosToken,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -165,6 +166,8 @@ public sealed class UserAuthInfo
     public string MatchmakerToken { get; set; } = string.Empty;
 
     public string FriendCode { get; set; } = string.Empty;
+
+    public string? EosToken { get; set; }
 
     public string Name { get; set; } = string.Empty;
 

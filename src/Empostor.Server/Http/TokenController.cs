@@ -78,11 +78,13 @@ public sealed class TokenController : ControllerBase
                 return Unauthorized(new { error = "Invalid token content" });
             }
 
+            _logger.LogInformation("TokenController request for eosToken={eosToken}", eosToken);
+
             var clientIp = GetClientIp();
             var friendCode = await GetFriendCodeAsync(eosToken, productUserId);
             var matchmakerToken = GenerateMatchmakerToken(productUserId);
 
-            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp, request.Username, request.ClientVersion);
+            _authCache.Store(productUserId, matchmakerToken, friendCode, clientIp, eosToken, request.Username, request.ClientVersion);
 
             // In DeltaPort mode, allocate a dedicated port tying the auth session to the UDP connection.
             // In GameCode mode nothing is allocated (the UDP side matches via a temporary GameCode).
@@ -94,6 +96,7 @@ public sealed class TokenController : ControllerBase
                 MatchmakerToken = matchmakerToken,
                 FriendCode = friendCode ?? string.Empty,
                 ClientIp = clientIp != null ? NormalizeIpString(clientIp) : null,
+                EosToken = eosToken,
                 CreatedAt = DateTime.UtcNow,
             };
 
