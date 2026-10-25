@@ -139,7 +139,7 @@ namespace Empostor.Server.Net
                 case MessageFlags.HostGame:
                 case MessageFlags.HostModdedGame:
                 {
-                    // GameCode モードではゲーム生成前に認証情報を確定させる。
+                    // In GameCode mode the auth info must be bound before the game is created.
                     if (_serverConfig.UseGameCodeMode && string.IsNullOrEmpty(ProductUserId)
                         && !TryBindHostAuth())
                     {
@@ -196,7 +196,7 @@ namespace Empostor.Server.Net
 
                     if (_serverConfig.UseGameCodeMode)
                     {
-                        // 一覧が配ったチャレンジコードから認証情報を解決する。
+                        // Resolve auth info from the challenge code handed out by the listing.
                         var (bound, realCode) = await TryBindJoinAuthAsync(gameCode);
                         if (!bound)
                         {
@@ -517,8 +517,8 @@ namespace Empostor.Server.Net
             await _gameManager.OnClientDisconnectAsync(this);
         }
 
-        // JoinGame のコードから認証情報を解決する。GameCode モードではチャレンジコードが鍵。
-        // 解決後は Msg00 で実コードを通知する。旧経路向けに IP/名前/バージョンの保留照合も残す。
+        // Resolves auth info from the JoinGame code; in GameCode mode the challenge code is the key.
+        // After resolving, the real code is announced with Msg00. The IP/name/version pending match is kept for the legacy path.
         private async ValueTask<(bool Bound, GameCode RealCode)> TryBindJoinAuthAsync(GameCode code)
         {
             if (_gameCodeAuth.TryResolveChallenge(code, Id, out var user, out var target, out var challengeReason)
@@ -541,7 +541,7 @@ namespace Empostor.Server.Net
 
             if (!string.IsNullOrEmpty(ProductUserId))
             {
-                // 既に認証済みの接続が実コードで Join してきた場合はそのまま通す。
+                // An already authenticated connection joining with the real code is let through as-is.
                 return (true, code);
             }
 
@@ -569,7 +569,7 @@ namespace Empostor.Server.Net
             return (false, code);
         }
 
-        // HostGame 時点ではゲームコードがまだ無いので、IP＋名前＋バージョンで募集主を特定する。
+        // At HostGame time no game code exists yet, so the host is identified by IP + name + version.
         private bool TryBindHostAuth()
         {
             var udpIp = NormalizeIp(Connection.EndPoint?.Address);
@@ -719,7 +719,7 @@ namespace Empostor.Server.Net
         {
             using var message = MessageWriter.Get(MessageType.Reliable);
 
-            // チャレンジコードで照会されることもあるので実コードへ解決してから探す。
+            // The query may arrive with a challenge code, so resolve it to the real code first.
             var lookup = _gameCodeAuth.TryGetTarget(code, out var targetCode) ? targetCode : code;
             var playerSpecificData = _gameManager.Find(lookup)?.Players.Select(p => p.Client.PlatformSpecificData) ?? Enumerable.Empty<PlatformSpecificData>();
 

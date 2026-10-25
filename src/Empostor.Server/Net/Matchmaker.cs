@@ -27,7 +27,6 @@ namespace Empostor.Server.Net
         private readonly ILogger<Matchmaker> _logger;
         private readonly PortPoolService _portPool;
         private readonly IFirewallService _firewall;
-        private readonly ServerConfig _serverConfig;
         private readonly AuthCacheService _authCache;
         private readonly IOptions<AntiCheatConfig> _antiCheatOptions;
 
@@ -44,7 +43,6 @@ namespace Empostor.Server.Net
             ILogger<Matchmaker> logger,
             PortPoolService portPool,
             IFirewallService firewall,
-            IOptions<ServerConfig> serverConfig,
             AuthCacheService authCache,
             IOptions<AntiCheatConfig> antiCheatOptions)
         {
@@ -55,7 +53,6 @@ namespace Empostor.Server.Net
             _logger = logger;
             _portPool = portPool;
             _firewall = firewall;
-            _serverConfig = serverConfig.Value;
             _authCache = authCache;
             _antiCheatOptions = antiCheatOptions;
 
@@ -244,12 +241,6 @@ namespace Empostor.Server.Net
                 e.Connection.Dispose();
             }
         }
-
-        // Localized "please try again in N minutes" hint. N is what is actually
-        // left for that IP when it can be read off the quota, the full window
-        // otherwise (behind a CDN the UDP source address may not be the key the
-        // requests were counted with).
-
 
         private void OnPortReturned(int port)
         {

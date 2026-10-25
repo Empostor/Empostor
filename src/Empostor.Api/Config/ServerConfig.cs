@@ -4,13 +4,13 @@ using Empostor.Api.Utils;
 
 namespace Empostor.Api.Config
 {
-    // HTTP 認証 (POST /api/user) と UDP 接続をどう結びつけるか。
+    // How the HTTP authentication (POST /api/user) session is tied to the UDP connection.
     public enum ServerVerificationMode
     {
-        // プレイヤーごとにユニークな動的 UDP ポートを払い出し、それを nonce 代わりにする。
+        // Allocates a unique dynamic UDP port per player and uses it as a nonce.
         DeltaPort = 0,
 
-        // 動的ポートを使わず、加入ごとの使い捨て偽 GameCode で対応付ける。
+        // Matches connections by a disposable fake GameCode issued per join, without dynamic ports.
         GameCode = 1,
     }
 
@@ -33,13 +33,13 @@ namespace Empostor.Api.Config
 
         public bool UseFirewalld { get; set; } = false;
 
-        // DeltaPort（既定）か GameCode。
+        // DeltaPort (default) or GameCode.
         public ServerVerificationMode VerificationMode { get; set; } = ServerVerificationMode.DeltaPort;
 
-        // GameCode モードで使うポート。空なら ListenPort。先頭の 1 つだけバインドする。
+        // Ports used in GameCode mode. Empty falls back to ListenPort; only the first one is bound.
         public List<int> GameCodePorts { get; set; } = new();
 
-        // 加入/募集要求を保留する秒数。この間に届いた UDP 接続と突き合わせる。
+        // Seconds to keep join/host requests pending; UDP connections arriving in this window are matched against them.
         public int TemporaryGameCodeLifetimeSeconds { get; set; } = 180;
 
         public ushort DeltaPortStart { get; set; } = 0;

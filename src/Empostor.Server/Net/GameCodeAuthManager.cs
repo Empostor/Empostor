@@ -10,11 +10,11 @@ using Microsoft.Extensions.Options;
 
 namespace Empostor.Server.Net;
 
-// GameCode 認証モード: 動的 UDP ポートを使わず、サーバー発行の一時 GameCode
-// （チャレンジコード）で認証情報と UDP 接続を対応付ける。
+// GameCode auth mode: ties auth info to UDP connections using server-issued temporary GameCodes
+// (challenge codes) instead of dynamic UDP ports.
 public sealed class GameCodeAuthManager : IDisposable
 {
-    // 実コードあたりに預かる旧経路の保留数上限。
+    // Maximum number of legacy-path pending entries kept per real code.
     private const int MaxPendingPerCode = 64;
 
     private readonly ILogger<GameCodeAuthManager> _logger;
@@ -22,13 +22,13 @@ public sealed class GameCodeAuthManager : IDisposable
 
     private readonly object _gate = new();
 
-    // チャレンジコード -> チャレンジ内容
+    // Challenge code -> challenge
     private readonly Dictionary<int, Challenge> _challenges = new();
 
-    // 旧経路: 実コード -> HTTP の加入要求で預かった認証情報
+    // Legacy path: real code -> auth info stashed by HTTP join requests
     private readonly Dictionary<GameCode, List<PendingJoin>> _pendingJoins = new();
 
-    // 旧経路: 送信元 IP -> HTTP の募集要求で預かった認証情報
+    // Legacy path: source IP -> auth info stashed by HTTP host requests
     private readonly Dictionary<string, List<PendingHost>> _hosts = new();
 
     private readonly Timer _cleanupTimer;
@@ -45,7 +45,7 @@ public sealed class GameCodeAuthManager : IDisposable
 
     private bool Expired(DateTime createdAt) => DateTime.UtcNow - createdAt > _lifetime;
 
-    // 一覧に載せるチャレンジコードを発行する。
+    // Issues a challenge code for the listing.
     public GameCode CreateChallenge(GameCode targetCode, UserAuthInfo user)
     {
         lock (_gate)
@@ -66,7 +66,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // チャレンジコード -> 実コード（消費しない）。一覧や PlatformId 照会の逆引き用。
+    // Challenge code -> real code (non-consuming). Used to reverse-map listings and PlatformId queries.
     public bool TryGetTarget(GameCode code, out GameCode targetCode)
     {
         lock (_gate)
@@ -82,7 +82,7 @@ public sealed class GameCodeAuthManager : IDisposable
         return false;
     }
 
-    // UDP JoinGame のコードから認証情報を解決する。
+    // Resolves auth info from the code of a UDP JoinGame.
     public bool TryResolveChallenge(GameCode code, int clientId, out UserAuthInfo? user, out GameCode targetCode,
         out string reason)
     {
@@ -118,7 +118,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // 旧経路（POST /api/games）: 実コード宛ての加入要求として認証情報を預かる。
+    // Legacy path (POST /api/games): stash auth info as a join request addressed to the real code.
     public void RegisterPendingJoin(GameCode realCode, UserAuthInfo user)
     {
         lock (_gate)
@@ -141,7 +141,7 @@ public sealed class GameCodeAuthManager : IDisposable
 
             if (list.Count >= MaxPendingPerCode)
             {
-                // 溢れたら最も古いものを捨てる。
+                // Drop the oldest entry when the list overflows.
                 list.RemoveAt(0);
             }
 
@@ -156,7 +156,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // 旧経路: 実コードのまま JoinGame してきた接続を、IP / 名前 / バージョンで突き合わせる。
+    // Legacy path: match a connection that sent JoinGame with the real code by IP / name / version.
     public bool TryConsumePendingJoin(GameCode realCode, string udpIp, string playerName, int gameVersion,
         out UserAuthInfo? user, out string matchInfo)
     {
@@ -198,7 +198,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // 募集開始（PUT /api/games）。ゲームもコードもまだ無いので、送信元 IP を鍵に預かる。
+    // Hosting starts (PUT /api/games). Neither game nor code exists yet, so key the stash by source IP.
     public void RegisterHost(UserAuthInfo user, string? ip)
     {
         var key = Normalize(ip) ?? "(unknown)";
@@ -231,7 +231,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // HostGame で接続してきたクライアントに合う保留募集主を 1 件取り出す。
+    // Takes out one pending host matching the client that connected via HostGame.
     public bool TryConsumeHost(string udpIp, string playerName, int gameVersion, out UserAuthInfo? user,
         out string matchInfo)
     {
@@ -274,7 +274,7 @@ public sealed class GameCodeAuthManager : IDisposable
         }
     }
 
-    // 重複しないチャレンジコードを作る（実コードと同じ V2 形式）。
+    // Creates a unique challenge code (same V2 format as real codes).
     private GameCode NewChallengeCode()
     {
         for (var i = 0; i < 64; i++)
@@ -289,7 +289,7 @@ public sealed class GameCodeAuthManager : IDisposable
         throw new InvalidOperationException("failed to allocate a unique challenge code");
     }
 
-    // 最適な 1 件を選ぶ。IP 一致 > 名前 > バージョン、同点なら古い方。
+    // Picks the best entry. IP match > name > version; ties go to the older entry.
     private static int PickBest(
         IEnumerable<(string? Ip, string Name, int GameVersion, DateTime CreatedAt)> candidates,
         string udpIp,
@@ -402,7 +402,7 @@ public sealed class GameCodeAuthManager : IDisposable
 
         public required DateTime CreatedAt { get; set; }
 
-        // チャレンジを消費した接続。1 つのチャレンジは 1 接続だけが使える。
+        // The connection that consumed the challenge; each challenge can be used by one connection only.
         public int? OccupiedBy { get; set; }
     }
 

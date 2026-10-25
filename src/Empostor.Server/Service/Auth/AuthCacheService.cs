@@ -35,7 +35,7 @@ public sealed class AuthCacheService : IDisposable
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    // UDP 側でゲーム内表示名・バージョンと突き合わせるため、一緒に預かっておく。
+    // Kept together so the UDP side can cross-check the in-game display name and version.
     public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp,
         string? name = null, int clientVersion = 0)
     {
@@ -168,7 +168,7 @@ public sealed class UserAuthInfo
 
     public string Name { get; set; } = string.Empty;
 
-    // POST /api/user でクライアントが申告したブロードキャストバージョン。
+    // Broadcast version as declared by the client in POST /api/user.
     public int ClientVersion { get; set; }
 
     public string? ClientIp { get; set; }

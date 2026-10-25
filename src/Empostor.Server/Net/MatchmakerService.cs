@@ -41,7 +41,7 @@ namespace Empostor.Server.Net
 
             if (_serverConfig.UseGameCodeMode)
             {
-                // GameCode モード: 動的ポートは使わず、共有の UDP ポートを 1 つだけ開く。
+                // GameCode mode: dynamic ports are unused; open a single shared UDP port.
                 var endpoint = new IPEndPoint(listenAddress, _serverConfig.GameCodeListenPort);
                 await _matchmaker.StartAsync(endpoint);
 
@@ -51,7 +51,7 @@ namespace Empostor.Server.Net
             }
             else if (_portPool.IsEnabled)
             {
-                // 動的 DeltaPort モード: 起動時は静的ポートを開かず、必要時に確保する。
+                // Dynamic DeltaPort mode: no static port is opened at startup; ports are allocated on demand.
                 var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
                 _matchmaker.Initialize(endpoint);
                 _logger.LogInformation(
@@ -61,7 +61,7 @@ namespace Empostor.Server.Net
             }
             else
             {
-                // 固定ポートモード: 設定されたポートでメインリスナーを開く。
+                // Fixed-port mode: open the main listener on the configured port.
                 var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
                 await _matchmaker.StartAsync(endpoint);
 

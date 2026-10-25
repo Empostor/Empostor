@@ -155,14 +155,14 @@ namespace Empostor.Server.Net.Manager
                 ? $" │ Reactor: {string.Join(", ", System.Linq.Enumerable.Select(mods, m => $"{m.Id} {m.Version}"))}"
                 : string.Empty;
 
-            // 認証セッションと UDP 接続の突き合わせ。DeltaPort は専用ポートを nonce に厳密一致、
-            // GameCode は JoinGame / HostGame で確定。固定ポートは突き合わせない。
+            // Match the auth session to the UDP connection: DeltaPort requires an exact match on
+            // the dedicated port used as a nonce, GameCode settles it in JoinGame / HostGame, fixed port does not match at all.
             if (deltaPort > 0)
             {
                 authInfo = _authCache.FindByPort(deltaPort);
                 if (authInfo == null)
                 {
-                    // 認証情報の無いポートへの接続 = 未認証。通さず拒否する。
+                    // A connection to a port with no auth info is unauthenticated: reject it.
                     _logger.LogWarning(
                         "#{Id} {Name} │ port {Port} has no auth info │ {Ip} │ rejecting unauthenticated UDP connection",
                         id, name, deltaPort, NormalizeIp(clientIp));
@@ -170,9 +170,9 @@ namespace Empostor.Server.Net.Manager
                     return;
                 }
 
-                // ポート一致 — 確保タイムアウトを止める。
+                // Port matched - stop the allocation timeout.
                 _portPool.ConfirmPort(deltaPort);
-                // 接続中の間は auth キャッシュ期限切れでポートが回収されないようにする。
+                // Keep the port from being reclaimed by auth-cache expiry while the client is connected.
                 _authCache.ConfirmPort(deltaPort);
 
                 friendCode = authInfo.FriendCode;
@@ -183,14 +183,14 @@ namespace Empostor.Server.Net.Manager
             }
             else if (_serverConfig.UseGameCodeMode)
             {
-                // GameCode モード: この時点では認証情報を紐づけず、JoinGame / HostGame で確定する。
+                // GameCode mode: no auth info is bound at this point; it is settled in JoinGame / HostGame.
                 _logger.LogInformation(
                     "#{Id} {Name} │ gamecode mode │ awaiting challenge │ {Location} │ {Lang} │ {Platform}{Reactor}",
                     id, name, locationStr, lang, platformStr, reactorStr);
             }
             else
             {
-                // 固定ポートモード: PUID / FriendCode の紐づけなし。
+                // Fixed-port mode: no PUID / FriendCode binding.
                 _logger.LogInformation(
                     "#{Id} {Name} │ fixed port │ {Location} │ {Lang} │ {Platform}{Reactor}",
                     id, name, locationStr, lang, platformStr, reactorStr);

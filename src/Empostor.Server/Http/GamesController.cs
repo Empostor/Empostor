@@ -97,7 +97,7 @@ public sealed class GamesController : ControllerBase
 
         if (_serverConfig.UseGameCodeMode && TryGetAuthInfo() is { } auth)
         {
-            // 旧経路はコードを返せないので、実コード宛ての保留加入として預ける。
+            // The legacy path cannot return a code, so stash this as a pending join addressed to the real code.
             _gameCodeAuth.RegisterPendingJoin(code, auth);
         }
 
@@ -113,7 +113,7 @@ public sealed class GamesController : ControllerBase
     {
         if (_serverConfig.UseGameCodeMode && TryGetAuthInfo() is { } auth)
         {
-            // 募集開始。ゲーム生成は次の UDP HostGame なので、認証情報と IP を保留しておく。
+            // Hosting starts here. The game is created by the next UDP HostGame, so keep the auth info and IP pending.
             var ip = RealIpResolver.Resolve(HttpContext)?.ToString();
             _gameCodeAuth.RegisterHost(auth, ip);
         }
@@ -125,7 +125,7 @@ public sealed class GamesController : ControllerBase
     [HttpGet("{gameId}")]
     public IActionResult Show([FromRoute] int gameId)
     {
-        // 入力されるコードは実コード（招待・手入力）かチャレンジコードのどちらもありうる。
+        // The submitted code may be a real code (invite or manual input) or a challenge code.
         var requested = new GameCode(gameId);
         var code = _gameCodeAuth.TryGetTarget(requested, out var targetCode) ? targetCode : requested;
         var game = _gameManager.Find(code);
@@ -234,7 +234,7 @@ public sealed class GamesController : ControllerBase
 
     /// <summary>
     ///     The UDP port the client should connect to.
-    ///     GameCode モードでは共有ポート、DeltaPort モードではトークン内の専用ポートを返す。
+    ///     In GameCode mode returns the shared port, in DeltaPort mode the dedicated port from the token.
     /// </summary>
     private ushort GetPort()
     {
@@ -258,14 +258,14 @@ public sealed class GamesController : ControllerBase
             }
             catch
             {
-                // base64 でない・壊れている場合は公開ポートにフォールバック
+                // Fall back to the public port if the value is not base64 or is corrupted
             }
         }
 
         return _serverConfig.PublicPort;
     }
 
-    // ベアラトークンから認証情報を引く。
+    // Looks up auth info from the bearer token.
     private UserAuthInfo? TryGetAuthInfo()
     {
         var header = HttpContext.Request.Headers.Authorization.ToString();
@@ -285,13 +285,13 @@ public sealed class GamesController : ControllerBase
         }
         catch
         {
-            // トークンが壊れている場合は未認証として扱う
+            // Treat a corrupted token as unauthenticated
         }
 
         return null;
     }
 
-    // 一覧 1 件分。GameCode モードでは認証情報に紐づくチャレンジコードを GameId として返す。
+    // Builds a single listing entry. In GameCode mode the challenge code bound to the auth info is returned as the GameId.
     private GameListing BuildListing(IGame game, UserAuthInfo? auth)
     {
         var port = GetPort();

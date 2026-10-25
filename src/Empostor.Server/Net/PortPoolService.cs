@@ -26,7 +26,7 @@ public sealed class PortPoolService : IDisposable
     private readonly int _deltaLowWaterMark;
     private readonly bool _useGameCodeMode;
 
-    // GameCode モードでは動的ポートを一切使わず、共有の UDP ポート 1 つだけを使う。
+    // GameCode mode uses no dynamic ports at all, only a single shared UDP port.
     public bool IsEnabled => !_useGameCodeMode
                              && _deltaPortStart > 0
                              && _deltaPortEnd >= _deltaPortStart;
