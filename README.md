@@ -52,7 +52,7 @@ All settings live in `config.json` next to the server binary (a full sample is [
 
 | Section | Purpose |
 | --- | --- |
-| `Server` | Public IP/port, listen address and the dynamic (delta) UDP port range `DeltaPortStart`..`DeltaPortEnd` |
+| `Server` | Public IP/port, listen address and the client verification mode (`VerificationMode`, `DeltaPortStart`..`DeltaPortEnd`) |
 | `HttpServer` | Web API, admin panel and matchmaking token endpoint (`Enabled`, `ListenIp`, `ListenPort`) |
 | `AntiCheat` | Server-side anticheat, including the [IP request rate limit](#ip-request-rate-limit) |
 | `Timeout` | Spawn and connection timeouts |
@@ -61,6 +61,31 @@ All settings live in `config.json` next to the server binary (a full sample is [
 | `AuthApi` | Friend code resolution (`Mode`: `GameServices`, `Ume`, `Both` or `Off`) |
 | `Admin` | Admin panel password and marketplace URL |
 | `HPLP` | HPLP public region listing |
+
+### Verification mode
+
+Empostor has to know which HTTP authentication (`POST /api/user`) belongs to which raw UDP connection, because the game's UDP handshake carries no token, PUID or game code. `Server.VerificationMode` selects how:
+
+| Mode | Behaviour |
+| --- | --- |
+| `DeltaPort` (default) | Every player gets a unique dynamic UDP port from the `DeltaPortStart`..`DeltaPortEnd` pool. The port itself is the proof of identity. |
+| `GameCode` | **No dynamic ports at all** — only the shared listen port (`GameCodePorts[0]`, or `ListenPort`) is used. The lobby list hands out a server-issued **challenge game code** per player, and the `JoinGame` that follows over UDP is authenticated by that code alone. |
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `VerificationMode` | `DeltaPort` | `DeltaPort` or `GameCode` |
+| `GameCodePorts` | `[]` | Ports for `GameCode` mode; only the first is bound. Empty falls back to `ListenPort`/`PublicPort` |
+| `TemporaryGameCodeLifetimeSeconds` | `180` | How long an issued challenge code stays valid |
+
+In `GameCode` mode the port pool is disabled (no delta listeners, no per-player firewall rules) and `DeltaPortStart`/`DeltaPortEnd` are ignored.
+
+The game client validates the game code of every message it receives against the code it joined with and silently drops mismatches, and the UDP handshake carries no token/PUID/game code. `GameCode` mode therefore uses the code itself as the token:
+
+1. A lobby listing returns a **challenge code** — a second, server-generated game code (same format, so the client accepts it as a normal join target) bound to `(authenticated user, real game, player name, client version)`.
+2. `JoinGame(challenge)` over UDP is resolved by the challenge code alone — no IP, no PUID, no name matching. The challenge is single-use and expires after `TemporaryGameCodeLifetimeSeconds`, so many players can join the same game at the same time without being mixed up.
+3. The server then re-keys the client with `Msg00 HostGame` carrying the **real** code (`AmongUsClient.OnGameCreated` is empty, so this only overwrites `GameId`). Everything after that — game data, the in-lobby code display, invites — uses the real code, so no message rewriting is needed.
+
+`HostGame` is the one exception: no code exists before the host message, so the hosting socket is matched against the `PUT /api/games` request by IP, player name and client version (the PUID comes from the HTTP token). Joining an already hosted game with the real code (legacy `POST /api/games`, e.g. Steam invites) still falls back to the same name/version/IP matching.
 
 ### AntiCheat
 
@@ -73,21 +98,17 @@ All settings live in `config.json` next to the server binary (a full sample is [
 | `EnableColorLimitChecks`, `EnableNameLimitChecks`, `EnableItemLimitChecks` | `true` | Lobby limits (colors, names, items) |
 | `ForbidProtocolExtensions` | `true` | Reject unknown/extension protocol messages |
 | `EnablePacketSizeChecks`, `PacketSizeLimit` | `true`, `1203` | Maximum inbound packet size |
-| `EnableIpRateLimit` | `true` | IP request rate limit (below) |
-| `IpRateLimitRequests` | `30` | Max TCP (HTTP) requests per IP per window, `0` disables the limit |
-| `IpRateLimitWindowMinutes` | `5` | Length of the rate limit window in minutes |
+| `EnableRateLimits` | `true` | IP request rate limit and game-side rate limits (below) |
 
 #### Ip request rate limit
 
-Within one window (5 minutes by default) the same IP may only make `IpRateLimitRequests` (default `30`) TCP (HTTP) requests — this protects the HTTP API against connection/request flooding. When the limit is exceeded:
+Within one window (1 minute) the same IP may only make `30` TCP (HTTP) requests — this protects the HTTP API against connection/request flooding. The limit lives in `IpRateLimitService` and is switched by `EnableRateLimits`. When the limit is exceeded:
 
-- Every normal endpoint answers with `429 Too Many Requests` and a localized hint, chosen from the request's `Accept-Language` header, e.g. `请求过于频繁请 5 分钟后重试`. The `Retry-After` header says how many seconds are left.
-- `POST /api/user` **and** `PUT`/`GET /api/games` (the whole join flow of the game client: matchmaking token + FindHost) are **never rejected over HTTP** — failing them there would only leave the client on a black screen, which just logs `CoSendRequest failed` and hangs. Both still count against the quota, and while an IP is over quota the server also skips the outbound friend code API calls (a cached/fallback code is used instead) so the endpoint cannot be abused for amplification. To keep a flooding IP from draining the dynamic port range, such joins are **not given a pool port**: they all receive the same shared *reject port*, a single pre-bound UDP socket whose only job is to answer the handshake with the localized hint in the client's own language (`请求过于频繁请 5 分钟后重试`) and close it again — the player is told why they cannot join instead of seeing a black screen, and only one socket is used no matter how many requests arrive. `GamesController` echoes the token's port back, so the client is naturally sent to that reject port. In fixed-port mode (`DeltaPortStart=0`) the main port is used instead.
+- **Every** endpoint answers with `429 Too Many Requests` plus the standard matchmaker error body `{"Errors":[{"Reason":116}]}` — `116` is `DisconnectReason.TooManyRequests`, which the client renders as its own localized "too many requests" popup without retrying. The `Retry-After` header says how many seconds are left.
+- This includes the whole join flow of the game client (`POST /api/user` matchmaking token and `PUT`/`GET /api/games` FindHost): the client never receives a token or a port, so it never enters the UDP phase and no dynamic pool port is spent on a blocked request — the player gets the popup and returns to the main menu instead of a black screen.
 - `/admin` and `/api/admin` are neither counted nor limited, so the dashboard can never lock the operator out.
 
-The message lives under the key `ratelimit.too_frequent` in `Languages/*.json` (and in the built-in defaults in `LanguageService.cs`), so you can reword or translate it there. Set `IpRateLimitRequests` to `0` to turn the whole feature off.
-
-Empostor usually runs behind a CDN or reverse proxy, so the real client IP is taken from the `X-Real-IP` header, then from the first entry of `X-Forwarded-For`, and only afterwards from the socket address. Make sure your CDN/proxy forwards one of these headers — otherwise every player would share the proxy IP's quota. Note that the game client polls some endpoints (e.g. `/api/games`) while you play: if `30` per 5 minutes is too tight for your players, raise `IpRateLimitRequests` (for example to `120`).
+Empostor usually runs behind a CDN or reverse proxy, so the real client IP is taken from the `X-Real-IP` header, then from the first entry of `X-Forwarded-For`, and only afterwards from the socket address. Make sure your CDN/proxy forwards one of these headers — otherwise every player would share the proxy IP's quota. Note that the game client polls some endpoints (e.g. `/api/games`) while you play: if `30` per minute is too tight for your players, set `EnableRateLimits` to `false` (that also switches off the game-side RPC/task rate limits).
 
 ## Contributing
 Please read the [contributing guidelines](https://github.com/Empostor/Empostor/blob/main/CONTRIBUTING.md).
