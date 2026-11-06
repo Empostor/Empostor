@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>11</LangVersion>
     <VersionPrefix>2.0.2</VersionPrefix>
-    <VersionSuffix>dev</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <EnforceCodeStyleInBuild Condition="$(MSBuildProjectName)!='Hazel'">true</EnforceCodeStyleInBuild>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
