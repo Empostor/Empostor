@@ -18,10 +18,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.x
 
       # Package version = <VersionPrefix>-ci.<CI run_number + 500>, mirroring
       # the nightly build numbering. The floor (max already-published ci.N + 1)

@@ -8,7 +8,7 @@ Thank you for your interest in contributing! We welcome bug reports, feature sug
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - An Among Us installation (for testing)
 - Git
 

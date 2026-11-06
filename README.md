@@ -20,7 +20,7 @@ Empostor is an open-source private server implementation for Among Us.
 
 To run the server, you need:
 
-- [.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 10.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 
 Download the build you'd like from the [releases](https://github.com/Empostor/Empostor/releases). You most likely want the x64 build. Use the arm64 build if you are running Empostor on a Raspberry Pi, another ARM-based SBC, or an ARM VPS.
 
@@ -49,7 +49,7 @@ After changing port or verification settings, rerun `python3 docker-up.py up -d 
 
 Keep `Server.ListenIp` and `HttpServer.ListenIp` at `0.0.0.0` for IPv4 bridge networking. Keep `UseUfw` and `UseFirewalld` disabled inside the container and allow the published ports in the host/cloud firewall. The default DeltaPort range publishes 20,001 UDP ports, which can be slow to create in Docker; reduce the range to suit your expected player count, or use GameCode for a single shared UDP port. The pool also reserves `DeltaPortLowWaterMark` ports (default 5).
 
-The image runs as the non-root `app` user. Persistent Docker volumes hold `Data`, `Log`, `plugins`, `libraries`, `Pages`, `Languages`, `languages`, and `Update`; plugin files and generated configurations in these directories remain writable across container recreation. Program files and the bundled `marketplace` catalog/assets remain root-owned. Empty named volumes receive the image's initial contents, including bundled pages/themes. Existing volumes retain their contents when the image is rebuilt; back them up and update bundled assets separately when needed. Installed plugins can be managed through the admin marketplace. For host bind mounts instead of named volumes, grant the container user write access (UID 1654 in the .NET 8 image). Custom plugin output paths must point into a writable mounted directory.
+The image runs as the non-root `app` user. Persistent Docker volumes hold `Data`, `Log`, `plugins`, `libraries`, `Pages`, `Languages`, `languages`, and `Update`; plugin files and generated configurations in these directories remain writable across container recreation. Program files and the bundled `marketplace` catalog/assets remain root-owned. Empty named volumes receive the image's initial contents, including bundled pages/themes. Existing volumes retain their contents when the image is rebuilt; back them up and update bundled assets separately when needed. Installed plugins can be managed through the admin marketplace. For host bind mounts instead of named volumes, grant the container user write access (UID 1654 in the .NET 10 image). Custom plugin output paths must point into a writable mounted directory.
 
 ## Client Setup
 

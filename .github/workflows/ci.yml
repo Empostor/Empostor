@@ -18,13 +18,13 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup .NET 8
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.x
 
       - name: Install Cake.Tool
-        run: dotnet tool install --global Cake.Tool
+        run: dotnet tool restore
 
       - name: Run Cake Build
         run: dotnet cake build.cake --target=Build

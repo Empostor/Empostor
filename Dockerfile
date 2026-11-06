@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 ARG TARGETARCH
 ARG VERSION_SUFFIX=docker
@@ -23,7 +23,7 @@ RUN case "$TARGETARCH" in \
       -p:VersionSuffix="$VERSION_SUFFIX" \
       --output /app
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 WORKDIR /app
 COPY --from=build /app/ ./
