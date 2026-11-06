@@ -209,6 +209,7 @@ namespace Empostor.Server
                     services.AddSingleton<IEventManager, EventManager>();
                     services.AddSingleton<Matchmaker>();
                     services.AddSingleton<IDeltaListenerManager>(sp => sp.GetRequiredService<Matchmaker>());
+                    services.AddSingleton<GameCodeAuthManager>();
                     services.AddHostedService<MatchmakerService>();
                 })
                 .UseSerilog((context, logCfg) =>

@@ -6,6 +6,9 @@
     "ListenPort": 22023,
     "UseUfw": false,
     "UseFirewalld": false,
+    "VerificationMode": "DeltaPort",
+    "GameCodePorts": [],
+    "TemporaryGameCodeLifetimeSeconds": 180,
     "DeltaPortStart": 22024,
     "DeltaPortEnd": 42024
   },

@@ -35,7 +35,9 @@ public sealed class AuthCacheService : IDisposable
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp, string? eosToken = null)
+    // Kept together so the UDP side can cross-check the in-game display name and version.
+    public void Store(string productUserId, string matchmakerToken, string? friendCode, IPAddress? clientIp,
+        string? eosToken = null, string? name = null, int clientVersion = 0)
     {
         if (string.IsNullOrEmpty(productUserId) || string.IsNullOrEmpty(matchmakerToken))
         {
@@ -48,6 +50,8 @@ public sealed class AuthCacheService : IDisposable
             MatchmakerToken = matchmakerToken,
             FriendCode = friendCode ?? string.Empty,
             ClientIp = clientIp != null ? NormalizeIp(clientIp) : null,
+            Name = name ?? string.Empty,
+            ClientVersion = clientVersion,
             EosToken = eosToken,
             CreatedAt = DateTime.UtcNow,
         };
@@ -166,6 +170,9 @@ public sealed class UserAuthInfo
     public string? EosToken { get; set; }
 
     public string Name { get; set; } = string.Empty;
+
+    // Broadcast version as declared by the client in POST /api/user.
+    public int ClientVersion { get; set; }
 
     public string? ClientIp { get; set; }
 

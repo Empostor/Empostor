@@ -58,7 +58,7 @@ internal static class StartupBanner
 
         var version = DotnetUtils.Version;
 
-        string[] labelTexts = { "Public IP", "Listen Port", "HTTP API", "Admin Panel", "Port Pool", "AntiCheat", "Log Level", "Log File" };
+        string[] labelTexts = { "Public IP", "Listen Port", "Verify Mode", "HTTP API", "Admin Panel", "Port Pool", "AntiCheat", "Log Level", "Log File" };
         var maxLabel = labelTexts.Max(t => t.Length) + 2;
 
         var width = 62;
@@ -72,14 +72,21 @@ internal static class StartupBanner
         sw.WriteLine(C(BoxML + new string(BoxH[0], width - 2) + BoxMR, Cyan));
 
         Row(sw, width, maxLabel, "Public IP", server.PublicIp);
-        var deltaEnabled = server.DeltaPortStart > 0 && server.DeltaPortEnd >= server.DeltaPortStart;
-        var actualListenPort = deltaEnabled ? "dynamic" : $"{server.ListenPort} (UDP)";
+        var gameCodeMode = server.UseGameCodeMode;
+        var deltaEnabled = !gameCodeMode && server.DeltaPortStart > 0 && server.DeltaPortEnd >= server.DeltaPortStart;
+        var actualListenPort = gameCodeMode
+            ? $"{server.GameCodeListenPort} (UDP, shared)"
+            : deltaEnabled ? "dynamic" : $"{server.ListenPort} (UDP)";
         Row(sw, width, maxLabel, "Listen Port", actualListenPort);
+        Row(sw, width, maxLabel, "Verify Mode",
+            gameCodeMode ? C("GameCode", Green) : C("DeltaPort", Gray));
         Row(sw, width, maxLabel, "HTTP API", $"http://{http.ListenIp}:{http.ListenPort}");
         Row(sw, width, maxLabel, "Admin Panel", $"http://{server.PublicIp}:{http.ListenPort}/admin");
-        var poolInfo = deltaEnabled
-            ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports, rejects below low-water mark {server.DeltaPortLowWaterMark})"
-            : C("disabled", Yellow);
+        var poolInfo = gameCodeMode
+            ? C("disabled (GameCode mode)", Yellow)
+            : deltaEnabled
+                ? $"{server.DeltaPortStart}-{server.DeltaPortEnd} ({server.DeltaPortEnd - server.DeltaPortStart + 1} ports, rejects below low-water mark {server.DeltaPortLowWaterMark})"
+                : C("disabled", Yellow);
         Row(sw, width, maxLabel, "Port Pool", poolInfo);
 
         Row(sw, width, maxLabel, "Packet Filter", C("✔ Enabled", Green));

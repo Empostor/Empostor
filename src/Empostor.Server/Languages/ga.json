@@ -37,6 +37,5 @@
   "ban.notice.reason": "Cúis: {0}",
   "ban.notice.unban": "Am dí-chosc: {0}",
   "ban.notice.unban_permanent": "Am dí-chosc: Buan",
-  "ban.notice.contact": "Má tá ceist agat, déan teagmháil le riarthóir.",
-  "ratelimit.too_frequent": "Iarraidh ró-mhóra, bain triail eile as i {0} nóiméad."
+  "ban.notice.contact": "Má tá ceist agat, déan teagmháil le riarthóir."
 }

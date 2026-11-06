@@ -37,13 +37,22 @@ namespace Empostor.Server.Net
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), _serverConfig.ListenPort);
+            var listenAddress = IPAddress.Parse(_serverConfig.ResolveListenIp());
 
-            if (_portPool.IsEnabled)
+            if (_serverConfig.UseGameCodeMode)
             {
-                // Dynamic delta mode: no static UDP port is bound at startup.
-                // Ports are allocated per player on demand; once the pool drops
-                // to the low-water mark, new players are rejected.
+                // GameCode mode: dynamic ports are unused; open a single shared UDP port.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.GameCodeListenPort);
+                await _matchmaker.StartAsync(endpoint);
+
+                _logger.LogInformation(
+                    "GameCode Matchmaker enabled: single shared UDP port {Port} (dynamic delta ports disabled).",
+                    endpoint.Port);
+            }
+            else if (_portPool.IsEnabled)
+            {
+                // Dynamic DeltaPort mode: no static port is opened at startup; ports are allocated on demand.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
                 _matchmaker.Initialize(endpoint);
                 _logger.LogInformation(
                     "Delta Matchmaker enabled: no static UDP port at startup (pool {Start}-{End}), ports created per player.",
@@ -52,7 +61,8 @@ namespace Empostor.Server.Net
             }
             else
             {
-                // Static mode: bind the main UDP listener on the configured port.
+                // Fixed-port mode: open the main listener on the configured port.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
                 await _matchmaker.StartAsync(endpoint);
 
                 _logger.LogInformation(

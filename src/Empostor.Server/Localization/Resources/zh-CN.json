@@ -1,5 +1,4 @@
 {
- "ratelimit.too_frequent":"请求过于频繁请 {0} 分钟后重试",
  "command.error":"执行 #{0} 时发生错误。",
  "command.usage":"用法：#{0}",
  "command.help.list":"=== 指令列表 ===",
