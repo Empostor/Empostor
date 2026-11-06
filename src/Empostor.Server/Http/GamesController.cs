@@ -299,7 +299,7 @@ public sealed class GamesController : ControllerBase
 
         if (_serverConfig.UseGameCodeMode && auth != null && !game.Code.IsInvalid)
         {
-            listingCode = _gameCodeAuth.CreateChallenge(game.Code, auth);
+            listingCode = _gameCodeAuth.CreateChallenge(game.Code, auth, code => _gameManager.Find(code) != null);
         }
 
         return GameListing.From(game, port, listingCode);

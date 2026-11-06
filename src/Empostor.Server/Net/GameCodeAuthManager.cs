@@ -25,6 +25,9 @@ public sealed class GameCodeAuthManager : IDisposable
     // Challenge code -> challenge
     private readonly Dictionary<int, Challenge> _challenges = new();
 
+    // Reuse a live challenge when a client refreshes the same lobby listing.
+    private readonly Dictionary<(string Token, GameCode Target), int> _challengeOwners = new();
+
     // Legacy path: real code -> auth info stashed by HTTP join requests
     private readonly Dictionary<GameCode, List<PendingJoin>> _pendingJoins = new();
 
@@ -45,12 +48,23 @@ public sealed class GameCodeAuthManager : IDisposable
 
     private bool Expired(DateTime createdAt) => DateTime.UtcNow - createdAt > _lifetime;
 
-    // Issues a challenge code for the listing.
-    public GameCode CreateChallenge(GameCode targetCode, UserAuthInfo user)
+    // Issues a challenge code for the listing. A live game code can never be used as a challenge.
+    public GameCode CreateChallenge(GameCode targetCode, UserAuthInfo user, Func<GameCode, bool> isGameCodeInUse)
     {
         lock (_gate)
         {
-            var code = NewChallengeCode();
+            RemoveExpiredChallenge(targetCode.Value);
+            var owner = (user.MatchmakerToken, targetCode);
+            if (_challengeOwners.TryGetValue(owner, out var existingCode)
+                && _challenges.TryGetValue(existingCode, out var existing)
+                && !Expired(existing.CreatedAt)
+                && existing.OccupiedBy == null)
+            {
+                return existing.Code;
+            }
+
+            _challengeOwners.Remove(owner);
+            var code = NewChallengeCode(targetCode, isGameCodeInUse);
 
             _challenges[code.Value] = new Challenge
             {
@@ -61,8 +75,19 @@ public sealed class GameCodeAuthManager : IDisposable
                 GameVersion = user.ClientVersion,
                 CreatedAt = DateTime.UtcNow,
             };
+            _challengeOwners[owner] = code.Value;
 
             return code;
+        }
+    }
+
+    // Serializes game-code insertion with challenge allocation to prevent cross-type collisions.
+    public bool TryReserveGameCode(GameCode code, Func<bool> tryAddGame)
+    {
+        lock (_gate)
+        {
+            RemoveExpiredChallenge(code.Value);
+            return !_challenges.ContainsKey(code.Value) && tryAddGame();
         }
     }
 
@@ -107,6 +132,12 @@ public sealed class GameCodeAuthManager : IDisposable
             if (challenge.OccupiedBy != null && challenge.OccupiedBy != clientId)
             {
                 reason = $"challenge already used by client {challenge.OccupiedBy}";
+                return false;
+            }
+
+            if (challenge.OccupiedBy == clientId)
+            {
+                reason = "challenge already consumed";
                 return false;
             }
 
@@ -275,18 +306,34 @@ public sealed class GameCodeAuthManager : IDisposable
     }
 
     // Creates a unique challenge code (same V2 format as real codes).
-    private GameCode NewChallengeCode()
+    private GameCode NewChallengeCode(GameCode targetCode, Func<GameCode, bool> isGameCodeInUse)
     {
         for (var i = 0; i < 64; i++)
         {
             var code = GameCode.Create();
-            if (!code.IsInvalid && !_challenges.ContainsKey(code.Value))
+            if (!code.IsInvalid
+                && code != targetCode
+                && !_challenges.ContainsKey(code.Value)
+                && !isGameCodeInUse(code))
             {
                 return code;
             }
         }
 
         throw new InvalidOperationException("failed to allocate a unique challenge code");
+    }
+
+    private void RemoveExpiredChallenge(int code)
+    {
+        if (_challenges.TryGetValue(code, out var challenge) && Expired(challenge.CreatedAt))
+        {
+            _challenges.Remove(code);
+            var owner = (challenge.User.MatchmakerToken, challenge.TargetCode);
+            if (_challengeOwners.TryGetValue(owner, out var ownerCode) && ownerCode == code)
+            {
+                _challengeOwners.Remove(owner);
+            }
+        }
     }
 
     // Picks the best entry. IP match > name > version; ties go to the older entry.
@@ -346,7 +393,14 @@ public sealed class GameCodeAuthManager : IDisposable
             {
                 foreach (var value in _challenges.Where(x => Expired(x.Value.CreatedAt)).Select(x => x.Key).ToList())
                 {
-                    _challenges.Remove(value);
+                    if (_challenges.Remove(value, out var challenge))
+                    {
+                        var owner = (challenge.User.MatchmakerToken, challenge.TargetCode);
+                        if (_challengeOwners.TryGetValue(owner, out var ownerCode) && ownerCode == value)
+                        {
+                            _challengeOwners.Remove(owner);
+                        }
+                    }
                 }
 
                 foreach (var code in _pendingJoins.Keys.ToList())

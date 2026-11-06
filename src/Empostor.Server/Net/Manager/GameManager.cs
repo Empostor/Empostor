@@ -29,6 +29,7 @@ namespace Empostor.Server.Net.Manager
         private readonly IServiceProvider _serviceProvider;
         private readonly IEventManager _eventManager;
         private readonly IGameCodeFactory _gameCodeFactory;
+        private readonly GameCodeAuthManager _gameCodeAuth;
         private readonly ICompatibilityManager _compatibilityManager;
         private readonly ConcurrentDictionary<IClient, Game?> _gamesCreatedBy;
 
@@ -38,6 +39,7 @@ namespace Empostor.Server.Net.Manager
             IServiceProvider serviceProvider,
             IEventManager eventManager,
             IGameCodeFactory gameCodeFactory,
+            GameCodeAuthManager gameCodeAuth,
             IOptions<CompatibilityConfig> compatibilityConfig,
             ICompatibilityManager compatibilityManager)
         {
@@ -45,6 +47,7 @@ namespace Empostor.Server.Net.Manager
             _serviceProvider = serviceProvider;
             _eventManager = eventManager;
             _gameCodeFactory = gameCodeFactory;
+            _gameCodeAuth = gameCodeAuth;
             _publicIp = new IPEndPoint(IPAddress.Parse(config.Value.ResolvePublicIp()), config.Value.PublicPort);
             _games = new ConcurrentDictionary<int, Game>();
             _compatibilityConfig = compatibilityConfig.Value;
@@ -126,7 +129,7 @@ namespace Empostor.Server.Net.Manager
             var game = modGuid.HasValue
                 ? ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions, modGuid.Value)
                 : ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions);
-            if (!_games.TryAdd(gameCode, game))
+            if (!_gameCodeAuth.TryReserveGameCode(gameCode, () => _games.TryAdd(gameCode, game)))
             {
                 return (false, null);
             }
