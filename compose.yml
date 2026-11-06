@@ -1,0 +1,35 @@
+services:
+  empostor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: empostor-server:local
+    container_name: empostor-server
+    restart: unless-stopped
+    init: true
+    ports: []
+    volumes:
+      - type: bind
+        source: ${EMPOSTOR_DOCKER_CONFIG:-./config.json}
+        target: /app/config.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - empostor-data:/app/Data
+      - empostor-log:/app/Log
+      - empostor-pages:/app/Pages
+      - empostor-languages:/app/Languages
+      - empostor-languages-lower:/app/languages
+      - empostor-plugins:/app/plugins
+      - empostor-libraries:/app/libraries
+      - empostor-updates:/app/Update
+
+volumes:
+  empostor-data:
+  empostor-log:
+  empostor-pages:
+  empostor-languages:
+  empostor-languages-lower:
+  empostor-plugins:
+  empostor-libraries:
+  empostor-updates:

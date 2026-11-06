@@ -28,6 +28,29 @@ Unzip the file and go to config.json. To make your server playable for other dev
 
 It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/get-started/reverse-proxy#use-a-reverse-proxy) (for HTTPS connections).
 
+### Docker
+
+Docker Compose port mappings are generated from `config.json` before the container starts. Install Docker Engine with Compose v2 and Python 3.9 or newer. Copy `src/Empostor.Server/config.json` to `config.json` in the repository root and set `Server.PublicIp` to your public IP or domain, then run:
+
+```sh
+python3 docker-up.py
+```
+
+On Windows, use `python docker-up.py`. If `config.json` is missing, the script creates it from the repository defaults. The script builds the image and starts the service. Set `EMPOSTOR_CONFIG` to use a different configuration file; the launcher reads and mounts that same file read-only.
+
+| Configuration | Published ports |
+| --- | --- |
+| HTTP enabled | `HttpServer.ListenPort/tcp`, with the same host and container port |
+| DeltaPort range enabled | `DeltaPortStart` through `DeltaPortEnd/udp`, with identical host and container ranges |
+| GameCode with `GameCodePorts` | Only `GameCodePorts[0]/udp` |
+| GameCode with an empty list, or DeltaPort range disabled | `PublicPort:ListenPort/udp` |
+
+After changing port or verification settings, rerun `python3 docker-up.py up -d --force-recreate` to regenerate the mappings and reload the configuration. Use the launcher for other Compose commands too, for example `python3 docker-up.py logs -f` or `python3 docker-up.py down`. Running `docker compose up` directly does not generate port mappings.
+
+Keep `Server.ListenIp` and `HttpServer.ListenIp` at `0.0.0.0` for IPv4 bridge networking. Keep `UseUfw` and `UseFirewalld` disabled inside the container and allow the published ports in the host/cloud firewall. The default DeltaPort range publishes 20,001 UDP ports, which can be slow to create in Docker; reduce the range to suit your expected player count, or use GameCode for a single shared UDP port. The pool also reserves `DeltaPortLowWaterMark` ports (default 5).
+
+The image runs as the non-root `app` user. Persistent Docker volumes hold `Data`, `Log`, `plugins`, `libraries`, `Pages`, `Languages`, `languages`, and `Update`; plugin files and generated configurations in these directories remain writable across container recreation. Program files and the bundled `marketplace` catalog/assets remain root-owned. Empty named volumes receive the image's initial contents, including bundled pages/themes. Existing volumes retain their contents when the image is rebuilt; back them up and update bundled assets separately when needed. Installed plugins can be managed through the admin marketplace. For host bind mounts instead of named volumes, grant the container user write access (UID 1654 in the .NET 8 image). Custom plugin output paths must point into a writable mounted directory.
+
 ## Client Setup
 
 ### Windows
