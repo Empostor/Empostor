@@ -30,13 +30,16 @@ It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/ge
 
 ### Docker
 
-Docker Compose port mappings are generated from `config.json` before the container starts. Install Docker Engine with Compose v2 and Python 3.9 or newer. Copy `src/Empostor.Server/config.json` to `config.json` in the repository root and set `Server.PublicIp` to your public IP or domain, then run:
+Docker Compose port mappings are generated from `config.json` on the host before the container starts. Install the .NET 10 SDK, Docker Engine with Compose v2, and Python 3.9 or newer. Generate the Linux x64 release, then set `Server.PublicIp` in its `config.json` to your public IP or domain:
 
 ```sh
+dotnet tool restore
+dotnet cake build.cake --target=Build
+cd build/Empostor-Server_linux-x64
 python3 docker-up.py
 ```
 
-On Windows, use `python docker-up.py`. If `config.json` is missing, the script creates it from the repository defaults. The script builds the image and starts the service. Set `EMPOSTOR_CONFIG` to use a different configuration file; the launcher reads and mounts that same file read-only.
+On Windows, use `Set-Location build/Empostor-Server_linux-x64` and `python docker-up.py`. The Linux x64 generated release folder contains the published server files, `config.json`, and the three Docker files. Cake adds these files to the release folder; it does not create a separate image context or deployment archive. The host-side launcher reads config, fills the port sections in `Dockerfile` and `compose.yml`, then invokes Compose using the same folder as the image build context. Rerun the Cake build after updating the server or marketplace. Set `EMPOSTOR_CONFIG` to use a different configuration file; the launcher reads and mounts that same file read-only.
 
 | Configuration | Published ports |
 | --- | --- |

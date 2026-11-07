@@ -2,12 +2,13 @@ services:
   empostor:
     build:
       context: .
-      dockerfile: Dockerfile
     image: empostor-server:local
     container_name: empostor-server
     restart: unless-stopped
     init: true
-    ports: []
+    ports:
+      # EMPPOSTOR_PORTS_START
+      # EMPPOSTOR_PORTS_END
     volumes:
       - type: bind
         source: ${EMPOSTOR_DOCKER_CONFIG:-./config.json}

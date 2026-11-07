@@ -6,7 +6,6 @@ import os
 import pathlib
 import subprocess
 import sys
-import tempfile
 
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -69,34 +68,43 @@ def port_mappings(config):
     return sorted(mappings)
 
 
+def replace_block(path, start_marker, end_marker, lines):
+    content = path.read_text(encoding="utf-8")
+    start = content.find(start_marker)
+    end = content.find(end_marker)
+    if start < 0 or end < start:
+        raise ValueError(f"{path.name} is missing its port markers")
+
+    start += len(start_marker)
+    replacement = "\n" + "".join(f"{line}\n" for line in lines)
+    path.write_text(content[:start] + replacement + content[end:], encoding="utf-8")
+
+
+def write_port_mappings(mappings):
+    compose_lines = [f'      - "{mapping}"' for mapping in mappings]
+    exposes = sorted({mapping.split(":", 1)[1] for mapping in mappings})
+    dockerfile_lines = [f"EXPOSE {port}" for port in exposes]
+
+    replace_block(COMPOSE, "      # EMPPOSTOR_PORTS_START", "      # EMPPOSTOR_PORTS_END", compose_lines)
+    replace_block(ROOT / "Dockerfile", "# EMPPOSTOR_PORTS_START", "# EMPPOSTOR_PORTS_END", dockerfile_lines)
+
+
 def main():
     if not CONFIG.is_file():
-        default_config = ROOT / "src" / "Empostor.Server" / "config.json"
-        CONFIG.parent.mkdir(parents=True, exist_ok=True)
-        CONFIG.write_bytes(default_config.read_bytes())
-        print(f"Created {CONFIG} from the repository default config.")
+        raise FileNotFoundError(f"config file not found: {CONFIG}")
 
     with CONFIG.open(encoding="utf-8-sig") as stream:
         config = json.load(stream)
 
     mappings = port_mappings(config)
-    override = "services:\n  empostor:\n    ports:\n"
-    override += "".join(f'      - "{item}"\n' for item in mappings)
-
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yml", delete=False) as stream:
-        stream.write(override)
-        override_path = pathlib.Path(stream.name)
-
-    try:
-        command = ["docker", "compose", "-f", str(COMPOSE), "-f", str(override_path)]
-        command.extend(sys.argv[1:] or ["up", "-d", "--build"])
-        environment = dict(os.environ, EMPOSTOR_DOCKER_CONFIG=str(CONFIG))
-        print("Publishing:")
-        for item in mappings:
-            print(f"  {item}")
-        raise SystemExit(subprocess.call(command, cwd=ROOT, env=environment))
-    finally:
-        override_path.unlink(missing_ok=True)
+    write_port_mappings(mappings)
+    command = ["docker", "compose"]
+    command.extend(sys.argv[1:] or ["up", "-d", "--build"])
+    print("Publishing:")
+    for item in mappings:
+        print(f"  {item}")
+    environment = dict(os.environ, EMPOSTOR_DOCKER_CONFIG=str(CONFIG))
+    raise SystemExit(subprocess.call(command, cwd=ROOT, env=environment))
 
 
 if __name__ == "__main__":

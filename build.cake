@@ -59,12 +59,37 @@ private void EmpostorPublish(string name, string project, string runtime, bool i
         }
     }
 
+    if (isServer && runtime == "linux-x64") {
+        CopyDirectory(Directory("./marketplace"), projBuildDir.Combine("marketplace"));
+        FileWriteText(projBuildDir.CombineWithFilePath("Dockerfile"), @"# syntax=docker/dockerfile:1
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+WORKDIR /app
+COPY --exclude=docker-up.py --exclude=compose.yml --exclude=config.json . ./
+
+RUN mkdir -p Data Log Pages Languages languages plugins libraries Update \
+    && chown -R app:app Data Log Pages Languages languages plugins libraries Update \
+    && chmod 0750 Data Log Pages Languages languages plugins libraries Update
+
+ENV DOTNET_RUNNING_IN_CONTAINER=1
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+# EMPPOSTOR_PORTS_START
+# EMPPOSTOR_PORTS_END
+
+USER app
+ENTRYPOINT [""./Empostor.Server""]
+");
+        CopyFile(File("./compose.yml"), projBuildDir.CombineWithFilePath("compose.yml"));
+        CopyFile(File("./docker-up.py"), projBuildDir.CombineWithFilePath("docker-up.py"));
+    }
+
     if (runtime == "win-x64") {
         Zip(projBuildDir, buildDir.CombineWithFilePath(projBuildName + ".zip"));
     } else {
         GZipCompress(projBuildDir, buildDir.CombineWithFilePath(projBuildName + ".tar.gz"));
     }
-    
+
     if (BuildSystem.GitHubActions.IsRunningOnGitHubActions) {
         BuildSystem.GitHubActions.Commands.UploadArtifact(projBuildDir, projBuildName);
     }
