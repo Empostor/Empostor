@@ -69,6 +69,7 @@ COPY --exclude=docker-up.py --exclude=compose.yml --exclude=config.json . ./
 
 RUN mkdir -p Data Log Pages Languages languages plugins libraries Update \
     && chown -R app:app Data Log Pages Languages languages plugins libraries Update \
+    && chown app:app /app \
     && chmod 0750 Data Log Pages Languages languages plugins libraries Update
 
 ENV DOTNET_RUNNING_IN_CONTAINER=1
