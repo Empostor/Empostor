@@ -78,19 +78,6 @@
     ]
   },
   {
-    "id": "cn.hayashiume.qqverify",
-    "name": "QQ群验证API",
-    "description": "[仅限中国]，搭配 [本插件](https://github.com/HayashiUme/LLOneBot_Empostor_Verify) 使用",
-    "author": "HayashiUme",
-    "versions": [
-      {
-        "version": "1.0.0",
-        "empostor_version": "2.0.0",
-        "download_url": "https://raw.githubusercontent.com/Empostor/Empostor/master/marketplace/Empostor.Plugins.QqVerify.dll"
-      }
-    ]
-  },
-  {
     "id": "cn.hayashiume.message",
     "name": "Leave a Message",
     "description": "Leave a message for a player by friend code",

@@ -23,12 +23,12 @@ public sealed class VerifyController : ControllerBase
             return Unauthorized(new { ok = false, error = "Invalid bot secret." });
         }
 
-        if (string.IsNullOrWhiteSpace(req.FriendCode) || string.IsNullOrWhiteSpace(req.QqNumber))
+        if (string.IsNullOrWhiteSpace(req.FriendCode) || string.IsNullOrWhiteSpace(req.UserOpenid))
         {
-            return BadRequest(new { ok = false, error = "friendCode and qqNumber are required." });
+            return BadRequest(new { ok = false, error = "friendCode and userOpenid are required." });
         }
 
-        var ok = _store.TryConfirm(req.FriendCode, req.QqNumber);
+        var ok = _store.TryConfirm(req.FriendCode, req.UserOpenid);
         if (ok)
         {
             return Ok(new { ok = true });
@@ -44,6 +44,6 @@ public sealed class VerifyController : ControllerBase
 
     public sealed record VerifyConfirmRequest(
         [property: JsonPropertyName("friendCode")] string FriendCode,
-        [property: JsonPropertyName("qqNumber")] string QqNumber,
+        [property: JsonPropertyName("userOpenid")] string UserOpenid,
         [property: JsonPropertyName("secret")] string Secret);
 }
