@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Impostor.Hazel": {
+        "type": "Direct",
+        "requested": "[1.0.1, )",
+        "resolved": "1.0.1",
+        "contentHash": "DFsZcOa9ptFEj8FCfK63L/bcJ9RUVRZUhUS0qkrmdSqkgeJRdvUOTWR1gKlqbaOJcSEvexAITC0QJEPnJUcI7Q==",
+        "dependencies": {
+          "Impostor.Hazel.Abstractions": "1.0.1",
+          "Serilog": "2.12.0"
+        }
+      },
+      "Serilog.Extensions.Hosting": {
+        "type": "Direct",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "db0OcbWeSCvYQkHWu6n0v40N4kKaTAXNjlM3BKvcbwvNzYphQFcBR+36eQ/7hMMwOkJvAyLC2a9/jNdUL5NjtQ==",
+        "dependencies": {
+          "Serilog": "3.1.1",
+          "Serilog.Extensions.Logging": "8.0.0"
+        }
+      },
+      "Serilog.Settings.Configuration": {
+        "type": "Direct",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "nR0iL5HwKj5v6ULo3/zpP8NMcq9E2pxYA6XKTSWCbugVs4YqPyvaqaKOY+OMpPivKp7zMEpax2UKHnDodbRB0Q==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyModel": "8.0.0",
+          "Serilog": "3.1.1"
+        }
+      },
+      "Serilog.Sinks.Console": {
+        "type": "Direct",
+        "requested": "[5.0.1, )",
+        "resolved": "5.0.1",
+        "contentHash": "6Jt8jl9y2ey8VV7nVEUAyjjyxjAQuvd5+qj4XYAT9CwcsvR70HHULGBeD+K2WCALFXf7CFsNQT4lON6qXcu2AA==",
+        "dependencies": {
+          "Serilog": "3.1.1"
+        }
+      },
+      "StyleCop.Analyzers.Unstable": {
+        "type": "Direct",
+        "requested": "[1.2.0.556, )",
+        "resolved": "1.2.0.556",
+        "contentHash": "zvn9Mqs/ox/83cpYPignI8hJEM2A93s2HkHs8HYMOAQW0PkampyoErAiIyKxgTLqbbad29HX/shv/6LGSjPJNQ=="
+      },
+      "Impostor.Hazel.Abstractions": {
+        "type": "Transitive",
+        "resolved": "1.0.1",
+        "contentHash": "de2bMj78xDXOWwyqQVk8o4vbZKGfAgOjnWnkKB1IGGovNtxLeBF8jy3wH5moTZB6juTnLf0ptkCDkRi8c2OcjA=="
+      },
+      "Microsoft.Extensions.DependencyModel": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "NSmDw3K0ozNDgShSIpsZcbFIzBX4w28nDag+TfaQujkXGazBm+lid5onlWoCBy4VsLxqnnKjEBbGSJVWJMf43g=="
+      },
+      "Serilog": {
+        "type": "Transitive",
+        "resolved": "3.1.1",
+        "contentHash": "P6G4/4Kt9bT635bhuwdXlJ2SCqqn2nhh4gqFqQueCOr9bK/e7W9ll/IoX1Ter948cV2Z/5+5v8pAfJYUISY03A=="
+      },
+      "Serilog.Extensions.Logging": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "YEAMWu1UnWgf1c1KP85l1SgXGfiVo0Rz6x08pCiPOIBt2Qe18tcZLvdBUuV5o1QHvrs8FAry9wTIhgBRtjIlEg==",
+        "dependencies": {
+          "Serilog": "3.1.1"
+        }
+      },
+      "impostor.api": {
+        "type": "Project",
+        "dependencies": {
+          "Impostor.Hazel.Abstractions": "[1.0.1, )"
+        }
+      }
+    },
+    "net10.0/linux-arm": {},
+    "net10.0/linux-arm64": {},
+    "net10.0/linux-x64": {},
+    "net10.0/osx-x64": {},
+    "net10.0/win-x64": {}
+  }
+}

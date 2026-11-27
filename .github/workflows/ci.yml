@@ -2,10 +2,21 @@ name: CI
 
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'src/**/**'
+      - 'build.cake'
   pull_request:
-    branches: [main]
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'src/**/**'
+      - 'build.cake'
+
+permissions:
+  # Needed to get an OIDC token for NuGet Trusted Publishing
+  id-token: write
+  # Needed to create a Github release
+  contents: write
 
 jobs:
   build:
@@ -13,87 +24,47 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/checkout@v7
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.x
 
-      - name: Install Cake.Tool
-        run: dotnet tool restore
-
-      - name: Run Cake Build
-        run: dotnet cake build.cake --target=Build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Run the Cake script
+        uses: cake-build/cake-action@v3
         with:
-          name: build-output
-          path: build/
-
-      - name: Create Release (tag only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/*
-          generate_release_notes: true
-
-  publish-nightly:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: build/
-
-      - name: Prepare latest files and manifest
-        run: |
-          set -euo pipefail
-          cd build
-          VERSION=$(ls Empostor-Server_*_linux-x64.tar.gz | head -1 | sed -E 's/^Empostor-Server_(.*)_linux-x64\.tar\.gz$/\1/')
-          echo "Version: ${VERSION}"
-          cp Empostor-Server_*_linux-x64.tar.gz   Empostor-Server-latest-linux-x64.tar.gz
-          cp Empostor-Server_*_linux-arm64.tar.gz Empostor-Server-latest-linux-arm64.tar.gz
-          cp Empostor-Server_*_win-x64.zip        Empostor-Server-latest-win-x64.zip
-          cp Empostor-Server_*_osx-x64.tar.gz     Empostor-Server-latest-osx-x64.tar.gz
-          {
-            echo '{'
-            echo "  \"version\": \"${VERSION}\","
-            echo "  \"linux-x64\": { \"file\": \"Empostor-Server-latest-linux-x64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-linux-x64.tar.gz | cut -d' ' -f1)\" },"
-            echo "  \"linux-arm64\": { \"file\": \"Empostor-Server-latest-linux-arm64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-linux-arm64.tar.gz | cut -d' ' -f1)\" },"
-            echo "  \"win-x64\": { \"file\": \"Empostor-Server-latest-win-x64.zip\", \"sha256\": \"$(sha256sum Empostor-Server-latest-win-x64.zip | cut -d' ' -f1)\" },"
-            echo "  \"osx-x64\": { \"file\": \"Empostor-Server-latest-osx-x64.tar.gz\", \"sha256\": \"$(sha256sum Empostor-Server-latest-osx-x64.tar.gz | cut -d' ' -f1)\" }"
-            echo '}'
-          } > manifest.json
-          cat manifest.json
-
-      - name: Publish nightly release
+          verbosity: Diagnostic
+          cake-version: 7.0.0
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          draft: true
+          files: |
+            ./build/*.zip
+            ./build/*.tar.gz
+            ./build/*.nupkg
+            ./build/*.snupkg
+
+      # Use NuGet trusted publishing: https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        if: github.ref_type == 'tag'
+        with:
+          user: "${{ secrets.NUGET_USER }}"
+
+      - name: Push NuGet package
+        if: github.ref_type == 'tag'
         run: |
-          set -euo pipefail
-          cd build
-          VERSION=$(ls Empostor-Server_*_linux-x64.tar.gz | head -1 | sed -E 's/^Empostor-Server_(.*)_linux-x64\.tar\.gz$/\1/')
-          gh release delete nightly -y --cleanup-tag || true
-          gh release create nightly \
-            Empostor-Server-latest-linux-x64.tar.gz \
-            Empostor-Server-latest-linux-arm64.tar.gz \
-            Empostor-Server-latest-win-x64.zip \
-            Empostor-Server-latest-osx-x64.tar.gz \
-            manifest.json \
-            --title "Nightly build (${VERSION})" \
-            --prerelease \
-            --notes "Automated nightly build from ${GITHUB_SHA}" \
-            --target "${GITHUB_SHA}"
+          dotnet nuget push ./build/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
