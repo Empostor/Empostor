@@ -1,36 +1,96 @@
+using System;
+using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Impostor.Server.Http;
 
 /// <summary>
-/// Generate a diagnostic page to show that the Impostor HTTP server is working.
+///     Serves the landing page from Pages/index.html, creating it with a default page on first start.
 /// </summary>
 [Route("/")]
 public sealed class HelloController : ControllerBase
 {
-    private static bool _shownHello = false;
+    private static readonly string PagesDir = Path.Combine(Directory.GetCurrentDirectory(), "Pages");
+    private static readonly string IndexFile = Path.Combine(PagesDir, "index.html");
+    private static readonly object InitLock = new();
+    private static bool _initialized = false;
+
     private readonly ILogger<HelloController> _logger;
 
     public HelloController(ILogger<HelloController> logger)
     {
         _logger = logger;
+        EnsurePagesDirectory();
     }
 
+    private static string DefaultIndexHtml() => $"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empostor Server</title>
+</head>
+<body>
+<div class="card">
+  <div class="dot"></div>
+  <h1>Empostor is running</h1>
+  <p>Your private Among Us server is online and accepting connections.</p>
+  <div class="links">
+    <a class="link-btn" href="https://github.com/Empostor/Empostor" target="_blank">🌐Github Repo</a>
+    <a class="link-btn" href="https://empostor.github.io/Empostor" target="_blank">🌐 Generate Region File</a>
+  </div>
+</div>
+<footer>Started {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC &nbsp;·&nbsp; Edit this page at Pages/index.html</footer>
+</body>
+</html>
+""";
+
+    private static string FallbackHtml() =>
+        "<html><h2>Empostor is running</h2>" +
+        "<p>Pages/index.html was deleted. Restart the server to regenerate it.</p></body></html>";
+
     [HttpGet]
-    public IActionResult GetHello()
+    public IActionResult GetIndex()
     {
-        if (!_shownHello)
+        if (!System.IO.File.Exists(IndexFile))
         {
-            _shownHello = true;
-            _logger.LogInformation("Impostor's Http server is reachable (this message is only printed once per start)");
+            _logger.LogWarning("Pages/index.html not found, serving fallback.");
+            return Content(FallbackHtml(), "text/html; charset=utf-8");
         }
 
-        return Ok(
-            """
-            Impostor is running, please configure your Among Us to connect to a game
-            To generate a region file, go to https://impostor.github.io/Impostor
-            """
-        );
+        var html = System.IO.File.ReadAllText(IndexFile);
+        return Content(html, "text/html; charset=utf-8");
+    }
+
+    private void EnsurePagesDirectory()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        lock (InitLock)
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            _initialized = true;
+
+            if (!Directory.Exists(PagesDir))
+            {
+                Directory.CreateDirectory(PagesDir);
+                _logger.LogInformation("Created Pages/ directory at {Path}", PagesDir);
+            }
+
+            if (!System.IO.File.Exists(IndexFile))
+            {
+                System.IO.File.WriteAllText(IndexFile, DefaultIndexHtml());
+                _logger.LogInformation("Written default Pages/index.html");
+            }
+        }
     }
 }
