@@ -1,0 +1,21 @@
+using System.Threading.Tasks;
+
+namespace Impostor.Server.Net;
+
+/// <summary>
+///     Public interface for managing dynamically allocated UDP listeners on delta ports.
+///     Implemented by Matchmaker; injected into HTTP controllers that need to start
+///     listeners after port allocation.
+/// </summary>
+public interface IDeltaListenerManager
+{
+    /// <summary>
+    ///     Starts a UDP listener on a specific port.
+    /// </summary>
+    ValueTask<bool> StartDeltaListenerAsync(int port);
+
+    /// <summary>
+    ///     Stops and disposes the UDP listener on a specific port.
+    /// </summary>
+    ValueTask StopDeltaListenerAsync(int port);
+}
