@@ -21,6 +21,7 @@ using Impostor.Server.Net;
 using Impostor.Server.Net.Custom;
 using Impostor.Server.Net.Factories;
 using Impostor.Server.Net.Manager;
+using Impostor.Server.Service.Shared;
 using Impostor.Server.Net.Messages;
 using Impostor.Server.Plugins;
 using Impostor.Server.Recorder;
@@ -159,6 +160,7 @@ namespace Impostor.Server
                         services.AddSingleton<IClientFactory, ClientFactory<Client>>();
                     }
 
+                    services.AddSingleton<ReportStore>();
                     services.AddSingleton<GameManager>();
                     services.AddSingleton<IGameManager>(p => p.GetRequiredService<GameManager>());
                     services.AddSingleton<ListingManager>();

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Impostor.Api;
 using Impostor.Api.Config;
+using Impostor.Api.Events.Managers;
+using Impostor.Api.Events.Player;
 using Impostor.Api.Games;
 using Impostor.Api.Innersloth;
 using Impostor.Api.Innersloth.GameOptions;
@@ -13,7 +15,9 @@ using Impostor.Api.Net.Messages;
 using Impostor.Api.Net.Messages.C2S;
 using Impostor.Api.Net.Messages.S2C;
 using Impostor.Hazel;
+using Impostor.Server.Events.Player;
 using Impostor.Server.Net.Manager;
+using Impostor.Server.Service.Shared;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -28,9 +32,11 @@ namespace Impostor.Server.Net
         private readonly ICustomMessageManager<ICustomRootMessage> _customMessageManager;
         private readonly ILocalizationService _localizer;
         private readonly GameCodeAuthManager _gameCodeAuth;
+        private readonly IEventManager _eventManager;
+        private readonly ReportStore _reportStore;
         private readonly ServerConfig _serverConfig;
 
-        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, ILocalizationService localizer, GameCodeAuthManager gameCodeAuth, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
+        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, ILocalizationService localizer, GameCodeAuthManager gameCodeAuth, IEventManager eventManager, ReportStore reportStore, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
             : base(name, gameVersion, language, chatMode, platformSpecificData, connection)
         {
             _logger = logger;
@@ -40,6 +46,8 @@ namespace Impostor.Server.Net
             _customMessageManager = customMessageManager;
             _localizer = localizer;
             _gameCodeAuth = gameCodeAuth;
+            _eventManager = eventManager;
+            _reportStore = reportStore;
             _serverConfig = serverConfig.Value;
         }
 
@@ -463,6 +471,10 @@ namespace Impostor.Server.Net
                     return;
                 }
 
+                case MessageFlags.ReportPlayer:
+                    await OnReportPlayerAsync(reader);
+                    break;
+
                 case MessageFlags.SetActivePodType:
                 {
                     Message21SetActivePodType.Deserialize(reader, out _);
@@ -559,6 +571,57 @@ namespace Impostor.Server.Net
             return true;
         }
 
+        /// <summary>Handles the in-game player-report message (not dead-body reporting).</summary>
+        private async ValueTask OnReportPlayerAsync(IMessageReader reader)
+        {
+            var gameId = reader.ReadInt32();
+            var reportedClientId = reader.ReadPackedInt32();
+            var reason = (ReportReasons)reader.ReadByte();
+
+            // Only resolve targets from the reporter's current game. Client IDs are server-global,
+            // but accepting a stale/mismatched game ID could otherwise report someone in another room.
+            var reporterPlayer = Player;
+            var currentGame = reporterPlayer?.Game;
+            var isCurrentGame = currentGame != null && currentGame.Code.Value == gameId;
+            var reportedClient = isCurrentGame
+                ? _clientManager.Clients.FirstOrDefault(c => c.Id == reportedClientId && c.Player?.Game == currentGame)
+                : null;
+
+            var outcome = ReportOutcome.NotReportedUnknown;
+            if (reporterPlayer?.Character != null && isCurrentGame)
+            {
+                var reportEvent = new PlayerReportEvent(currentGame!, reporterPlayer, reporterPlayer.Character, reportedClient, reason);
+                await _eventManager.CallAsync(reportEvent);
+                outcome = reportEvent.Outcome;
+            }
+
+            _logger.LogInformation(
+                "[Player report] {Reporter} ({ReporterFriendCode}) reported {Reported} ({ReportedFriendCode}) Reason={Reason} Game={Game} Outcome={Outcome}",
+                Name, string.IsNullOrEmpty(FriendCode) ? "unknown" : FriendCode,
+                reportedClient?.Name ?? "unknown", reportedClient?.FriendCode ?? "unknown",
+                reason, isCurrentGame ? currentGame!.Code.ToString() : gameId.ToString(), outcome);
+
+            _reportStore.Add(new ReportStore.ReportEntry
+            {
+                GameCode = isCurrentGame ? currentGame!.Code.ToString() : gameId.ToString(),
+                ReporterName = Name,
+                ReporterFriendCode = FriendCode,
+                ReportedName = reportedClient?.Name,
+                ReportedFriendCode = reportedClient?.FriendCode,
+                Reason = reason,
+                Outcome = outcome,
+            });
+            
+            using var response = MessageWriter.Get(MessageType.Reliable);
+            response.StartMessage(MessageFlags.ReportPlayer);
+            response.WritePacked(reportedClientId);
+            response.Write((int)reason);
+            response.Write((byte)outcome);
+            response.Write(reportedClient?.Name ?? string.Empty);
+            response.EndMessage();
+            await Connection.SendAsync(response);
+        }
+
         /// <summary>
         ///     Triggered when the connected client requests the PlatformSpecificData.
         /// </summary>
@@ -577,3 +640,4 @@ namespace Impostor.Server.Net
         }
     }
 }
+
