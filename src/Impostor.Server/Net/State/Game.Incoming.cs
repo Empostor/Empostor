@@ -149,6 +149,29 @@ namespace Impostor.Server.Net.State
             }
         }
 
+        private bool IsDuplicateAccount(ClientBase client)
+        {
+            if (string.IsNullOrEmpty(client.Puid))
+            {
+                return false;
+            }
+
+            foreach (var other in _players.Values)
+            {
+                if (other.Client == client)
+                {
+                    continue;
+                }
+
+                if (string.Equals(other.Client.Puid, client.Puid, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private async ValueTask<GameJoinResult> AddClientSafeAsync(ClientBase client)
         {
             // Check if the IP of the player is banned.
@@ -158,6 +181,14 @@ namespace Impostor.Server.Net.State
             }
 
             var player = client.Player;
+            if (!_compatibilityConfig.AllowDuplicateLogin && IsDuplicateAccount(client))
+            {
+                _logger.LogWarning(
+                    "#{Id} {Name} rejected: account {Puid} is already playing in this game",
+                    client.Id, client.Name, client.Puid);
+
+                return GameJoinResult.FromError(GameJoinError.DuplicateConnection);
+            }
 
             // Check if the player is running the same version as the host
             if (_compatibilityConfig.AllowVersionMixing == false &&
