@@ -46,7 +46,7 @@
         ///     The host has an older version of the game and the client should downgrade.
         /// </summary>
         ClientTooNew,
-        
+
         /// <summary>
         ///     The same account is already playing in this game.
         /// </summary>

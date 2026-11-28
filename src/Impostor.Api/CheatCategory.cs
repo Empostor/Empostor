@@ -44,4 +44,7 @@ public enum CheatCategory
 
     /// <summary>A packet contained an identifier (friendcode or puid) that does not match the one known for that player.</summary>
     Identifiers,
+
+    /// <summary>A client exceeded a configured message or action rate limit.</summary>
+    RateLimit,
 }

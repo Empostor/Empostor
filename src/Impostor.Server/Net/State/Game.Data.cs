@@ -120,6 +120,22 @@ namespace Impostor.Server.Net.State
                         var netId = reader.ReadPackedUInt32();
                         if (_allObjects.TryGetValue(netId, out var obj))
                         {
+                            var ownerId = obj.OwnerId >= 0 ? obj.OwnerId : sender.Client.Id;
+                            var limitedPlayerId = toPlayer || ownerId == sender.Client.Id
+                                ? GetClientPlayer(ownerId)?.Character?.PlayerId
+                                : null;
+
+                            if (AntiCheatConfig.EnableRateLimits
+                                && limitedPlayerId != null
+                                && CountRpc(limitedPlayerId.Value)
+                                && await sender.Client.ReportCheatAsync(
+                                    new CheatContext(nameof(GameDataTag.RpcFlag)),
+                                    CheatCategory.RateLimit,
+                                    $"Client sent more than {AntiCheatConfig.RpcRateLimitPerSecond} RPCs in one second"))
+                            {
+                                return false;
+                            }
+
                             if (!await obj.HandleRpcAsync(sender, target, (RpcCalls)reader.ReadByte(), reader))
                             {
                                 parent.RemoveMessage(reader);

@@ -24,6 +24,7 @@ using Impostor.Server.Plugins;
 using Impostor.Server.Recorder;
 using Impostor.Server.Service.Auth;
 using Impostor.Server.Service.Firewall;
+using Impostor.Server.Service.Ip;
 using Impostor.Server.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -114,6 +115,7 @@ namespace Impostor.Server
 
                     services.AddHttpClient("innersloth");
                     services.AddHttpClient("ume");
+                    services.AddSingleton<IpRateLimitService>();
                     services.AddSingleton<AuthCacheService>();
                     services.AddSingleton<PortPoolService>();
                     services.AddSingleton<IFirewallService>(sp =>
@@ -231,6 +233,9 @@ namespace Impostor.Server
 
                     builder.Configure(app =>
                     {
+                        // Apply the IP quota to every HTTP endpoint, including plugin endpoints.
+                        app.UseMiddleware<IpRateLimitMiddleware>();
+
                         var pluginLoaderService = app.ApplicationServices.GetRequiredService<PluginLoaderService>();
                         foreach (var pluginInformation in pluginLoaderService.Plugins)
                         {

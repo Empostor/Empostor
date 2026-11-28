@@ -30,6 +30,10 @@
     "EnableRoleChecks": true,
     "EnableTargetChecks": true,
     "EnableIdentifierChecks": true,
+    "EnableRateLimits": true,
+    "RpcRateLimitPerSecond": 20,
+    "TaskRateLimitCount": 3,
+    "TaskRateLimitWindowSeconds": 2,
     "ForbidProtocolExtensions": true,
     "EnablePacketSizeChecks": true,
     "PacketSizeLimit": 1203

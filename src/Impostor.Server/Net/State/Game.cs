@@ -17,6 +17,7 @@ using Impostor.Api.Net.Manager;
 using Impostor.Api.Net.Messages.S2C;
 using Impostor.Server.Events;
 using Impostor.Server.Net.Manager;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -69,6 +70,7 @@ namespace Impostor.Server.Net.State
             _compatibilityManager = compatibilityManager;
             _compatibilityConfig = compatibilityConfig.Value;
             _timeoutConfig = timeoutConfig.Value;
+            AntiCheatConfig = serviceProvider.GetRequiredService<IOptions<AntiCheatConfig>>().Value;
             Items = new ConcurrentDictionary<object, object>();
         }
 
@@ -101,6 +103,8 @@ namespace Impostor.Server.Net.State
         public Guid? ModGuid { get; }
 
         internal GameNet GameNet { get; }
+
+        internal AntiCheatConfig AntiCheatConfig { get; }
 
         public bool TryGetPlayer(int id, [MaybeNullWhen(false)] out ClientPlayer player)
         {

@@ -85,6 +85,7 @@ namespace Impostor.Server.Net
                 CheatCategory.Role => _antiCheatConfig.EnableRoleChecks,
                 CheatCategory.Target => _antiCheatConfig.EnableTargetChecks,
                 CheatCategory.Identifiers => _antiCheatConfig.EnableIdentifierChecks,
+                CheatCategory.RateLimit => _antiCheatConfig.EnableRateLimits,
                 CheatCategory.HostOnlyExtension => _antiCheatConfig.AllowHostOnlyExtensions switch {
                     CheatingHostMode.Always => false,
                     CheatingHostMode.IfRequested => !GameVersion.HasDisableServerAuthorityFlag,

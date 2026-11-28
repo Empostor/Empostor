@@ -617,6 +617,17 @@ namespace Impostor.Server.Net.Inner.Objects
 
         private async ValueTask HandleCompleteTask(ClientPlayer sender, uint taskId)
         {
+            // Count per player because the host may complete tasks on behalf of others.
+            if (Game.AntiCheatConfig.EnableRateLimits
+                && Game.CountTask(PlayerId)
+                && await sender.Client.ReportCheatAsync(
+                    RpcCalls.CompleteTask,
+                    CheatCategory.RateLimit,
+                    $"Client completed more than {Game.AntiCheatConfig.TaskRateLimitCount} tasks in {Game.AntiCheatConfig.TaskRateLimitWindowSeconds}s"))
+            {
+                return;
+            }
+
             TaskInfo? task = null;
             if (PlayerInfo == null)
             {

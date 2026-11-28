@@ -32,6 +32,14 @@ namespace Impostor.Api.Config
 
         public bool EnableIdentifierChecks { get; set; } = true;
 
+        public bool EnableRateLimits { get; set; } = true;
+
+        public int RpcRateLimitPerSecond { get; set; } = 20;
+
+        public int TaskRateLimitCount { get; set; } = 3;
+
+        public double TaskRateLimitWindowSeconds { get; set; } = 2;
+
         public bool ForbidProtocolExtensions { get; set; } = true;
 
         public bool EnablePacketSizeChecks { get; set; } = true;
