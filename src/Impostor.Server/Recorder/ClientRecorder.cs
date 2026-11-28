@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Impostor.Api.Config;
 using Impostor.Api.Innersloth;
 using Impostor.Api.Net.Custom;
@@ -6,7 +6,6 @@ using Impostor.Api.Net.Messages;
 using Impostor.Server.Net;
 using Impostor.Server.Net.Hazel;
 using Impostor.Server.Net.Manager;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

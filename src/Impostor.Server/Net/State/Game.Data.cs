@@ -314,6 +314,12 @@ namespace Impostor.Server.Net.State
 
                     default:
                     {
+                        if (GameDataTag.ValidTags.Contains(reader.Tag))
+                        {
+                            _logger.LogDebug("{Code} - Get vanilla GameData tag {Tag} that isn't handled.", Code, reader.Tag);
+                            break;
+                        }
+
                         _logger.LogWarning("Bad GameData tag {0}", reader.Tag);
                         break;
                     }
