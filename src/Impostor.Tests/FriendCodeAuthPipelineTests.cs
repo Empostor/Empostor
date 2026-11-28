@@ -24,33 +24,37 @@ namespace Impostor.Tests;
 
 public sealed class FriendCodeAuthPipelineTests
 {
-    [Fact]
-    public async Task TokenEndpoint_ResolvesFriendCodeAndReturnsCompatibleTokenEnvelope()
+    [Theory]
+    [InlineData(ServerVerificationMode.DeltaPort, 26000)]
+    [InlineData(ServerVerificationMode.GameCode, 0)]
+    public async Task TokenEndpoint_ResolvesFriendCodeWithInnersloth(ServerVerificationMode mode, int expectedPort)
     {
         var puid = Guid.NewGuid().ToString("N");
-        var calls = new List<string>();
+        var bearer = CreateBearer(puid);
+        var calls = new List<(HttpMethod Method, Uri Uri, string? Authorization)>();
         var factory = new StubHttpClientFactory(request =>
         {
-            calls.Add(request.RequestUri!.AbsolutePath);
-            if (request.RequestUri.AbsolutePath == "/api/verify")
-            {
-                return JsonResponse(HttpStatusCode.OK,
-                    $"{{\"VerifyStatus\":\"Verified\",\"FriendCode\":\"Player#1234\",\"ProductUserId\":\"{puid}\"}}");
-            }
-
-            throw new InvalidOperationException("Successful Ume lookup should short-circuit provider fallback.");
+            calls.Add((request.Method, request.RequestUri!, request.Headers.Authorization?.ToString()));
+            return JsonResponse(HttpStatusCode.OK, """{"data":{"attributes":{"username":"Player","discriminator":"1234"}}}""");
         });
         using var cache = new AuthCacheService(NullLogger<AuthCacheService>.Instance);
-        var server = new ServerConfig { DeltaPortStart = 0, DeltaPortEnd = 0 };
+        var server = new ServerConfig
+        {
+            VerificationMode = mode,
+            DeltaPortStart = 26000,
+            DeltaPortEnd = 26000,
+            DeltaPortLowWaterMark = 0,
+        };
         using var pool = new PortPoolService(NullLogger<PortPoolService>.Instance, Options.Create(server));
-        var controller = CreateController(factory, cache, pool, server);
+        var listener = new StubDeltaListenerManager();
+        var controller = CreateController(factory, cache, pool, server, listener);
 
         var result = await controller.GetToken(new TokenController.TokenRequest
         {
             Puid = puid,
             Username = "Player",
             ClientVersion = 123,
-        }, CreateBearer(puid));
+        }, bearer);
 
         var ok = Assert.IsType<OkObjectResult>(result);
         var encoded = Assert.IsType<string>(ok.Value);
@@ -58,9 +62,53 @@ public sealed class FriendCodeAuthPipelineTests
         Assert.Equal("Player#1234", json.RootElement.GetProperty("Content").GetProperty("FriendCode").GetString());
         Assert.Equal(puid, json.RootElement.GetProperty("Content").GetProperty("Puid").GetString());
         Assert.Equal(123, json.RootElement.GetProperty("Content").GetProperty("ClientVersion").GetInt32());
-        Assert.True(json.RootElement.TryGetProperty("Hash", out _));
-        Assert.Equal(0, json.RootElement.GetProperty("Port").GetInt32());
-        Assert.Equal(new[] { "/api/verify" }, calls);
+        var hash = json.RootElement.GetProperty("Hash").GetString();
+        Assert.Equal("Player#1234", cache.FindByToken(hash)?.FriendCode);
+        Assert.Equal(expectedPort, json.RootElement.GetProperty("Port").GetInt32());
+        Assert.Equal(expectedPort == 0 ? Array.Empty<int>() : new[] { expectedPort }, listener.StartedPorts);
+        var call = Assert.Single(calls);
+        Assert.Equal(HttpMethod.Get, call.Method);
+        Assert.Equal("backend.innersloth.proxy.amongusclub.cn", call.Uri.Host);
+        Assert.Equal("/api/user/username", call.Uri.AbsolutePath);
+        Assert.Equal(bearer, call.Authorization);
+    }
+
+    [Fact]
+    public async Task DisableMode_ReturnsLegacyTokenWithoutAuthorizationOrVerification()
+    {
+        var factory = new StubHttpClientFactory(_ => throw new InvalidOperationException("Disable mode must not use an auth provider."));
+        using var cache = new AuthCacheService(NullLogger<AuthCacheService>.Instance);
+        var server = new ServerConfig
+        {
+            VerificationMode = ServerVerificationMode.Disable,
+            DeltaPortStart = 26000,
+            DeltaPortEnd = 26100,
+        };
+        using var pool = new PortPoolService(NullLogger<PortPoolService>.Instance, Options.Create(server));
+        var listener = new StubDeltaListenerManager();
+        var controller = CreateController(factory, cache, pool, server, listener);
+
+        var result = await controller.GetToken(new TokenController.TokenRequest
+        {
+            Puid = "legacy-puid",
+            ClientVersion = 123,
+        }, authorization: null);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var encoded = Assert.IsType<string>(ok.Value);
+        using var json = JsonDocument.Parse(Convert.FromBase64String(encoded));
+        var content = json.RootElement.GetProperty("Content");
+        Assert.Equal("legacy-puid", content.GetProperty("Puid").GetString());
+        Assert.Equal(123, content.GetProperty("ClientVersion").GetInt32());
+        Assert.Equal(new DateTime(2012, 12, 21), content.GetProperty("ExpiresAt").GetDateTime());
+        Assert.Equal("impostor_was_here", json.RootElement.GetProperty("Hash").GetString());
+        Assert.False(content.TryGetProperty("FriendCode", out _));
+        Assert.False(json.RootElement.TryGetProperty("Port", out _));
+        Assert.Equal(0, factory.ClientsCreated);
+        Assert.Null(cache.FindByToken("impostor_was_here"));
+        Assert.Empty(listener.StartedPorts);
+        Assert.False(pool.IsEnabled);
+        Assert.Equal(0, pool.AllocatePort("legacy-puid"));
     }
 
     [Fact]
@@ -141,25 +189,21 @@ public sealed class FriendCodeAuthPipelineTests
         Assert.Equal(0, pool.AllocatePort("puid"));
     }
 
+
     private static TokenController CreateController(
         IHttpClientFactory clientFactory,
         AuthCacheService cache,
         PortPoolService pool,
-        ServerConfig serverConfig)
+        ServerConfig serverConfig,
+        IDeltaListenerManager listener)
     {
         var controller = new TokenController(
             NullLogger<TokenController>.Instance,
             clientFactory,
             cache,
-            Options.Create(new AuthApiConfig
-            {
-                Mode = AuthApiMode.Both,
-                UmeApiBaseUrl = "https://ume.example",
-                UmeApiKey = "test-key",
-            }),
             Options.Create(serverConfig),
             pool,
-            new StubDeltaListenerManager());
+            listener);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
         controller.HttpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
         return controller;
@@ -184,7 +228,13 @@ public sealed class FriendCodeAuthPipelineTests
     {
         private readonly Func<HttpRequestMessage, HttpResponseMessage> _handler;
         public StubHttpClientFactory(Func<HttpRequestMessage, HttpResponseMessage> handler) => _handler = handler;
-        public HttpClient CreateClient(string name) => new(new StubHandler(_handler), disposeHandler: true);
+        public int ClientsCreated { get; private set; }
+
+        public HttpClient CreateClient(string name)
+        {
+            ClientsCreated++;
+            return new HttpClient(new StubHandler(_handler), disposeHandler: true);
+        }
     }
 
     private sealed class StubHandler : HttpMessageHandler
@@ -197,7 +247,13 @@ public sealed class FriendCodeAuthPipelineTests
 
     private sealed class StubDeltaListenerManager : IDeltaListenerManager
     {
-        public ValueTask<bool> StartDeltaListenerAsync(int port) => ValueTask.FromResult(true);
+        public List<int> StartedPorts { get; } = new();
+
+        public ValueTask<bool> StartDeltaListenerAsync(int port)
+        {
+            StartedPorts.Add(port);
+            return ValueTask.FromResult(true);
+        }
         public ValueTask StopDeltaListenerAsync(int port) => ValueTask.CompletedTask;
     }
 }

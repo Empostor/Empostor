@@ -109,12 +109,10 @@ namespace Impostor.Server
                     services.Configure<AntiCheatConfig>(host.Configuration.GetSection(AntiCheatConfig.Section));
                     services.Configure<CompatibilityConfig>(host.Configuration.GetSection(CompatibilityConfig.Section));
                     services.Configure<ServerConfig>(host.Configuration.GetSection(ServerConfig.Section));
-                    services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
                     services.Configure<TimeoutConfig>(host.Configuration.GetSection(TimeoutConfig.Section));
                     services.Configure<HttpServerConfig>(host.Configuration.GetSection(HttpServerConfig.Section));
 
                     services.AddHttpClient("innersloth");
-                    services.AddHttpClient("ume");
                     services.AddSingleton<IpRateLimitService>();
                     services.AddSingleton<AuthCacheService>();
                     services.AddSingleton<PortPoolService>();

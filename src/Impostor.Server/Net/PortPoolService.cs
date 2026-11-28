@@ -25,10 +25,10 @@ public sealed class PortPoolService : IDisposable
     private readonly int _deltaPortEnd;
     private readonly int _listenPort;
     private readonly int _deltaLowWaterMark;
-    private readonly bool _useGameCodeMode;
+    private readonly ServerVerificationMode _verificationMode;
 
-    // GameCode mode uses no dynamic ports at all, only a single shared UDP port.
-    public bool IsEnabled => !_useGameCodeMode
+    // Only DeltaPort mode uses dynamic UDP ports.
+    public bool IsEnabled => _verificationMode == ServerVerificationMode.DeltaPort
                              && _deltaPortStart > 0
                              && _deltaPortEnd >= _deltaPortStart;
 
@@ -50,7 +50,7 @@ public sealed class PortPoolService : IDisposable
         _deltaPortEnd = cfg.DeltaPortEnd;
         _listenPort = cfg.ListenPort;
         _deltaLowWaterMark = cfg.DeltaPortLowWaterMark;
-        _useGameCodeMode = cfg.UseGameCodeMode;
+        _verificationMode = cfg.VerificationMode;
 
         if (IsEnabled)
         {
@@ -77,14 +77,13 @@ public sealed class PortPoolService : IDisposable
                 "PortPool initialized with {Count} ports ({Start}-{End})",
                 _availablePorts.Count, _deltaPortStart, _deltaPortEnd);
         }
+        else if (_verificationMode != ServerVerificationMode.DeltaPort)
+        {
+            _logger.LogInformation("PortPool disabled in {VerificationMode} verification mode", _verificationMode);
+        }
         else
         {
-            _logger.LogInformation(
-                _useGameCodeMode
-                    ? "PortPool disabled (GameCode verification mode uses the shared UDP port {ListenPort})"
-                    : "PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})",
-                _useGameCodeMode ? _listenPort : _deltaPortStart,
-                _useGameCodeMode ? 0 : _deltaPortEnd);
+            _logger.LogInformation("PortPool disabled (DeltaPortStart={Start}, DeltaPortEnd={End})", _deltaPortStart, _deltaPortEnd);
         }
     }
 

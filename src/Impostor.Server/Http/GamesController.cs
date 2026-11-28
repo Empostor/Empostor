@@ -79,7 +79,7 @@ public sealed class GamesController : ControllerBase
 
         var clientVersion = new GameVersion(token.Content.ClientVersion);
 
-        var auth = _authCache.FindByToken(token.Hash);
+        var auth = _serverConfig.IsVerificationDisabled ? null : _authCache.FindByToken(token.Hash);
         if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
         var listings = _listingManager.FindListings(HttpContext, mapId, numImpostors, lang, clientVersion);
         return Ok(listings.Select(game => BuildListing(game, auth)));
@@ -97,7 +97,7 @@ public sealed class GamesController : ControllerBase
         var code = new GameCode(gameId);
         var auth = TryGetAuthInfo();
         if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
-        if (_gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
+        if (_serverConfig.UseGameCodeMode && _gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -107,7 +107,7 @@ public sealed class GamesController : ControllerBase
         }
 
         if (_serverConfig.UseGameCodeMode && auth != null) _gameCodeAuth.RegisterPendingJoin(code, auth);
-        var port = !_serverConfig.UseGameCodeMode && auth?.Port > 0
+        var port = _serverConfig.UseDeltaPortMode && auth?.Port > 0
             ? (ushort)auth.Port
             : _serverConfig.UseGameCodeMode ? _serverConfig.GameCodePublicPort : (ushort)game.PublicIp.Port;
         return Ok(HostServer.From(game.PublicIp.Address, port));
@@ -120,6 +120,8 @@ public sealed class GamesController : ControllerBase
     [HttpPut]
     public IActionResult Put()
     {
+        if (_serverConfig.IsVerificationDisabled) return Ok(_hostServer);
+
         var auth = TryGetAuthInfo();
         if (_serverConfig.UseGameCodeMode)
         {
@@ -127,7 +129,7 @@ public sealed class GamesController : ControllerBase
             _gameCodeAuth.RegisterHost(auth, auth.ClientIp);
         }
 
-        var port = !_serverConfig.UseGameCodeMode && auth?.Port > 0
+        var port = _serverConfig.UseDeltaPortMode && auth?.Port > 0
             ? (ushort)auth.Port
             : _serverConfig.UseGameCodeMode ? _serverConfig.GameCodePublicPort : _serverConfig.PublicPort;
         return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
@@ -138,7 +140,7 @@ public sealed class GamesController : ControllerBase
     {
         var code = new GameCode(gameId);
         var auth = TryGetAuthInfo();
-        if (_gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
+        if (_serverConfig.UseGameCodeMode && _gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -203,6 +205,8 @@ public sealed class GamesController : ControllerBase
 
     private UserAuthInfo? TryGetAuthInfo()
     {
+        if (_serverConfig.IsVerificationDisabled) return null;
+
         var header = Request.Headers.Authorization.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(header) || !AuthenticationHeaderValue.TryParse(header, out var authorization)
             || !string.Equals(authorization.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase)
@@ -220,6 +224,8 @@ public sealed class GamesController : ControllerBase
 
     private GameListing BuildListing(IGame game, UserAuthInfo? auth)
     {
+        if (_serverConfig.IsVerificationDisabled) return GameListing.From(game);
+
         var code = game.Code;
         var port = _serverConfig.PublicPort;
         if (_serverConfig.UseGameCodeMode)
@@ -227,7 +233,7 @@ public sealed class GamesController : ControllerBase
             code = _gameCodeAuth.CreateChallenge(game.Code, auth!, challenge => _gameManager.Find(challenge) != null);
             port = _serverConfig.GameCodePublicPort;
         }
-        else if (auth?.Port > 0)
+        else if (_serverConfig.UseDeltaPortMode && auth?.Port > 0)
         {
             port = (ushort)auth.Port;
         }

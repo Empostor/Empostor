@@ -8,6 +8,7 @@ namespace Impostor.Api.Config
     {
         DeltaPort = 0,
         GameCode = 1,
+        Disable = 2,
     }
 
     public class ServerConfig
@@ -41,7 +42,11 @@ namespace Impostor.Api.Config
 
         public ushort DeltaPortLowWaterMark { get; set; } = 5;
 
+        public bool UseDeltaPortMode => VerificationMode == ServerVerificationMode.DeltaPort;
+
         public bool UseGameCodeMode => VerificationMode == ServerVerificationMode.GameCode;
+
+        public bool IsVerificationDisabled => VerificationMode == ServerVerificationMode.Disable;
 
         public ushort GameCodeListenPort => GameCodePorts.Count > 0 ? checked((ushort)GameCodePorts[0]) : ListenPort;
 

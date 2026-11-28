@@ -34,7 +34,6 @@ public sealed class TokenController : ControllerBase
     private readonly ILogger<TokenController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AuthCacheService _authCache;
-    private readonly AuthApiConfig _authApiConfig;
     private readonly PortPoolService _portPool;
     private readonly IDeltaListenerManager _deltaListenerManager;
     private readonly ServerConfig _serverConfig;
@@ -43,7 +42,6 @@ public sealed class TokenController : ControllerBase
         ILogger<TokenController> logger,
         IHttpClientFactory httpClientFactory,
         AuthCacheService authCache,
-        IOptions<AuthApiConfig> authApiConfig,
         IOptions<ServerConfig> serverConfig,
         PortPoolService portPool,
         IDeltaListenerManager deltaListenerManager)
@@ -51,7 +49,6 @@ public sealed class TokenController : ControllerBase
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _authCache = authCache;
-        _authApiConfig = authApiConfig.Value;
         _serverConfig = serverConfig.Value;
         _portPool = portPool;
         _deltaListenerManager = deltaListenerManager;
@@ -60,8 +57,30 @@ public sealed class TokenController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> GetToken(
         [FromBody] TokenRequest request,
-        [FromHeader] string authorization)
+        [FromHeader] string? authorization)
     {
+        if (_serverConfig.IsVerificationDisabled)
+        {
+            var productUserId = request.Puid ?? request.ProductUserId;
+            if (productUserId == null)
+            {
+                return BadRequest(new { error = "Missing Puid" });
+            }
+
+            // Keep the legacy response shape without consulting EOS, the auth cache, or either verification flow.
+            var legacyToken = new
+            {
+                Content = new TokenContent
+                {
+                    ProductUserId = productUserId,
+                    ClientVersion = request.ClientVersion,
+                },
+                Hash = "impostor_was_here",
+            };
+
+            return Ok(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(legacyToken)));
+        }
+
         var allocatedDeltaPort = 0;
         string? matchmakerToken = null;
         try
@@ -86,16 +105,15 @@ public sealed class TokenController : ControllerBase
             var friendCode = await GetFriendCodeAsync(eosToken, productUserId);
             matchmakerToken = GenerateMatchmakerToken(productUserId);
 
-            // In DeltaPort mode, allocate a dedicated port tying the auth session to the UDP connection.
-            // In GameCode mode nothing is allocated (the UDP side matches via a temporary GameCode).
-            var deltaPort = _serverConfig.UseGameCodeMode ? 0 : _portPool.AllocatePort(productUserId);
+            // Only DeltaPort mode allocates a dedicated port to match the HTTP session to the UDP connection.
+            var deltaPort = _serverConfig.UseDeltaPortMode ? _portPool.AllocatePort(productUserId) : 0;
             allocatedDeltaPort = deltaPort;
 
             var authInfo = new UserAuthInfo
             {
                 ProductUserId = productUserId,
                 MatchmakerToken = matchmakerToken,
-                FriendCode = friendCode ?? string.Empty,
+                FriendCode = friendCode,
                 ClientIp = clientIp != null ? NormalizeIpString(clientIp) : null,
                 EosToken = eosToken,
                 CreatedAt = DateTime.UtcNow,
@@ -109,7 +127,7 @@ public sealed class TokenController : ControllerBase
             // Display name for logging (inferred from the friend code when the client declares none).
             var playerName = !string.IsNullOrWhiteSpace(authInfo.Name)
                 ? authInfo.Name
-                : friendCode?.Split('#')[0] ?? productUserId[..Math.Min(8, productUserId.Length)];
+                : friendCode.Split('#')[0];
 
             if (deltaPort > 0)
             {
@@ -219,31 +237,7 @@ public sealed class TokenController : ControllerBase
             return cached;
         }
 
-        var mode = _authApiConfig.Mode;
-        _logger.LogDebug("TokenControllerAuthApi mode: {Mode}", mode);
-
-        string? friendCode = null;
-
-        if (mode == AuthApiMode.Ume)
-        {
-            friendCode = await FetchFromUmeAsync(eosToken, productUserId);
-        }
-
-        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Both)
-        {
-            _logger.LogDebug("TokenController Both mode: trying Ume first, then Innersloth");
-            friendCode = await FetchFromUmeAsync(eosToken, productUserId);
-            if (string.IsNullOrEmpty(friendCode))
-            {
-                friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
-            }
-        }
-
-        if (string.IsNullOrEmpty(friendCode) && mode == AuthApiMode.Innersloth)
-        {
-            friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
-        }
-
+        var friendCode = await FetchFromInnerslothAsync(eosToken, productUserId);
         if (string.IsNullOrEmpty(friendCode))
         {
             friendCode = GenerateFallbackFriendCode(productUserId);
@@ -319,12 +313,12 @@ public sealed class TokenController : ControllerBase
         try
         {
             using var client = _httpClientFactory.CreateClient("innersloth");
-            var req = new HttpRequestMessage(HttpMethod.Get,
+            using var req = new HttpRequestMessage(HttpMethod.Get,
                 "https://backend.innersloth.proxy.amongusclub.cn/api/user/username");
             req.Headers.Add("Authorization", "Bearer " + eosToken);
             req.Headers.TryAddWithoutValidation("Accept", "application/vnd.api+json");
 
-            var response = await client.SendAsync(req);
+            using var response = await client.SendAsync(req);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
@@ -357,85 +351,6 @@ public sealed class TokenController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "TokenControllerException calling Innersloth API for PUID={Puid}", productUserId);
-        }
-
-        return null;
-    }
-
-    private async Task<string?> FetchFromUmeAsync(string eosToken, string productUserId)
-    {
-        if (string.IsNullOrEmpty(_authApiConfig.UmeApiBaseUrl)
-            || string.IsNullOrEmpty(_authApiConfig.UmeApiKey))
-        {
-            _logger.LogWarning("TokenControllerUmeApi config incomplete, skipping Ume");
-            return null;
-        }
-
-        try
-        {
-            using var client = _httpClientFactory.CreateClient("ume");
-            var body = JsonSerializer.SerializeToUtf8Bytes(new UmeVerifyRequest
-            {
-                ApiKey = _authApiConfig.UmeApiKey,
-                EosToken = eosToken,
-            });
-
-            var req = new HttpRequestMessage(HttpMethod.Post,
-                $"{_authApiConfig.UmeApiBaseUrl.TrimEnd('/')}/api/verify")
-            {
-                Content = new ByteArrayContent(body),
-            };
-            req.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
-
-            var resp = await client.SendAsync(req);
-            if (!resp.IsSuccessStatusCode)
-            {
-                _logger.LogWarning(
-                    "TokenControllerUme returned {Status} for PUID={Puid}",
-                    resp.StatusCode, productUserId);
-                return null;
-            }
-
-            var json = await resp.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            var status = root.TryGetProperty("VerifyStatus", out var s) ? s.GetString() : null;
-            if (status != "Verified")
-            {
-                _logger.LogWarning(
-                    "TokenControllerUme VerifyStatus={Status} for PUID={Puid}",
-                    status, productUserId);
-                return null;
-            }
-
-            var friendCode = root.TryGetProperty("FriendCode", out var fc) ? fc.GetString() : null;
-            if (string.IsNullOrEmpty(friendCode))
-            {
-                _logger.LogWarning(
-                    "TokenControllerUme response missing FriendCode for PUID={Puid}",
-                    productUserId);
-                return null;
-            }
-
-            var returnedPuid = root.TryGetProperty("ProductUserId", out var rp) ? rp.GetString() : null;
-            if (string.IsNullOrEmpty(returnedPuid)
-                || !string.Equals(returnedPuid, productUserId, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogWarning(
-                    "TokenControllerUme PUID mismatch: expected={Expected} got={Got}",
-                    productUserId, returnedPuid);
-                return null;
-            }
-
-            _logger.LogInformation(
-                "TokenControllerFriendCode from Ume: PUID={Puid} FC={FC}",
-                productUserId, friendCode);
-            return friendCode;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "TokenControllerException calling Ume for PUID={Puid}", productUserId);
         }
 
         return null;
@@ -490,6 +405,7 @@ public sealed class TokenController : ControllerBase
         public required string ProductUserId { get; init; }
 
         [JsonPropertyName("FriendCode")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? FriendCode { get; init; }
 
         [JsonPropertyName("ClientVersion")]
@@ -499,13 +415,5 @@ public sealed class TokenController : ControllerBase
         public DateTime ExpiresAt { get; init; } = new DateTime(2012, 12, 21);
     }
 
-    private sealed class UmeVerifyRequest
-    {
-        [JsonPropertyName("ApiKey")]
-        public required string ApiKey { get; init; }
-
-        [JsonPropertyName("EosToken")]
-        public required string EosToken { get; init; }
-    }
     #endregion
 }

@@ -51,10 +51,5 @@
   "Debug": {
     "GameRecorderEnabled": false,
     "GameRecorderPath": ""
-  },
-  "AuthApi": {
-    "Mode": "Both",
-    "UmeApiBaseUrl": "https://auverify.hayashiume.top",
-    "UmeApiKey": ""
   }
 }

@@ -12,7 +12,6 @@ Empostor is an open-source private server implementation for Among Us.
 ## Features
 - FriendCode support (authentication)
 - Dynamic ports
-- Admin Panel (dashboard)
 - Plugin support
 - Server-side anticheat
 
@@ -28,31 +27,6 @@ Unzip the file and go to config.json. To make your server playable for other dev
 
 It is also recommended to [set up a Reverse Proxy](https://empostor.github.io/get-started/reverse-proxy#use-a-reverse-proxy) (for HTTPS connections).
 
-### Docker
-
-Docker Compose port mappings are generated from `config.json` on the host before the container starts. Install the .NET 10 SDK, Docker Engine with Compose v2, and Python 3.9 or newer. Generate the Linux x64 release, then set `Server.PublicIp` in its `config.json` to your public IP or domain:
-
-```sh
-dotnet tool restore
-dotnet cake build.cake --target=Build
-cd build/Empostor-Server_linux-x64
-python3 docker-up.py
-```
-
-On Windows, use `Set-Location build/Empostor-Server_linux-x64` and `python docker-up.py`. The Linux x64 generated release folder contains the published server files, `config.json`, and the three Docker files. Cake adds these files to the release folder; it does not create a separate image context or deployment archive. The host-side launcher reads config, fills the port sections in `Dockerfile` and `compose.yml`, then invokes Compose using the same folder as the image build context. Rerun the Cake build after updating the server or marketplace. Set `EMPOSTOR_CONFIG` to use a different configuration file; the launcher reads and mounts that same file read-only.
-
-| Configuration | Published ports |
-| --- | --- |
-| HTTP enabled | `HttpServer.ListenPort/tcp`, with the same host and container port |
-| DeltaPort range enabled | `DeltaPortStart` through `DeltaPortEnd/udp`, with identical host and container ranges |
-| GameCode with `GameCodePorts` | Only `GameCodePorts[0]/udp` |
-| GameCode with an empty list, or DeltaPort range disabled | `PublicPort:ListenPort/udp` |
-
-After changing port or verification settings, rerun `python3 docker-up.py up -d --force-recreate` to regenerate the mappings and reload the configuration. Use the launcher for other Compose commands too, for example `python3 docker-up.py logs -f` or `python3 docker-up.py down`. Running `docker compose up` directly does not generate port mappings.
-
-Keep `Server.ListenIp` and `HttpServer.ListenIp` at `0.0.0.0` for IPv4 bridge networking. Keep `UseUfw` and `UseFirewalld` disabled inside the container and allow the published ports in the host/cloud firewall. The default DeltaPort range publishes 20,001 UDP ports, which can be slow to create in Docker; reduce the range to suit your expected player count, or use GameCode for a single shared UDP port. The pool also reserves `DeltaPortLowWaterMark` ports (default 5).
-
-The image runs as the non-root `app` user. Persistent Docker volumes hold `Data`, `Log`, `plugins`, `libraries`, `Pages`, `Languages`, `languages`, and `Update`; plugin files and generated configurations in these directories remain writable across container recreation. Program files and the bundled `marketplace` catalog/assets remain root-owned. Empty named volumes receive the image's initial contents, including bundled pages/themes. Existing volumes retain their contents when the image is rebuilt; back them up and update bundled assets separately when needed. Installed plugins can be managed through the admin marketplace. For host bind mounts instead of named volumes, grant the container user write access (UID 1654 in the .NET 10 image). Custom plugin output paths must point into a writable mounted directory.
 
 ## Client Setup
 
@@ -84,7 +58,6 @@ All settings live in `config.json` next to the server binary (a full sample is [
 | `Timeout` | Spawn and connection timeouts |
 | `Compatibility` | Game version compatibility rules |
 | `Debug` | Game recorder |
-| `AuthApi` | Friend code resolution (`Mode`: `GameServices`, `Ume`, `Both` or `Off`) |
 | `Admin` | Admin panel password and marketplace URL |
 | `HPLP` | HPLP public region listing |
 
@@ -96,14 +69,15 @@ Empostor has to know which HTTP authentication (`POST /api/user`) belongs to whi
 | --- | --- |
 | `DeltaPort` (default) | Every player gets a unique dynamic UDP port from the `DeltaPortStart`..`DeltaPortEnd` pool. The port itself is the proof of identity. |
 | `GameCode` | **No dynamic ports at all** — only the shared listen port (`GameCodePorts[0]`, or `ListenPort`) is used. The lobby list hands out a server-issued **challenge game code** per player, and the `JoinGame` that follows over UDP is authenticated by that code alone. |
+| `Disable` | Uses the original fixed-port matchmaking flow. No EOS verification, friend-code lookup, dynamic-port matching, or GameCode challenge is performed. |
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `VerificationMode` | `DeltaPort` | `DeltaPort` or `GameCode` |
+| `VerificationMode` | `DeltaPort` | `DeltaPort`, `GameCode`, or `Disable` |
 | `GameCodePorts` | `[]` | Ports for `GameCode` mode; only the first is bound. Empty falls back to `ListenPort`/`PublicPort` |
 | `TemporaryGameCodeLifetimeSeconds` | `180` | How long an issued challenge code stays valid |
 
-In `GameCode` mode the port pool is disabled (no delta listeners, no per-player firewall rules) and `DeltaPortStart`/`DeltaPortEnd` are ignored.
+In `GameCode` and `Disable` modes the port pool is disabled and `DeltaPortStart`/`DeltaPortEnd` are ignored. Friend codes in the two verification modes are resolved through Innersloth only.
 
 The game client validates the game code of every message it receives against the code it joined with and silently drops mismatches, and the UDP handshake carries no token/PUID/game code. `GameCode` mode therefore uses the code itself as the token:
 
@@ -125,16 +99,6 @@ The game client validates the game code of every message it receives against the
 | `ForbidProtocolExtensions` | `true` | Reject unknown/extension protocol messages |
 | `EnablePacketSizeChecks`, `PacketSizeLimit` | `true`, `1203` | Maximum inbound packet size |
 | `EnableRateLimits` | `true` | IP request rate limit and game-side rate limits (below) |
-
-#### Ip request rate limit
-
-Within one window (1 minute) the same IP may only make `30` TCP (HTTP) requests — this protects the HTTP API against connection/request flooding. The limit lives in `IpRateLimitService` and is switched by `EnableRateLimits`. When the limit is exceeded:
-
-- **Every** endpoint answers with `429 Too Many Requests` plus the standard matchmaker error body `{"Errors":[{"Reason":116}]}` — `116` is `DisconnectReason.TooManyRequests`, which the client renders as its own localized "too many requests" popup without retrying. The `Retry-After` header says how many seconds are left.
-- This includes the whole join flow of the game client (`POST /api/user` matchmaking token and `PUT`/`GET /api/games` FindHost): the client never receives a token or a port, so it never enters the UDP phase and no dynamic pool port is spent on a blocked request — the player gets the popup and returns to the main menu instead of a black screen.
-- `/admin` and `/api/admin` are neither counted nor limited, so the dashboard can never lock the operator out.
-
-Empostor usually runs behind a CDN or reverse proxy, so the real client IP is taken from the `X-Real-IP` header, then from the first entry of `X-Forwarded-For`, and only afterwards from the socket address. Make sure your CDN/proxy forwards one of these headers — otherwise every player would share the proxy IP's quota. Note that the game client polls some endpoints (e.g. `/api/games`) while you play: if `30` per minute is too tight for your players, set `EnableRateLimits` to `false` (that also switches off the game-side RPC/task rate limits).
 
 ## Contributing
 Please read the [contributing guidelines](https://github.com/Empostor/Empostor/blob/main/CONTRIBUTING.md).
