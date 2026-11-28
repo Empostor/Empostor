@@ -1,13 +1,14 @@
 # Empostor
 Empostor is an open-source private server implementation for Among Us.
 
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://dsc.gg/empostor)
-[![QQ](https://img.shields.io/badge/QQ-Group-black?style=flat-square)](https://qm.qq.com/q/GeX3Q0Ft0k)
-[![GitHub license](https://badgen.net/github/license/Empostor/Empostor)](https://github.com/Empostor/Empostor/blob/main/LICENSE)
-[![GitHub latest commit](https://badgen.net/github/last-commit/Empostor/Empostor)](https://github.com/Empostor/Empostor/commit/)
-[![GitHub all releases](https://img.shields.io/github/downloads/Empostor/Empostor/total.svg)](https://github.com/Empostor/Empostor/releases/)
-[![GitHub contributors](https://badgen.net/github/contributors/Empostor/Empostor)](https://github.com/Empostor/Empostor/graphs/contributors/)
-[![GitHub total-pull-requests](https://badgen.net/github/prs/Empostor/Empostor)](https://github.com/Empostor/Empostor/pull/)
+<p align="center">
+  <a href="https://qm.qq.com/q/GeX3Q0Ft0k"><img src="https://img.shields.io/badge/QQ-Group-black?style=flat-square" alt="QQ"></a>
+  <a href="https://github.com/HayashiUme/Finesse/blob/main/LICENSE"><img src="https://badgen.net/github/license/HayashiUme/Finesse" alt="GitHub license"></a>
+  <a href="https://github.com/HayashiUme/Finesse/commit/"><img src="https://badgen.net/github/last-commit/HayashiUme/Finesse" alt="GitHub latest commit"></a>
+  <a href="https://github.com/HayashiUme/Finesse/releases/"><img src="https://img.shields.io/github/downloads/HayashiUme/Finesse/total.svg" alt="GitHub all releases"></a>
+  <a href="https://github.com/HayashiUme/Finesse/graphs/contributors/"><img src="https://badgen.net/github/contributors/HayashiUme/Finesse" alt="GitHub contributors"></a>
+  <a href="https://github.com/HayashiUme/Finesse/pull/"><img src="https://badgen.net/github/prs/HayashiUme/Finesse" alt="GitHub total-pull-requests"></a>
+</p>
 
 ## Features
 - FriendCode support (authentication)
