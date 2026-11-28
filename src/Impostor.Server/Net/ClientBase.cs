@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Impostor.Api;
@@ -43,6 +43,10 @@ namespace Impostor.Server.Net
         public string? FriendCode { get; set; }
 
         public string? Puid { get; set; }
+
+        internal string? EosToken { get; set; }
+
+        internal int DeltaPort { get; set; }
 
         public ColorType? PreviousColor { get; set; } = null;
 

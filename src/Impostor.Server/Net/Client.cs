@@ -25,8 +25,10 @@ namespace Impostor.Server.Net
         private readonly ClientManager _clientManager;
         private readonly GameManager _gameManager;
         private readonly ICustomMessageManager<ICustomRootMessage> _customMessageManager;
+        private readonly GameCodeAuthManager _gameCodeAuth;
+        private readonly ServerConfig _serverConfig;
 
-        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
+        public Client(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, GameManager gameManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, GameCodeAuthManager gameCodeAuth, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, IHazelConnection connection)
             : base(name, gameVersion, language, chatMode, platformSpecificData, connection)
         {
             _logger = logger;
@@ -34,6 +36,8 @@ namespace Impostor.Server.Net
             _clientManager = clientManager;
             _gameManager = gameManager;
             _customMessageManager = customMessageManager;
+            _gameCodeAuth = gameCodeAuth;
+            _serverConfig = serverConfig.Value;
         }
 
         public override async ValueTask<bool> ReportCheatAsync(CheatContext context, CheatCategory category, string message)
@@ -149,6 +153,20 @@ namespace Impostor.Server.Net
                         Message00HostGameC2S.Deserialize(reader, out gameOptions, out _, out gameFilterOptions);
                     }
 
+                    if (_serverConfig.UseGameCodeMode)
+                    {
+                        if (!_gameCodeAuth.TryConsumeHost(Connection.EndPoint.Address.ToString(), Name, GameVersion.Value, out var auth, out var matchInfo))
+                        {
+                            await DisconnectAsync(DisconnectReason.Custom, "Unable to verify host authentication. Please retry.");
+                            _logger.LogWarning("GameCode host authentication failed for {Name}: {MatchInfo}", Name, matchInfo);
+                            return;
+                        }
+
+                        FriendCode = auth!.FriendCode;
+                        Puid = auth.ProductUserId;
+                        EosToken = auth.EosToken;
+                    }
+
                     // Create game.
                     var game = await _gameManager.CreateAsync(this, gameOptions, gameFilterOptions, modGuid);
 
@@ -176,6 +194,33 @@ namespace Impostor.Server.Net
                 case MessageFlags.JoinGame:
                 {
                     Message01JoinGameC2S.Deserialize(reader, out var gameCode);
+
+                    if (_serverConfig.UseGameCodeMode)
+                    {
+                        var resolvedChallenge = _gameCodeAuth.TryResolveChallenge(gameCode, Id, out var auth, out var targetCode, out var matchInfo);
+                        if (resolvedChallenge)
+                        {
+                            gameCode = targetCode;
+                            FriendCode = auth!.FriendCode;
+                            Puid = auth.ProductUserId;
+                            EosToken = auth.EosToken;
+                            using var rekeyWriter = MessageWriter.Get(MessageType.Reliable);
+                            Message00HostGameS2C.Serialize(rekeyWriter, targetCode);
+                            await Connection.SendAsync(rekeyWriter);
+                        }
+                        else if (_gameCodeAuth.TryConsumePendingJoin(gameCode, Connection.EndPoint.Address.ToString(), Name, GameVersion.Value, out auth, out matchInfo))
+                        {
+                            FriendCode = auth!.FriendCode;
+                            Puid = auth.ProductUserId;
+                            EosToken = auth.EosToken;
+                        }
+                        else
+                        {
+                            _logger.LogWarning("GameCode join authentication failed for {Name}: {MatchInfo}", Name, matchInfo);
+                            await DisconnectAsync(DisconnectReason.Custom, "Unable to verify game join authentication. Please retry.");
+                            return;
+                        }
+                    }
 
                     var game = _gameManager.Find(gameCode);
                     if (game == null)

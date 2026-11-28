@@ -31,6 +31,7 @@ namespace Impostor.Server.Net.Manager
         private readonly IEventManager _eventManager;
         private readonly IGameCodeFactory _gameCodeFactory;
         private readonly ICompatibilityManager _compatibilityManager;
+        private readonly GameCodeAuthManager _gameCodeAuth;
         private readonly ConcurrentDictionary<IClient, Game?> _gamesCreatedBy;
 
         public GameManager(
@@ -40,7 +41,8 @@ namespace Impostor.Server.Net.Manager
             IEventManager eventManager,
             IGameCodeFactory gameCodeFactory,
             IOptions<CompatibilityConfig> compatibilityConfig,
-            ICompatibilityManager compatibilityManager)
+            ICompatibilityManager compatibilityManager,
+            GameCodeAuthManager gameCodeAuth)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -50,6 +52,7 @@ namespace Impostor.Server.Net.Manager
             _games = new ConcurrentDictionary<int, Game>();
             _compatibilityConfig = compatibilityConfig.Value;
             _compatibilityManager = compatibilityManager;
+            _gameCodeAuth = gameCodeAuth;
             _gamesCreatedBy = new ConcurrentDictionary<IClient, Game?>();
         }
 
@@ -133,7 +136,7 @@ namespace Impostor.Server.Net.Manager
                 ? ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions, modGuid.Value)
                 : ActivatorUtilities.CreateInstance<Game>(_serviceProvider, _publicIp, gameCode, options, filterOptions);
 
-            if (!_games.TryAdd(gameCode, game))
+            if (!_gameCodeAuth.TryReserveGameCode(gameCode, () => _games.TryAdd(gameCode, game)))
             {
                 return (false, null);
             }

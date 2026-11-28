@@ -12,6 +12,8 @@ using Impostor.Api.Games.Managers;
 using Impostor.Api.Innersloth;
 using Impostor.Api.Innersloth.GameFilters;
 using Impostor.Server.Extensions;
+using Impostor.Server.Net;
+using Impostor.Server.Service.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,6 +31,9 @@ public sealed class GamesController : ControllerBase
     private readonly ListingManager _listingManager;
     private readonly HostServer _hostServer;
     private readonly ILogger<GamesController> _logger;
+    private readonly ServerConfig _serverConfig;
+    private readonly AuthCacheService _authCache;
+    private readonly GameCodeAuthManager _gameCodeAuth;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GamesController"/> class.
@@ -37,13 +42,16 @@ public sealed class GamesController : ControllerBase
     /// <param name="listingManager">ListingManager responsible for filtering.</param>
     /// <param name="serverConfig">Impostor configuration section containing the public ip address of this server.</param>
     /// <param name="logger">DI injected logger.</param>
-    public GamesController(IGameManager gameManager, ListingManager listingManager, IOptions<ServerConfig> serverConfig, ILogger<GamesController> logger)
+    public GamesController(IGameManager gameManager, ListingManager listingManager, IOptions<ServerConfig> serverConfig, ILogger<GamesController> logger, AuthCacheService authCache, GameCodeAuthManager gameCodeAuth)
     {
         _gameManager = gameManager;
         _listingManager = listingManager;
         var config = serverConfig.Value;
+        _serverConfig = config;
         _hostServer = HostServer.From(IPAddress.Parse(config.ResolvePublicIp()), config.PublicPort);
         _logger = logger;
+        _authCache = authCache;
+        _gameCodeAuth = gameCodeAuth;
     }
 
     /// <summary>
@@ -71,8 +79,10 @@ public sealed class GamesController : ControllerBase
 
         var clientVersion = new GameVersion(token.Content.ClientVersion);
 
+        var auth = _authCache.FindByToken(token.Hash);
+        if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
         var listings = _listingManager.FindListings(HttpContext, mapId, numImpostors, lang, clientVersion);
-        return Ok(listings.Select(GameListing.From));
+        return Ok(listings.Select(game => BuildListing(game, auth)));
     }
 
     /// <summary>
@@ -85,6 +95,9 @@ public sealed class GamesController : ControllerBase
     {
         // NOTE: this method is no longer used by Among Us 16.0.0 and is only kept for backwards compatibility
         var code = new GameCode(gameId);
+        var auth = TryGetAuthInfo();
+        if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
+        if (_gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -93,7 +106,11 @@ public sealed class GamesController : ControllerBase
             return NotFound(new MatchmakerResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        return Ok(HostServer.From(game.PublicIp));
+        if (_serverConfig.UseGameCodeMode && auth != null) _gameCodeAuth.RegisterPendingJoin(code, auth);
+        var port = !_serverConfig.UseGameCodeMode && auth?.Port > 0
+            ? (ushort)auth.Port
+            : _serverConfig.UseGameCodeMode ? _serverConfig.GameCodePublicPort : (ushort)game.PublicIp.Port;
+        return Ok(HostServer.From(game.PublicIp.Address, port));
     }
 
     /// <summary>
@@ -103,13 +120,25 @@ public sealed class GamesController : ControllerBase
     [HttpPut]
     public IActionResult Put()
     {
-        return Ok(_hostServer);
+        var auth = TryGetAuthInfo();
+        if (_serverConfig.UseGameCodeMode)
+        {
+            if (auth == null) return Unauthorized();
+            _gameCodeAuth.RegisterHost(auth, auth.ClientIp);
+        }
+
+        var port = !_serverConfig.UseGameCodeMode && auth?.Port > 0
+            ? (ushort)auth.Port
+            : _serverConfig.UseGameCodeMode ? _serverConfig.GameCodePublicPort : _serverConfig.PublicPort;
+        return Ok(HostServer.From(IPAddress.Parse(_serverConfig.ResolvePublicIp()), port));
     }
 
     [HttpGet("{gameId}")]
     public IActionResult Show([FromRoute] int gameId)
     {
         var code = new GameCode(gameId);
+        var auth = TryGetAuthInfo();
+        if (_gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -118,7 +147,8 @@ public sealed class GamesController : ControllerBase
             return NotFound(new FindGameByCodeResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        return Ok(new FindGameByCodeResponse(GameListing.From(game)));
+        if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
+        return Ok(new FindGameByCodeResponse(BuildListing(game, auth)));
     }
 
     [HttpGet("filtered")]
@@ -144,8 +174,10 @@ public sealed class GamesController : ControllerBase
                 return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "Invalid filterSets")));
             }
 
+            var auth = TryGetAuthInfo();
+            if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
             var filteredGames = _listingManager.FindListingsV2(HttpContext, filtersList);
-            var gameListings = filteredGames.Select(GameListing.From).ToList();
+            var gameListings = filteredGames.Select(game => BuildListing(game, auth)).ToList();
 
             var response = new
             {
@@ -167,6 +199,40 @@ public sealed class GamesController : ControllerBase
         {
             return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.ServerError, "Unknown exception caught in filter" + ex)));
         }
+    }
+
+    private UserAuthInfo? TryGetAuthInfo()
+    {
+        var header = Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(header) || !AuthenticationHeaderValue.TryParse(header, out var authorization)
+            || !string.Equals(authorization.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(authorization.Parameter)) return null;
+        try
+        {
+            var token = JsonSerializer.Deserialize<TokenController.Token>(Convert.FromBase64String(authorization.Parameter));
+            return token == null ? null : _authCache.FindByToken(token.Hash);
+        }
+        catch (Exception ex) when (ex is FormatException or JsonException)
+        {
+            return null;
+        }
+    }
+
+    private GameListing BuildListing(IGame game, UserAuthInfo? auth)
+    {
+        var code = game.Code;
+        var port = _serverConfig.PublicPort;
+        if (_serverConfig.UseGameCodeMode)
+        {
+            code = _gameCodeAuth.CreateChallenge(game.Code, auth!, challenge => _gameManager.Find(challenge) != null);
+            port = _serverConfig.GameCodePublicPort;
+        }
+        else if (auth?.Port > 0)
+        {
+            port = (ushort)auth.Port;
+        }
+
+        return GameListing.From(game, code, port);
     }
 
     private static uint ConvertAddressToNumber(IPAddress address)
@@ -290,15 +356,15 @@ public sealed class GamesController : ControllerBase
         [JsonPropertyName("Options")]
         public required string Options { get; init; }
 
-        public static GameListing From(IGame game)
+        public static GameListing From(IGame game, GameCode? listingCode = null, ushort? listingPort = null)
         {
             var platform = game.Host?.Client.PlatformSpecificData;
 
             return new GameListing
             {
                 Ip = ConvertAddressToNumber(game.PublicIp.Address),
-                Port = (ushort)game.PublicIp.Port,
-                GameId = game.Code,
+                Port = listingPort ?? (ushort)game.PublicIp.Port,
+                GameId = listingCode ?? game.Code,
                 PlayerCount = game.PlayerCount,
                 HostName = game.DisplayName ?? game.Host?.Client.Name ?? "Unknown host",
                 TrueHostName = game.DisplayName ?? game.Host?.Client.Name ?? "Unknown host",

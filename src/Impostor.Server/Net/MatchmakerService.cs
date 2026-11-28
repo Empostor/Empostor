@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Impostor.Api.Config;
+using Impostor.Server.Service.Firewall;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,31 +16,68 @@ namespace Impostor.Server.Net
         private readonly ServerConfig _serverConfig;
         private readonly HttpServerConfig _httpServerConfig;
         private readonly Matchmaker _matchmaker;
+        private readonly PortPoolService _portPool;
+        private readonly IFirewallService _firewall;
 
         public MatchmakerService(
             ILogger<MatchmakerService> logger,
             IOptions<ServerConfig> serverConfig,
             IOptions<HttpServerConfig> httpServerConfig,
-            Matchmaker matchmaker)
+            Matchmaker matchmaker,
+            PortPoolService portPool,
+            IFirewallService firewall)
         {
             _logger = logger;
             _serverConfig = serverConfig.Value;
             _httpServerConfig = httpServerConfig.Value;
             _matchmaker = matchmaker;
+            _portPool = portPool;
+            _firewall = firewall;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse(_serverConfig.ResolveListenIp()), _serverConfig.ListenPort);
+            var listenAddress = IPAddress.Parse(_serverConfig.ResolveListenIp());
 
-            await _matchmaker.StartAsync(endpoint);
+            if (_serverConfig.UseGameCodeMode)
+            {
+                // GameCode mode: dynamic ports are unused; open a single shared UDP port.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.GameCodeListenPort);
+                await _matchmaker.StartAsync(endpoint);
 
-            _logger.LogInformation(
-                "Matchmaker is listening on {0}:{1}, the public server ip is {2}:{3}.",
-                endpoint.Address,
-                endpoint.Port,
-                _serverConfig.ResolvePublicIp(),
-                _serverConfig.PublicPort);
+                _logger.LogInformation(
+                    "GameCode Matchmaker enabled: single shared UDP port {Port} (dynamic delta ports disabled).",
+                    endpoint.Port);
+            }
+            else if (_portPool.IsEnabled)
+            {
+                // Dynamic DeltaPort mode: no static port is opened at startup; ports are allocated on demand.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
+                _matchmaker.Initialize(endpoint);
+                _logger.LogInformation(
+                    "Delta Matchmaker enabled: no static UDP port at startup (pool {Start}-{End}), ports created per player.",
+                    _serverConfig.DeltaPortStart,
+                    _serverConfig.DeltaPortEnd);
+            }
+            else
+            {
+                // Fixed-port mode: open the main listener on the configured port.
+                var endpoint = new IPEndPoint(listenAddress, _serverConfig.ListenPort);
+                await _matchmaker.StartAsync(endpoint);
+
+                _logger.LogInformation(
+                    "Matchmaker is listening on {Address}:{Port}, the public server ip is {PublicIp}:{PublicPort}.",
+                    endpoint.Address,
+                    endpoint.Port,
+                    _serverConfig.ResolvePublicIp(),
+                    _serverConfig.PublicPort);
+            }
+
+            // Open firewall for HTTP server TCP port
+            if (_httpServerConfig.Enabled)
+            {
+                await _firewall.OpenPortAsync(_httpServerConfig.ListenPort, cancellationToken, "tcp");
+            }
 
             var runningOutsideContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == null;
             if (_serverConfig.PublicIp == "127.0.0.1")
@@ -47,12 +85,12 @@ namespace Impostor.Server.Net
                 // NOTE: If this warning annoys you, set your PublicIp to "localhost"
                 _logger.LogError("Your PublicIp is set to the default value of 127.0.0.1.");
                 _logger.LogError("To allow people on other devices to connect to your server, change this value to your Public IP address");
-                _logger.LogError("For more info on how to do this see https://github.com/Impostor/Impostor/blob/master/docs/Server-configuration.md");
+                _logger.LogError("For more info on how to do this see https://empostor.github.io/Server-configuration");
             }
             else if (_httpServerConfig.ListenIp == "0.0.0.0" && runningOutsideContainer)
             {
                 _logger.LogWarning("Since Among Us 16.0.5 it is required to support HTTPS for players to connect, we recommend setting up a reverse proxy:");
-                _logger.LogWarning("See https://github.com/Impostor/Impostor/blob/master/docs/Http-server.md for instructions");
+                _logger.LogWarning("See https://empostor.github.io/Http-server for instructions");
             }
         }
 

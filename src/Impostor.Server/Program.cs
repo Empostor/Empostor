@@ -22,6 +22,8 @@ using Impostor.Server.Net.Manager;
 using Impostor.Server.Net.Messages;
 using Impostor.Server.Plugins;
 using Impostor.Server.Recorder;
+using Impostor.Server.Service.Auth;
+using Impostor.Server.Service.Firewall;
 using Impostor.Server.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -106,9 +108,27 @@ namespace Impostor.Server
                     services.Configure<AntiCheatConfig>(host.Configuration.GetSection(AntiCheatConfig.Section));
                     services.Configure<CompatibilityConfig>(host.Configuration.GetSection(CompatibilityConfig.Section));
                     services.Configure<ServerConfig>(host.Configuration.GetSection(ServerConfig.Section));
+                    services.Configure<AuthApiConfig>(host.Configuration.GetSection(AuthApiConfig.Section));
                     services.Configure<TimeoutConfig>(host.Configuration.GetSection(TimeoutConfig.Section));
                     services.Configure<HttpServerConfig>(host.Configuration.GetSection(HttpServerConfig.Section));
 
+                    services.AddHttpClient("innersloth");
+                    services.AddHttpClient("ume");
+                    services.AddSingleton<AuthCacheService>();
+                    services.AddSingleton<PortPoolService>();
+                    services.AddSingleton<IFirewallService>(sp =>
+                    {
+                        var server = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ServerConfig>>().Value;
+                        if (server.UseUfw && server.UseFirewalld)
+                        {
+                            throw new InvalidOperationException("Enable only one firewall backend: UFW or firewalld.");
+                        }
+
+                        if (server.UseUfw) return ActivatorUtilities.CreateInstance<UfwFirewallService>(sp);
+                        if (server.UseFirewalld) return ActivatorUtilities.CreateInstance<FirewalldFirewallService>(sp);
+                        return ActivatorUtilities.CreateInstance<NoopFirewallService>(sp);
+                    });
+                    services.AddSingleton<GameCodeAuthManager>();
                     services.AddSingleton<ICompatibilityManager, CompatibilityManager>();
                     services.AddSingleton<ClientManager>();
                     services.AddSingleton<IClientManager>(p => p.GetRequiredService<ClientManager>());
@@ -144,6 +164,7 @@ namespace Impostor.Server
                     services.AddSingleton<IGameCodeFactory, GameCodeFactory>();
                     services.AddSingleton<IEventManager, EventManager>();
                     services.AddSingleton<Matchmaker>();
+                    services.AddSingleton<IDeltaListenerManager>(sp => sp.GetRequiredService<Matchmaker>());
                     services.AddHostedService<MatchmakerService>();
                 })
                 .UseSerilog((context, loggerConfiguration) =>

@@ -11,6 +11,7 @@ using Impostor.Api.Net.Manager;
 using Impostor.Hazel;
 using Impostor.Server.Events.Client;
 using Impostor.Server.Net.Factories;
+using Impostor.Server.Service.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -24,9 +25,11 @@ namespace Impostor.Server.Net.Manager
         private readonly ICompatibilityManager _compatibilityManager;
         private readonly CompatibilityConfig _compatibilityConfig;
         private readonly IClientFactory _clientFactory;
+        private readonly AuthCacheService _authCache;
+        private readonly PortPoolService _portPool;
         private int _idLast;
 
-        public ClientManager(ILogger<ClientManager> logger, IEventManager eventManager, IClientFactory clientFactory, ICompatibilityManager compatibilityManager, IOptions<CompatibilityConfig> compatibilityConfig)
+        public ClientManager(ILogger<ClientManager> logger, IEventManager eventManager, IClientFactory clientFactory, ICompatibilityManager compatibilityManager, IOptions<CompatibilityConfig> compatibilityConfig, AuthCacheService authCache, PortPoolService portPool)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -34,6 +37,8 @@ namespace Impostor.Server.Net.Manager
             _clients = new ConcurrentDictionary<int, ClientBase>();
             _compatibilityManager = compatibilityManager;
             _compatibilityConfig = compatibilityConfig.Value;
+            _authCache = authCache;
+            _portPool = portPool;
 
             if (_compatibilityConfig.AllowFutureGameVersions
                 || _compatibilityConfig.AllowHostAuthority
@@ -76,7 +81,7 @@ namespace Impostor.Server.Net.Manager
             return clientId;
         }
 
-        public async ValueTask RegisterConnectionAsync(IHazelConnection connection, string name, GameVersion clientVersion, Language language, QuickChatModes chatMode, PlatformSpecificData? platformSpecificData)
+        public async ValueTask RegisterConnectionAsync(IHazelConnection connection, string name, GameVersion clientVersion, Language language, QuickChatModes chatMode, PlatformSpecificData? platformSpecificData, int deltaPort = 0)
         {
             var versionCompare = _compatibilityManager.CanConnectToServer(clientVersion);
             if (versionCompare == ICompatibilityManager.VersionCompareResult.ServerTooOld && _compatibilityConfig.AllowFutureGameVersions && platformSpecificData != null)
@@ -131,6 +136,30 @@ namespace Impostor.Server.Net.Manager
             var id = NextId();
 
             client.Id = id;
+            if (deltaPort > 0)
+            {
+                var authInfo = _authCache.FindByPort(deltaPort);
+                if (authInfo == null)
+                {
+                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, "Authentication expired. Please reconnect.");
+                    return;
+                }
+
+                if ((!string.IsNullOrEmpty(authInfo.Name) && !string.Equals(authInfo.Name, name, StringComparison.OrdinalIgnoreCase))
+                    || (authInfo.ClientVersion > 0 && authInfo.ClientVersion != clientVersion.Value))
+                {
+                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, "Authentication does not match this client. Please reconnect.");
+                    return;
+                }
+
+                client.FriendCode = authInfo.FriendCode;
+                client.Puid = authInfo.ProductUserId;
+                client.EosToken = authInfo.EosToken;
+                client.DeltaPort = deltaPort;
+                _authCache.ConfirmPort(deltaPort);
+                _portPool.ConfirmPort(deltaPort);
+            }
+
             _logger.LogTrace("Client connected.");
             _clients.TryAdd(id, client);
 
@@ -141,6 +170,11 @@ namespace Impostor.Server.Net.Manager
         {
             _logger.LogTrace("Client disconnected.");
             _clients.TryRemove(client.Id, out _);
+            if (client is ClientBase { DeltaPort: > 0 } connected)
+            {
+                _authCache.RemoveByPort(connected.DeltaPort);
+                _portPool.ReturnPort(connected.DeltaPort);
+            }
         }
 
         public bool Validate(IClient client)
