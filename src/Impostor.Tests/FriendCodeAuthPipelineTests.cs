@@ -112,39 +112,55 @@ public sealed class FriendCodeAuthPipelineTests
     }
 
     [Fact]
-    public void GameCodeChallenge_IsOneUseAndResolvesToRealGame()
+    public void GameCodeAlias_IsOneUseAndResolvesToRealGame()
     {
         using var auth = CreateGameCodeAuth();
         var target = GameCode.Create();
-        var user = new UserAuthInfo { ProductUserId = "puid", MatchmakerToken = "session" };
-        var challenge = auth.CreateChallenge(target, user, _ => false);
+        var user = new UserAuthInfo { ProductUserId = "puid", MatchmakerToken = "session", Name = "Player" };
+        var alias = auth.IssueAlias(user, target, _ => false);
 
-        Assert.True(auth.TryGetTarget(challenge, out var mapped));
-        Assert.Equal(target, mapped);
-        Assert.True(auth.TryResolveChallenge(challenge, 8, out var matchedUser, out mapped, out _));
-        Assert.Same(user, matchedUser);
-        Assert.Equal(target, mapped);
-        Assert.False(auth.TryResolveChallenge(challenge, 9, out _, out _, out _));
+        Assert.NotEqual(target, alias);
+        Assert.True(auth.IsAlias(alias));
+        var claim = auth.ClaimJoin(alias, "Player");
+        Assert.NotNull(claim);
+        Assert.Same(user, claim!.Value.User);
+        Assert.Equal(target, claim.Value.Target);
+        Assert.Equal(alias.Value, claim.Value.Alias);
+        Assert.False(auth.IsAlias(alias));
+        Assert.Null(auth.ClaimJoin(alias, "Player"));
     }
 
     [Fact]
-    public void GameCodeLegacyJoin_ConsumesMatchingPendingIdentityOnlyOnce()
+    public void GameCodeAlias_IsReservedAgainstNewGameCreation()
+    {
+        using var auth = CreateGameCodeAuth();
+        var user = new UserAuthInfo { ProductUserId = "puid", MatchmakerToken = "session", Name = "Player" };
+        var target = GameCode.Create();
+        var alias = auth.IssueAlias(user, target, _ => false);
+
+        Assert.False(auth.TryReserveGameCode(alias, () => true));
+        Assert.True(auth.TryReserveGameCode(target, () => true));
+        Assert.NotEqual(target, alias);
+    }
+
+    [Fact]
+    public void GameCodeTickets_MatchHostsAndLegacyJoinsByName()
     {
         using var auth = CreateGameCodeAuth();
         var target = GameCode.Create();
-        var user = new UserAuthInfo
-        {
-            ProductUserId = "puid",
-            MatchmakerToken = "session",
-            Name = "Player",
-            ClientVersion = 4321,
-            ClientIp = "192.0.2.20",
-        };
-        auth.RegisterPendingJoin(target, user);
+        var joiner = new UserAuthInfo { ProductUserId = "joiner", MatchmakerToken = "join-session", Name = "Joiner" };
+        var host = new UserAuthInfo { ProductUserId = "host", MatchmakerToken = "host-session", Name = "Host" };
 
-        Assert.True(auth.TryConsumePendingJoin(target, "::ffff:192.0.2.20", "Player", 4321, out var matched, out _));
-        Assert.Same(user, matched);
-        Assert.False(auth.TryConsumePendingJoin(target, "192.0.2.20", "Player", 4321, out _, out _));
+        Assert.True(auth.TryExpectJoin(joiner, target));
+        Assert.True(auth.TryExpectHost(host));
+        var joinClaim = auth.ClaimJoin(target, "Joiner");
+        var hostClaim = auth.ClaimHost("Host");
+        Assert.Same(joiner, joinClaim!.Value.User);
+        Assert.Equal(target, joinClaim.Value.Target);
+        Assert.Equal(0, joinClaim.Value.Alias);
+        Assert.Same(host, hostClaim);
+        Assert.Null(auth.ClaimJoin(target, "Joiner"));
+        Assert.Null(auth.ClaimHost("Host"));
     }
 
     [Fact]

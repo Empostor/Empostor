@@ -44,6 +44,8 @@ namespace Impostor.Server.Net
 
         public string? Puid { get; set; }
 
+        public int JoinAlias { get; set; }
+
         internal string? EosToken { get; set; }
 
         internal int DeltaPort { get; set; }

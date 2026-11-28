@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Impostor.Api.Config;
 using Impostor.Api.Games;
+using Impostor.Api.Innersloth;
 using Impostor.Server.Service.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,475 +14,176 @@ namespace Impostor.Server.Net;
 
 public sealed class GameCodeAuthManager : IDisposable
 {
-    // Maximum number of legacy-path pending entries kept per real code.
-    private const int MaxPendingPerCode = 64;
+    private const int HostKey = 0;
+    private const int MaxWaitingPerCode = 64;
+    private const int AliasAttempts = 16;
+    private static readonly TimeSpan HostLifetime = TimeSpan.FromSeconds(15);
 
     private readonly ILogger<GameCodeAuthManager> _logger;
     private readonly TimeSpan _lifetime;
-
     private readonly object _gate = new();
-
-    // Challenge code -> challenge
-    private readonly Dictionary<int, Challenge> _challenges = new();
-
-    // Reuse a live challenge when a client refreshes the same lobby listing.
-    private readonly Dictionary<(string Token, GameCode Target), int> _challengeOwners = new();
-
-    // Legacy path: real code -> auth info stashed by HTTP join requests
-    private readonly Dictionary<GameCode, List<PendingJoin>> _pendingJoins = new();
-
-    // Legacy path: source IP -> auth info stashed by HTTP host requests
-    private readonly Dictionary<string, List<PendingHost>> _hosts = new();
-
+    private readonly Dictionary<int, Ticket> _aliases = new();
+    private readonly Dictionary<(string Token, int Target), int> _aliasOwners = new();
+    private readonly ConcurrentDictionary<int, List<Ticket>> _waiting = new();
     private readonly Timer _cleanupTimer;
 
-    public GameCodeAuthManager(
-        ILogger<GameCodeAuthManager> logger,
-        IOptions<ServerConfig> serverConfig)
+    public GameCodeAuthManager(ILogger<GameCodeAuthManager> logger, IOptions<ServerConfig> serverConfig)
     {
         _logger = logger;
         _lifetime = serverConfig.Value.TemporaryGameCodeLifetime;
-
         _cleanupTimer = new Timer(_ => Cleanup(), null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
     }
 
-    private bool Expired(DateTime createdAt) => DateTime.UtcNow - createdAt > _lifetime;
-
-    // Issues a challenge code for the listing. A live game code can never be used as a challenge.
-    public GameCode CreateChallenge(GameCode targetCode, UserAuthInfo user, Func<GameCode, bool> isGameCodeInUse)
+    public bool IsAlias(GameCode code)
     {
         lock (_gate)
         {
-            RemoveExpiredChallenge(targetCode.Value);
-            var owner = (user.MatchmakerToken, targetCode);
-            if (_challengeOwners.TryGetValue(owner, out var existingCode)
-                && _challenges.TryGetValue(existingCode, out var existing)
-                && !Expired(existing.CreatedAt)
-                && existing.OccupiedBy == null)
-            {
-                return existing.Code;
-            }
-
-            _challengeOwners.Remove(owner);
-            var code = NewChallengeCode(targetCode, isGameCodeInUse);
-
-            _challenges[code.Value] = new Challenge
-            {
-                Code = code,
-                TargetCode = targetCode,
-                User = user,
-                Name = user.Name,
-                GameVersion = user.ClientVersion,
-                CreatedAt = DateTime.UtcNow,
-            };
-            _challengeOwners[owner] = code.Value;
-
-            return code;
+            RemoveExpiredAliases();
+            return _aliases.ContainsKey(code.Value);
         }
     }
 
-    // Serializes game-code insertion with challenge allocation to prevent cross-type collisions.
+    public GameCode IssueAlias(UserAuthInfo user, GameCode targetCode, Func<int, bool> isCodeInUse)
+    {
+        lock (_gate)
+        {
+            RemoveExpiredAliases();
+            var owner = (user.MatchmakerToken, targetCode.Value);
+            if (_aliasOwners.TryGetValue(owner, out var existingCode)
+                && _aliases.TryGetValue(existingCode, out var existing)
+                && existing.ExpiresAt > DateTime.UtcNow)
+            {
+                return new GameCode(existingCode);
+            }
+
+            _aliasOwners.Remove(owner);
+            for (var attempt = 0; attempt < AliasAttempts; attempt++)
+            {
+                var alias = GameCodeParser.GenerateCode(6);
+                if (isCodeInUse(alias) || _aliases.ContainsKey(alias))
+                {
+                    continue;
+                }
+
+                _aliases.Add(alias, new Ticket(user, targetCode.Value, DateTime.UtcNow + _lifetime));
+                _aliasOwners[owner] = alias;
+                return new GameCode(alias);
+            }
+
+            _logger.LogWarning("Could not issue a temporary GameCode alias for {Name}; falling back to name matching", user.Name);
+            TryExpectJoin(user, targetCode);
+            return targetCode;
+        }
+    }
+
     public bool TryReserveGameCode(GameCode code, Func<bool> tryAddGame)
     {
         lock (_gate)
         {
-            RemoveExpiredChallenge(code.Value);
-            return !_challenges.ContainsKey(code.Value) && tryAddGame();
+            RemoveExpiredAliases();
+            return !_aliases.ContainsKey(code.Value) && tryAddGame();
         }
     }
 
-    // Challenge code -> real code (non-consuming). Used to reverse-map listings and PlatformId queries.
-    public bool TryGetTarget(GameCode code, out GameCode targetCode)
+    public bool TryExpectHost(UserAuthInfo user)
+        => Enqueue(HostKey, user, HostKey, _lifetime < HostLifetime ? _lifetime : HostLifetime);
+
+    public bool TryExpectJoin(UserAuthInfo user, GameCode targetCode)
+        => Enqueue(targetCode.Value, user, targetCode.Value, _lifetime);
+
+    public UserAuthInfo? ClaimHost(string playerName)
+        => ClaimWaiting(HostKey, playerName)?.User;
+
+    public (UserAuthInfo User, GameCode Target, int Alias)? ClaimJoin(GameCode joinCode, string playerName)
     {
         lock (_gate)
         {
-            if (_challenges.TryGetValue(code.Value, out var challenge) && !Expired(challenge.CreatedAt))
+            RemoveExpiredAliases();
+            if (_aliases.Remove(joinCode.Value, out var alias))
             {
-                targetCode = challenge.TargetCode;
-                return true;
+                _aliasOwners.Remove((alias.User.MatchmakerToken, alias.Target));
+                return (alias.User, new GameCode(alias.Target), joinCode.Value);
             }
         }
 
-        targetCode = default;
-        return false;
+        var pending = ClaimWaiting(joinCode.Value, playerName);
+        return pending == null ? null : (pending.User, new GameCode(pending.Target), 0);
     }
 
-    // Resolves auth info from the code of a UDP JoinGame.
-    public bool TryResolveChallenge(GameCode code, int clientId, out UserAuthInfo? user, out GameCode targetCode,
-        out string reason)
+    public void Dispose() => _cleanupTimer.Dispose();
+
+    private bool Enqueue(int key, UserAuthInfo user, int target, TimeSpan lifetime)
     {
-        user = null;
-        targetCode = default;
-
-        lock (_gate)
+        var list = _waiting.GetOrAdd(key, static _ => new List<Ticket>());
+        lock (list)
         {
-            if (!_challenges.TryGetValue(code.Value, out var challenge))
+            RemoveExpired(list);
+            if (list.Count >= MaxWaitingPerCode)
             {
-                reason = "unknown challenge code";
+                _logger.LogWarning("GameCode authentication queue is full for {Key}", key);
                 return false;
             }
 
-            if (Expired(challenge.CreatedAt))
+            foreach (var other in list)
             {
-                _challenges.Remove(code.Value);
-                reason = "challenge expired";
-                return false;
+                if (string.Equals(other.User.Name, user.Name, StringComparison.Ordinal)
+                    && !string.Equals(other.User.ProductUserId, user.ProductUserId, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("{Name} is already queued by a different account", user.Name);
+                    return false;
+                }
             }
 
-            if (challenge.OccupiedBy != null && challenge.OccupiedBy != clientId)
-            {
-                reason = $"challenge already used by client {challenge.OccupiedBy}";
-                return false;
-            }
-
-            if (challenge.OccupiedBy == clientId)
-            {
-                reason = "challenge already consumed";
-                return false;
-            }
-
-            challenge.OccupiedBy = clientId;
-            user = challenge.User;
-            targetCode = challenge.TargetCode;
-            reason = $"challenge matched (target {challenge.TargetCode.Code})";
+            list.RemoveAll(ticket => string.Equals(ticket.User.ProductUserId, user.ProductUserId, StringComparison.Ordinal));
+            list.Add(new Ticket(user, target, DateTime.UtcNow + lifetime));
             return true;
         }
     }
 
-    // Legacy path (POST /api/games): stash auth info as a join request addressed to the real code.
-    public void RegisterPendingJoin(GameCode realCode, UserAuthInfo user)
+    private Ticket? ClaimWaiting(int key, string playerName)
     {
-        lock (_gate)
+        if (!_waiting.TryGetValue(key, out var list)) return null;
+        lock (list)
         {
-            if (!_pendingJoins.TryGetValue(realCode, out var list))
-            {
-                list = new List<PendingJoin>();
-                _pendingJoins[realCode] = list;
-            }
-
-            list.RemoveAll(x => Expired(x.CreatedAt));
-
-            var existing = list.FindIndex(x => x.User.ProductUserId == user.ProductUserId);
-            if (existing >= 0)
-            {
-                list[existing].CreatedAt = DateTime.UtcNow;
-                list[existing].Ip = user.ClientIp;
-                return;
-            }
-
-            if (list.Count >= MaxPendingPerCode)
-            {
-                // Drop the oldest entry when the list overflows.
-                list.RemoveAt(0);
-            }
-
-            list.Add(new PendingJoin
-            {
-                User = user,
-                Name = user.Name,
-                GameVersion = user.ClientVersion,
-                Ip = user.ClientIp,
-                CreatedAt = DateTime.UtcNow,
-            });
+            RemoveExpired(list);
+            var index = list.FindIndex(ticket => string.Equals(ticket.User.Name, playerName, StringComparison.Ordinal));
+            if (index < 0) return null;
+            var ticket = list[index];
+            list.RemoveAt(index);
+            return ticket;
         }
-    }
-
-    // Legacy path: match a connection that sent JoinGame with the real code by IP / name / version.
-    public bool TryConsumePendingJoin(GameCode realCode, string udpIp, string playerName, int gameVersion,
-        out UserAuthInfo? user, out string matchInfo)
-    {
-        user = null;
-
-        lock (_gate)
-        {
-            if (!_pendingJoins.TryGetValue(realCode, out var list))
-            {
-                matchInfo = "no pending join for this code";
-                return false;
-            }
-
-            list.RemoveAll(x => Expired(x.CreatedAt));
-            if (list.Count == 0)
-            {
-                _pendingJoins.Remove(realCode);
-                matchInfo = "pending join expired";
-                return false;
-            }
-
-            var best = PickBest(list.Select(x => (x.Ip, x.Name, x.GameVersion, x.CreatedAt)), udpIp, playerName, gameVersion, out var signals);
-            if (best < 0)
-            {
-                matchInfo = $"no entry matched (ip={Normalize(udpIp) ?? "?"} name=\"{playerName}\" version={gameVersion}, {list.Count} pending)";
-                return false;
-            }
-
-            user = list[best].User;
-            matchInfo = $"{signals} of {list.Count} pending";
-            list.RemoveAt(best);
-
-            if (list.Count == 0)
-            {
-                _pendingJoins.Remove(realCode);
-            }
-
-            return true;
-        }
-    }
-
-    // Hosting starts (PUT /api/games). Neither game nor code exists yet, so key the stash by source IP.
-    public void RegisterHost(UserAuthInfo user, string? ip)
-    {
-        var key = Normalize(ip) ?? "(unknown)";
-
-        lock (_gate)
-        {
-            if (!_hosts.TryGetValue(key, out var list))
-            {
-                list = new List<PendingHost>();
-                _hosts[key] = list;
-            }
-
-            list.RemoveAll(x => Expired(x.CreatedAt));
-
-            var existing = list.FindIndex(x => x.User.ProductUserId == user.ProductUserId);
-            if (existing >= 0)
-            {
-                list[existing].CreatedAt = DateTime.UtcNow;
-                return;
-            }
-
-            list.Add(new PendingHost
-            {
-                User = user,
-                Name = user.Name,
-                GameVersion = user.ClientVersion,
-                Ip = key,
-                CreatedAt = DateTime.UtcNow,
-            });
-        }
-    }
-
-    // Takes out one pending host matching the client that connected via HostGame.
-    public bool TryConsumeHost(string udpIp, string playerName, int gameVersion, out UserAuthInfo? user,
-        out string matchInfo)
-    {
-        user = null;
-        var key = Normalize(udpIp) ?? "(unknown)";
-
-        lock (_gate)
-        {
-            if (!_hosts.TryGetValue(key, out var list))
-            {
-                matchInfo = $"no pending host for ip={key}";
-                return false;
-            }
-
-            list.RemoveAll(x => Expired(x.CreatedAt));
-            if (list.Count == 0)
-            {
-                _hosts.Remove(key);
-                matchInfo = "pending host expired";
-                return false;
-            }
-
-            var best = PickBest(list.Select(x => (x.Ip, x.Name, x.GameVersion, x.CreatedAt)), udpIp, playerName, gameVersion, out var signals);
-            if (best < 0)
-            {
-                matchInfo = $"no entry matched (name=\"{playerName}\" version={gameVersion}, {list.Count} pending)";
-                return false;
-            }
-
-            user = list[best].User;
-            matchInfo = $"{signals} of {list.Count} pending";
-            list.RemoveAt(best);
-
-            if (list.Count == 0)
-            {
-                _hosts.Remove(key);
-            }
-
-            return true;
-        }
-    }
-
-    // Creates a unique challenge code (same V2 format as real codes).
-    private GameCode NewChallengeCode(GameCode targetCode, Func<GameCode, bool> isGameCodeInUse)
-    {
-        for (var i = 0; i < 64; i++)
-        {
-            var code = GameCode.Create();
-            if (!code.IsInvalid
-                && code != targetCode
-                && !_challenges.ContainsKey(code.Value)
-                && !isGameCodeInUse(code))
-            {
-                return code;
-            }
-        }
-
-        throw new InvalidOperationException("failed to allocate a unique challenge code");
-    }
-
-    private void RemoveExpiredChallenge(int code)
-    {
-        if (_challenges.TryGetValue(code, out var challenge) && Expired(challenge.CreatedAt))
-        {
-            _challenges.Remove(code);
-            var owner = (challenge.User.MatchmakerToken, challenge.TargetCode);
-            if (_challengeOwners.TryGetValue(owner, out var ownerCode) && ownerCode == code)
-            {
-                _challengeOwners.Remove(owner);
-            }
-        }
-    }
-
-    // Picks the best entry. IP match > name > version; ties go to the older entry.
-    private static int PickBest(
-        IEnumerable<(string? Ip, string Name, int GameVersion, DateTime CreatedAt)> candidates,
-        string udpIp,
-        string playerName,
-        int gameVersion,
-        out string signals)
-    {
-        var list = candidates.ToList();
-        var normalizedIp = Normalize(udpIp);
-
-        var bestIndex = -1;
-        var bestScore = 0;
-        var bestCreated = DateTime.MinValue;
-        var bestSignals = string.Empty;
-
-        for (var i = 0; i < list.Count; i++)
-        {
-            var (ip, name, version, created) = list[i];
-
-            var ipMatch = !string.IsNullOrEmpty(ip) && ip == normalizedIp;
-            var nameMatch = !string.IsNullOrEmpty(name)
-                            && string.Equals(name, playerName, StringComparison.OrdinalIgnoreCase);
-            var versionMatch = version > 0 && version == gameVersion;
-
-            if (!ipMatch && !(nameMatch && versionMatch))
-            {
-                continue;
-            }
-
-            var candidateScore = 0;
-            if (ipMatch) candidateScore += 4;
-            if (nameMatch) candidateScore += 2;
-            if (versionMatch) candidateScore += 1;
-
-            if (candidateScore > bestScore
-                || (candidateScore == bestScore && (bestIndex < 0 || created < bestCreated)))
-            {
-                bestIndex = i;
-                bestScore = candidateScore;
-                bestCreated = created;
-                bestSignals = $"ip{(ipMatch ? "+" : "-")} name{(nameMatch ? "+" : "-")} ver{(versionMatch ? "+" : "-")}";
-            }
-        }
-
-        signals = bestSignals;
-        return bestIndex;
     }
 
     private void Cleanup()
     {
         try
         {
-            lock (_gate)
+            lock (_gate) RemoveExpiredAliases();
+            foreach (var list in _waiting.Values)
             {
-                foreach (var value in _challenges.Where(x => Expired(x.Value.CreatedAt)).Select(x => x.Key).ToList())
-                {
-                    if (_challenges.Remove(value, out var challenge))
-                    {
-                        var owner = (challenge.User.MatchmakerToken, challenge.TargetCode);
-                        if (_challengeOwners.TryGetValue(owner, out var ownerCode) && ownerCode == value)
-                        {
-                            _challengeOwners.Remove(owner);
-                        }
-                    }
-                }
-
-                foreach (var code in _pendingJoins.Keys.ToList())
-                {
-                    var list = _pendingJoins[code];
-                    list.RemoveAll(x => Expired(x.CreatedAt));
-                    if (list.Count == 0)
-                    {
-                        _pendingJoins.Remove(code);
-                    }
-                }
-
-                foreach (var ip in _hosts.Keys.ToList())
-                {
-                    var list = _hosts[ip];
-                    list.RemoveAll(x => Expired(x.CreatedAt));
-                    if (list.Count == 0)
-                    {
-                        _hosts.Remove(ip);
-                    }
-                }
+                lock (list) RemoveExpired(list);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "GameCodeAuth cleanup failed");
+            _logger.LogWarning(ex, "GameCode authentication cleanup failed");
         }
     }
 
-    private static string? Normalize(string? ip)
+    private void RemoveExpiredAliases()
     {
-        if (string.IsNullOrEmpty(ip))
+        var now = DateTime.UtcNow;
+        foreach (var (code, ticket) in _aliases.ToArray())
         {
-            return null;
+            if (ticket.ExpiresAt <= now)
+            {
+                _aliases.Remove(code);
+                _aliasOwners.Remove((ticket.User.MatchmakerToken, ticket.Target));
+            }
         }
-
-        return ip.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase) ? ip[7..] : ip;
     }
 
-    public void Dispose() => _cleanupTimer.Dispose();
+    private static void RemoveExpired(List<Ticket> list) => list.RemoveAll(ticket => ticket.ExpiresAt <= DateTime.UtcNow);
 
-    private sealed class Challenge
-    {
-        public required GameCode Code { get; init; }
-
-        public required GameCode TargetCode { get; init; }
-
-        public required UserAuthInfo User { get; init; }
-
-        public required string Name { get; init; }
-
-        public required int GameVersion { get; init; }
-
-        public required DateTime CreatedAt { get; set; }
-
-        // The connection that consumed the challenge; each challenge can be used by one connection only.
-        public int? OccupiedBy { get; set; }
-    }
-
-    private sealed class PendingJoin
-    {
-        public required UserAuthInfo User { get; init; }
-
-        public required string Name { get; init; }
-
-        public required int GameVersion { get; init; }
-
-        public required string? Ip { get; set; }
-
-        public required DateTime CreatedAt { get; set; }
-    }
-
-    private sealed class PendingHost
-    {
-        public required UserAuthInfo User { get; init; }
-
-        public required string Name { get; init; }
-
-        public required int GameVersion { get; init; }
-
-        public required string? Ip { get; init; }
-
-        public required DateTime CreatedAt { get; set; }
-    }
+    private sealed record Ticket(UserAuthInfo User, int Target, DateTime ExpiresAt);
 }

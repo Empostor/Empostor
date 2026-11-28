@@ -97,7 +97,7 @@ public sealed class GamesController : ControllerBase
         var code = new GameCode(gameId);
         var auth = TryGetAuthInfo();
         if (_serverConfig.UseGameCodeMode && auth == null) return Unauthorized();
-        if (_serverConfig.UseGameCodeMode && _gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
+
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -106,7 +106,11 @@ public sealed class GamesController : ControllerBase
             return NotFound(new MatchmakerResponse(new MatchmakerError(DisconnectReason.GameNotFound)));
         }
 
-        if (_serverConfig.UseGameCodeMode && auth != null) _gameCodeAuth.RegisterPendingJoin(code, auth);
+        if (_serverConfig.UseGameCodeMode && auth != null && !_gameCodeAuth.TryExpectJoin(auth, code))
+        {
+            return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.Custom, "Authentication failed; please retry.")));
+        }
+
         var port = _serverConfig.UseDeltaPortMode && auth?.Port > 0
             ? (ushort)auth.Port
             : _serverConfig.UseGameCodeMode ? _serverConfig.GameCodePublicPort : (ushort)game.PublicIp.Port;
@@ -126,7 +130,10 @@ public sealed class GamesController : ControllerBase
         if (_serverConfig.UseGameCodeMode)
         {
             if (auth == null) return Unauthorized();
-            _gameCodeAuth.RegisterHost(auth, auth.ClientIp);
+            if (!_gameCodeAuth.TryExpectHost(auth))
+            {
+                return BadRequest(new MatchmakerResponse(new MatchmakerError(DisconnectReason.Custom, "Authentication failed; please retry.")));
+            }
         }
 
         var port = _serverConfig.UseDeltaPortMode && auth?.Port > 0
@@ -140,7 +147,7 @@ public sealed class GamesController : ControllerBase
     {
         var code = new GameCode(gameId);
         var auth = TryGetAuthInfo();
-        if (_serverConfig.UseGameCodeMode && _gameCodeAuth.TryGetTarget(code, out var targetCode)) code = targetCode;
+
         var game = _gameManager.Find(code);
 
         // If the game was not found, print an error message.
@@ -230,7 +237,7 @@ public sealed class GamesController : ControllerBase
         var port = _serverConfig.PublicPort;
         if (_serverConfig.UseGameCodeMode)
         {
-            code = _gameCodeAuth.CreateChallenge(game.Code, auth!, challenge => _gameManager.Find(challenge) != null);
+            code = _gameCodeAuth.IssueAlias(auth!, game.Code, candidate => _gameManager.Find(new GameCode(candidate)) != null);
             port = _serverConfig.GameCodePublicPort;
         }
         else if (_serverConfig.UseDeltaPortMode && auth?.Port > 0)

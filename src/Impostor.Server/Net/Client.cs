@@ -156,14 +156,15 @@ namespace Impostor.Server.Net
 
                     if (_serverConfig.UseGameCodeMode)
                     {
-                        if (!_gameCodeAuth.TryConsumeHost(Connection.EndPoint.Address.ToString(), Name, GameVersion.Value, out var auth, out var matchInfo))
+                        var auth = _gameCodeAuth.ClaimHost(Name);
+                        if (auth == null)
                         {
                             await DisconnectAsync(DisconnectReason.Custom, "Unable to verify host authentication. Please retry.");
-                            _logger.LogWarning("GameCode host authentication failed for {Name}: {MatchInfo}", Name, matchInfo);
+                            _logger.LogWarning("GameCode host authentication failed for {Name}", Name);
                             return;
                         }
 
-                        FriendCode = auth!.FriendCode;
+                        FriendCode = auth.FriendCode;
                         Puid = auth.ProductUserId;
                         EosToken = auth.EosToken;
                     }
@@ -198,29 +199,19 @@ namespace Impostor.Server.Net
 
                     if (_serverConfig.UseGameCodeMode)
                     {
-                        var resolvedChallenge = _gameCodeAuth.TryResolveChallenge(gameCode, Id, out var auth, out var targetCode, out var matchInfo);
-                        if (resolvedChallenge)
+                        var claim = _gameCodeAuth.ClaimJoin(gameCode, Name);
+                        if (claim == null)
                         {
-                            gameCode = targetCode;
-                            FriendCode = auth!.FriendCode;
-                            Puid = auth.ProductUserId;
-                            EosToken = auth.EosToken;
-                            using var rekeyWriter = MessageWriter.Get(MessageType.Reliable);
-                            Message00HostGameS2C.Serialize(rekeyWriter, targetCode);
-                            await Connection.SendAsync(rekeyWriter);
-                        }
-                        else if (_gameCodeAuth.TryConsumePendingJoin(gameCode, Connection.EndPoint.Address.ToString(), Name, GameVersion.Value, out auth, out matchInfo))
-                        {
-                            FriendCode = auth!.FriendCode;
-                            Puid = auth.ProductUserId;
-                            EosToken = auth.EosToken;
-                        }
-                        else
-                        {
-                            _logger.LogWarning("GameCode join authentication failed for {Name}: {MatchInfo}", Name, matchInfo);
+                            _logger.LogWarning("GameCode join authentication failed for {Name} and code {GameCode}", Name, gameCode);
                             await DisconnectAsync(DisconnectReason.Custom, "Unable to verify game join authentication. Please retry.");
                             return;
                         }
+
+                        FriendCode = claim.Value.User.FriendCode;
+                        Puid = claim.Value.User.ProductUserId;
+                        EosToken = claim.Value.User.EosToken;
+                        JoinAlias = claim.Value.Alias;
+                        gameCode = claim.Value.Target;
                     }
 
                     var game = _gameManager.Find(gameCode);

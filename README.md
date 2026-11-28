@@ -68,24 +68,25 @@ Empostor has to know which HTTP authentication (`POST /api/user`) belongs to whi
 | Mode | Behaviour |
 | --- | --- |
 | `DeltaPort` (default) | Every player gets a unique dynamic UDP port from the `DeltaPortStart`..`DeltaPortEnd` pool. The port itself is the proof of identity. |
-| `GameCode` | **No dynamic ports at all** — only the shared listen port (`GameCodePorts[0]`, or `ListenPort`) is used. The lobby list hands out a server-issued **challenge game code** per player, and the `JoinGame` that follows over UDP is authenticated by that code alone. |
+| `GameCode` | **No dynamic ports at all** - only the shared listen port (`GameCodePorts[0]`, or `ListenPort`) is used. Lobby listings issue one-use alias codes bound to authenticated sessions; legacy joins use a short-lived ticket matched by real game code and player name. |
 | `Disable` | Uses the original fixed-port matchmaking flow. No EOS verification, friend-code lookup, dynamic-port matching, or GameCode challenge is performed. |
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `VerificationMode` | `DeltaPort` | `DeltaPort`, `GameCode`, or `Disable` |
 | `GameCodePorts` | `[]` | Ports for `GameCode` mode; only the first is bound. Empty falls back to `ListenPort`/`PublicPort` |
-| `TemporaryGameCodeLifetimeSeconds` | `180` | How long an issued challenge code stays valid |
+| `TemporaryGameCodeLifetimeSeconds` | `180` | How long an issued alias or join ticket stays valid |
 
 In `GameCode` and `Disable` modes the port pool is disabled and `DeltaPortStart`/`DeltaPortEnd` are ignored. Friend codes in the two verification modes are resolved through Innersloth only.
 
 The game client validates the game code of every message it receives against the code it joined with and silently drops mismatches, and the UDP handshake carries no token/PUID/game code. `GameCode` mode therefore uses the code itself as the token:
 
-1. A lobby listing returns a **challenge code** — a second, server-generated game code (same format, so the client accepts it as a normal join target) bound to `(authenticated user, real game, player name, client version)`.
-2. `JoinGame(challenge)` over UDP is resolved by the challenge code alone — no IP, no PUID, no name matching. The challenge is single-use and expires after `TemporaryGameCodeLifetimeSeconds`, so many players can join the same game at the same time without being mixed up.
-3. The server then re-keys the client with `Msg00 HostGame` carrying the **real** code (`AmongUsClient.OnGameCreated` is empty, so this only overwrites `GameId`). Everything after that — game data, the in-lobby code display, invites — uses the real code, so no message rewriting is needed.
+1. A lobby listing returns a server-generated alias game code bound to the authenticated session and real game code.
+2. The first UDP `JoinGame(alias)` consumes the alias and binds the connection to its authenticated session. Legacy joins consume a short-lived HTTP ticket matched by real game code and player name.
+3. For alias joins, the server responds using the alias expected by the client, then sends the real game code for subsequent traffic.
 
-`HostGame` is the one exception: no code exists before the host message, so the hosting socket is matched against the `PUT /api/games` request by IP, player name and client version (the PUID comes from the HTTP token). Joining an already hosted game with the real code (legacy `POST /api/games`, e.g. Steam invites) still falls back to the same name/version/IP matching.
+Hosts are bound to a short-lived `PUT /api/games` ticket by player name. Legacy `POST /api/games` joins are similarly matched by real game code and player name.
+
 
 ### AntiCheat
 
