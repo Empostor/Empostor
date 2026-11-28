@@ -51,5 +51,8 @@
   "Debug": {
     "GameRecorderEnabled": false,
     "GameRecorderPath": ""
+  },
+  "Localization": {
+    "GenerateOverrideFiles": false
   }
 }

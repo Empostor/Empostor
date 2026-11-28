@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Impostor.Api.Config;
 using Impostor.Api.Events.Managers;
 using Impostor.Api.Innersloth;
+using Impostor.Api.Localization;
 using Impostor.Api.Net;
 using Impostor.Api.Net.Manager;
 using Impostor.Hazel;
@@ -27,9 +28,10 @@ namespace Impostor.Server.Net.Manager
         private readonly IClientFactory _clientFactory;
         private readonly AuthCacheService _authCache;
         private readonly PortPoolService _portPool;
+        private readonly ILocalizationService _localizer;
         private int _idLast;
 
-        public ClientManager(ILogger<ClientManager> logger, IEventManager eventManager, IClientFactory clientFactory, ICompatibilityManager compatibilityManager, IOptions<CompatibilityConfig> compatibilityConfig, AuthCacheService authCache, PortPoolService portPool)
+        public ClientManager(ILogger<ClientManager> logger, IEventManager eventManager, IClientFactory clientFactory, ICompatibilityManager compatibilityManager, IOptions<CompatibilityConfig> compatibilityConfig, AuthCacheService authCache, PortPoolService portPool, ILocalizationService localizer)
         {
             _logger = logger;
             _eventManager = eventManager;
@@ -39,6 +41,7 @@ namespace Impostor.Server.Net.Manager
             _compatibilityConfig = compatibilityConfig.Value;
             _authCache = authCache;
             _portPool = portPool;
+            _localizer = localizer;
 
             if (_compatibilityConfig.AllowFutureGameVersions
                 || _compatibilityConfig.AllowHostAuthority
@@ -102,7 +105,7 @@ namespace Impostor.Server.Net.Manager
                     _ => throw new ArgumentOutOfRangeException(),
                 };
 
-                await connection.CustomDisconnectAsync(DisconnectReason.Custom, message);
+                await connection.CustomDisconnectAsync(DisconnectReason.Custom, _localizer.Get(message, language));
                 return;
             }
 
@@ -113,7 +116,7 @@ namespace Impostor.Server.Net.Manager
                 if (!_compatibilityConfig.AllowHostAuthority)
                 {
                     _logger.LogInformation("Player {Name} kicked because they requested host authority.", name);
-                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.HostAuthorityUnsupported);
+                    await connection.CustomDisconnectAsync(DisconnectReason.Custom, _localizer.Get(DisconnectMessages.HostAuthorityUnsupported, language));
                     return;
                 }
 
@@ -122,13 +125,13 @@ namespace Impostor.Server.Net.Manager
 
             if (name.Length > 10)
             {
-                await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameLength);
+                await connection.CustomDisconnectAsync(DisconnectReason.Custom, _localizer.Get(DisconnectMessages.UsernameLength, language));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(name))
             {
-                await connection.CustomDisconnectAsync(DisconnectReason.Custom, DisconnectMessages.UsernameIllegalCharacters);
+                await connection.CustomDisconnectAsync(DisconnectReason.Custom, _localizer.Get(DisconnectMessages.UsernameIllegalCharacters, language));
                 return;
             }
 

@@ -25,6 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="Localization/Resources/*.json" />
+    <None Remove="Localization/Resources/*.json" />
+    <EmbeddedResource Include="Localization/Resources/*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />

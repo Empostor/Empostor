@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Impostor.Api.Config;
 using Impostor.Api.Innersloth;
+using Impostor.Api.Localization;
 using Impostor.Api.Net.Custom;
 using Impostor.Api.Net.Messages;
 using Impostor.Server.Net;
@@ -18,8 +19,8 @@ namespace Impostor.Server.Recorder
         private bool _createdGame;
         private bool _recordAfter;
 
-        public ClientRecorder(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, GameManager gameManager, GameCodeAuthManager gameCodeAuth, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, HazelConnection connection, PacketRecorder recorder)
-            : base(logger, antiCheatOptions, clientManager, gameManager, customMessageManager, gameCodeAuth, serverConfig, name, gameVersion, language, chatMode, platformSpecificData, connection)
+        public ClientRecorder(ILogger<Client> logger, IOptions<AntiCheatConfig> antiCheatOptions, ClientManager clientManager, ICustomMessageManager<ICustomRootMessage> customMessageManager, GameManager gameManager, ILocalizationService localizer, GameCodeAuthManager gameCodeAuth, IOptions<ServerConfig> serverConfig, string name, GameVersion gameVersion, Language language, QuickChatModes chatMode, PlatformSpecificData platformSpecificData, HazelConnection connection, PacketRecorder recorder)
+            : base(logger, antiCheatOptions, clientManager, gameManager, customMessageManager, localizer, gameCodeAuth, serverConfig, name, gameVersion, language, chatMode, platformSpecificData, connection)
         {
             _recorder = recorder;
             _isFirst = true;
